@@ -32,5 +32,7 @@ Desktop.ini
 # venv
 .venv
 
-# 프로젝트 raw 파일
+# 프로젝트 raw 파일 및 첨부되지 않아야 할 파일 범위
 /donotuploadthis
+/pipeline/01_cleaned
+/pipeline/02_sentences
