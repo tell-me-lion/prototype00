@@ -29,4 +29,8 @@ replay_pid*
 Thumbs.db
 Desktop.ini
 
+# venv
+.venv
+
+# 프로젝트 raw 파일
 /donotuploadthis
