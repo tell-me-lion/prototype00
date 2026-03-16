@@ -36,3 +36,5 @@ Desktop.ini
 /donotuploadthis
 /pipeline/01_cleaned
 /pipeline/02_sentences
+
+.env
