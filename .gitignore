@@ -40,4 +40,13 @@ Desktop.ini
 # 프로젝트 데이터 (raw, 파이프라인 출력 등)
 data/
 
-.env
+# python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pyi
+
+# IDE
+.idea/
+.vscode/
