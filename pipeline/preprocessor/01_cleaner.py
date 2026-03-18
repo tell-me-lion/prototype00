@@ -87,34 +87,34 @@ class Cleaner:
             return text
 
     def merge_lines(self, lines: list[dict], max_gap_sec: int = 15) -> list[dict]:
-        """인접 라인 병합 (같은 세션 내 시간 간격 <= max_gap_sec)"""
+        """인접 라인 병합 (직전 발화와의 시간 간격 <= max_gap_sec)"""
         if not lines:
             return []
 
         paragraphs = []
-        current = {
-            "time": lines[0]["time"],
-            "texts": [lines[0]["text"]],
-        }
+        current_start_time = lines[0]["time"]
+        last_line_time = lines[0]["time"]
+        current_texts = [lines[0]["text"]]
 
         for line in lines[1:]:
-            gap = (line["time"] - current["time"]).total_seconds()
+            gap = (line["time"] - last_line_time).total_seconds()
             if 0 <= gap <= max_gap_sec:
-                current["texts"].append(line["text"])
+                current_texts.append(line["text"])
             else:
                 paragraphs.append({
-                    "time": current["time"],
-                    "text": " ".join(current["texts"]),
+                    "time": current_start_time,
+                    "end_time": last_line_time,
+                    "text": " ".join(current_texts),
                 })
-                current = {
-                    "time": line["time"],
-                    "texts": [line["text"]],
-                }
+                current_start_time = line["time"]
+                current_texts = [line["text"]]
+            last_line_time = line["time"]
 
         # 마지막 단락
         paragraphs.append({
-            "time": current["time"],
-            "text": " ".join(current["texts"]),
+            "time": current_start_time,
+            "end_time": last_line_time,
+            "text": " ".join(current_texts),
         })
 
         return paragraphs
@@ -129,7 +129,7 @@ class Cleaner:
 
         for i, para in enumerate(paragraphs):
             if i > 0:
-                gap_min = (para["time"] - paragraphs[i - 1]["time"]).total_seconds() / 60
+                gap_min = (para["time"] - paragraphs[i - 1]["end_time"]).total_seconds() / 60
                 if gap_min >= session_gap_min:
                     session += 1
             result.append({**para, "session": session})
@@ -171,7 +171,8 @@ class Cleaner:
                 text = self.clean_text_gemini(text)
                 
             result.append({
-                "day": day,
+                "chunk_id": filepath.stem,
+                "source_file": filepath.name,
                 "session": para["session"],
                 "time": self.format_time(para["time"]),
                 "paragraph": text,
