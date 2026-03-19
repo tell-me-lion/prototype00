@@ -204,6 +204,12 @@ def main():
     input_dir = base_dir / args.input
     output_dir = base_dir / args.output
     
+    # 제미나이 사용 여부에 따라 결과물 폴더 분리
+    if args.gemini:
+        output_dir = output_dir / "gemini_cleaned"
+    else:
+        output_dir = output_dir / "base_cleaned"
+    
     if not input_dir.exists():
         print(f"[ERROR] Input directory not found: {input_dir}")
         return
