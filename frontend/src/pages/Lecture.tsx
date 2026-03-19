@@ -87,10 +87,11 @@ export function Lecture() {
     if (!file) return
     setStep('loading')
     try {
+      const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
       const [conceptsRes, pointsRes, quizzesRes] = await Promise.all([
-        fetch('http://localhost:8000/api/concepts'),
-        fetch('http://localhost:8000/api/learning-points'),
-        fetch('http://localhost:8000/api/quizzes'),
+        fetch(`${API}/api/concepts`),
+        fetch(`${API}/api/learning-points`),
+        fetch(`${API}/api/quizzes`),
       ])
       if (!conceptsRes.ok || !pointsRes.ok || !quizzesRes.ok) {
         throw new Error('데이터를 불러오는 데 실패했습니다.')
