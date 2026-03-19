@@ -72,42 +72,47 @@ class FactExtractor:
         
         prompt = f"다음 코퍼스 텍스트 덩어리에서 중요한 지식 명제를 모두 뽑아주세요.\n[참고 핵심 키워드]: {', '.join(keywords)}\n\n[텍스트 원문]\n{text}"
         
-        if self.use_gemini and self.client:
-            try:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=self.gen_config
-                )
-                time.sleep(2) # 무료 호출 Rate Limit 안정성 확보
-                
-                # JSON 파싱 시도
-                res_text = response.text.strip()
-                if res_text.startswith("```json"):
-                    res_text = res_text[7:-3]
-                elif res_text.startswith("```"):
-                    res_text = res_text[3:-3]
-                
-                return json.loads(res_text.strip())
-            except Exception as e:
-                print(f"[Gemini Error] 추출 실패: {e}")
-                time.sleep(4)
-                return []
-                
-        elif self.use_ollama:
+        # ★ Ollama가 활성화되어 있으면 최우선으로 로컬 GPU 모델 사용
+        if self.use_ollama:
             import requests # Local SLM일 경우 사용
             try:
                 payload = {
                     "model": self.ollama_model,
                     "prompt": self.gen_config.system_instruction + "\n\n" + prompt,
                     "stream": False,
-                    "format": "json"
+                    "format": "json",
+                    "options": {
+                        "num_ctx": 4096,  # RTX 4090 16GB VRAM 한도 내에서 모델(13GB)과 컨텍스트가 모두 올라가도록 제한
+                        "num_gpu": 99     # 가능한 최대 레이어를 무조건 GPU에 올리도록 강제 지시
+                    }
                 }
-                res = requests.post(self.ollama_url, json=payload, timeout=60)
+                res = requests.post(self.ollama_url, json=payload, timeout=120)
                 data = res.json()
                 return json.loads(data["response"])
             except Exception as e:
                 print(f"[Ollama Error] 추출 실패: {e}")
+                return []
+
+        # Ollama가 비활성화된 경우, Gemini API 사용
+        elif self.use_gemini and self.client:
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=prompt,
+                    config=self.gen_config
+                )
+                time.sleep(2)  # 무료 호출 Rate Limit 안정성 확보
+
+                res_text = response.text.strip()
+                if res_text.startswith("```json"):
+                    res_text = res_text[7:-3]
+                elif res_text.startswith("```"):
+                    res_text = res_text[3:-3]
+
+                return json.loads(res_text.strip())
+            except Exception as e:
+                print(f"[Gemini Error] 추출 실패: {e}")
+                time.sleep(4)
                 return []
                 
         return []
@@ -173,6 +178,7 @@ def main():
     parser.add_argument("--input_type", type=str, choices=["base_cleaned", "gemini_cleaned"], default="base_cleaned")
     parser.add_argument("--no_gemini", action="store_true", help="Disable Gemini API (use only patterns or Ollama)")
     parser.add_argument("--use_ollama", action="store_true", help="Enable Ollama Local SLM endpoint")
+    parser.add_argument("--ollama_model", type=str, default="gpt-oss:20b", help="Target Ollama model name")
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent.parent.parent
@@ -186,7 +192,7 @@ def main():
         return
 
     # 제미나이를 쓸지, 옵션을 줄지 파라미터로 설정 (기본은 Gemini 활성화)
-    extractor = FactExtractor(use_gemini=not args.no_gemini, use_ollama=args.use_ollama)
+    extractor = FactExtractor(use_gemini=not args.no_gemini, use_ollama=args.use_ollama, ollama_model=args.ollama_model)
     
     jsonl_files = sorted(input_dir.glob("*.jsonl"))
     if not jsonl_files:
