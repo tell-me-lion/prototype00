@@ -16,6 +16,7 @@ from collections import defaultdict
 import google.genai as genai
 from google.genai import types
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 # .env 로드
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
@@ -90,39 +91,6 @@ class Cleaner:
             print(f"[Gemini Error]: {e}")
             return text
 
-    def merge_lines(self, lines: list[dict], max_gap_sec: int = 15) -> list[dict]:
-        """인접 라인 병합 (직전 발화와의 시간 간격 <= max_gap_sec)"""
-        if not lines:
-            return []
-
-        paragraphs = []
-        current_start_time = lines[0]["time"]
-        last_line_time = lines[0]["time"]
-        current_texts = [lines[0]["text"]]
-
-        for line in lines[1:]:
-            gap = (line["time"] - last_line_time).total_seconds()
-            if 0 <= gap <= max_gap_sec:
-                current_texts.append(line["text"])
-            else:
-                paragraphs.append({
-                    "time": current_start_time,
-                    "end_time": last_line_time,
-                    "text": " ".join(current_texts),
-                })
-                current_start_time = line["time"]
-                current_texts = [line["text"]]
-            last_line_time = line["time"]
-
-        # 마지막 단락
-        paragraphs.append({
-            "time": current_start_time,
-            "end_time": last_line_time,
-            "text": " ".join(current_texts),
-        })
-
-        return paragraphs
-
     def detect_sessions(self, paragraphs: list[dict], session_gap_min: int = 30) -> list[dict]:
         """세션 자동 감지 (시간 gap >= session_gap_min분이면 새 세션)"""
         if not paragraphs:
@@ -133,7 +101,7 @@ class Cleaner:
 
         for i, para in enumerate(paragraphs):
             if i > 0:
-                gap_min = (para["time"] - paragraphs[i - 1]["end_time"]).total_seconds() / 60
+                gap_min = (para["time"] - paragraphs[i - 1]["time"]).total_seconds() / 60
                 if gap_min >= session_gap_min:
                     session += 1
             result.append({**para, "session": session})
@@ -153,16 +121,15 @@ class Cleaner:
         lines = self.parse_lines(filepath)
         stats = {"raw_lines": len(lines)}
 
-        # 2) 인접 라인 병합
-        paragraphs = self.merge_lines(lines)
+        # 2) 세션 자동 감지 (병합 없음)
+        paragraphs = self.detect_sessions(lines)
         stats["paragraphs"] = len(paragraphs)
 
-        # 3) 세션 자동 감지
-        paragraphs = self.detect_sessions(paragraphs)
-
-        # 4) 출력 포맷팅 및 선택적 Gemini 클리닝
+        # 3) 출력 포맷팅 및 선택적 Gemini 클리닝
         result = []
-        for para in paragraphs:
+        
+        # 진행상황을 보여주기 위해 tqdm으로 감쌉니다.
+        for para in tqdm(paragraphs, desc=f"  >> {filepath.name} 정제 중", leave=False):
             text = para["text"].strip()
             # 다중 공백 압축
             text = re.sub(r"\s{2,}", " ", text)
