@@ -1,7 +1,7 @@
 """
 공통 경로 상수 (전체 파이프라인 버전)
 - 프로젝트 루트, config, data 하위 디렉터리 한 곳에서 관리
-- CURSOR.md 에 정의된 전체 파이프라인 구조를 반영
+- CLAUDE.md 에 정의된 전체 파이프라인 구조를 반영
 """
 
 from pathlib import Path
@@ -29,3 +29,6 @@ DATA_BLUEPRINTS = DATA_DIR / "blueprints"
 DATA_QUIZZES_RAW = DATA_DIR / "quizzes_raw"
 DATA_QUIZZES_VALIDATED = DATA_DIR / "quizzes_validated"
 DATA_LEARNING_GUIDES = DATA_DIR / "learning_guides"
+
+# 개발용 더미 산출물 (실전 미사용, ARCHITECTURE.md §2.3.1)
+DATA_DUMMY = DATA_DIR / "dummy"
