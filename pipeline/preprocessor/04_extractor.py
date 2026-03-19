@@ -74,21 +74,48 @@ class FactExtractor:
         
         # ★ Ollama가 활성화되어 있으면 최우선으로 로컬 GPU 모델 사용
         if self.use_ollama:
-            import requests # Local SLM일 경우 사용
+            import requests
             try:
                 payload = {
                     "model": self.ollama_model,
-                    "prompt": self.gen_config.system_instruction + "\n\n" + prompt,
+                    "prompt": (
+                        "당신은 IT 프로그래밍 강의 스크립트에서 기술적 사실(Fact) 및 지식 명제를 추출하는 데이터 엔지니어입니다.\n"
+                        "아래 규칙에 따라 지식 명제들을 JSON 배열로만 반환하세요.\n"
+                        "1. 강사의 사담, 인사말, 의미 없는 문장은 철저히 배제하세요.\n"
+                        "2. \"[개념]란 [설명]이다.\" 와 같은 명확한 정의나 IT 지식, 규칙, 핵심 절차만 추출하세요.\n"
+                        "3. 반드시 다음과 같은 JSON 포맷의 리스트로 응답하세요.\n"
+                        '예시: [{"type": "definition", "concept": "트랜잭션", "fact": "트랜잭션이란 데이터베이스의 상태를 변화시키는 작업의 단위이다."}]\n\n'
+                        + prompt
+                    ),
                     "stream": False,
                     "format": "json",
                     "options": {
-                        "num_ctx": 4096,  # RTX 4090 16GB VRAM 한도 내에서 모델(13GB)과 컨텍스트가 모두 올라가도록 제한
-                        "num_gpu": 99     # 가능한 최대 레이어를 무조건 GPU에 올리도록 강제 지시
+                        "num_ctx": 4096,
+                        "num_gpu": 99
                     }
                 }
                 res = requests.post(self.ollama_url, json=payload, timeout=120)
                 data = res.json()
-                return json.loads(data["response"])
+                
+                raw = data.get("response", "").strip()
+                if not raw:
+                    return []
+                
+                parsed = json.loads(raw)
+                # 모델이 리스트가 아닌 단일 객체를 반환한 경우 감싸기
+                if isinstance(parsed, dict):
+                    return [parsed]
+                elif isinstance(parsed, list):
+                    return parsed
+                else:
+                    return []
+                    
+            except json.JSONDecodeError:
+                # 모델이 유효한 JSON을 못 뱉은 경우 (빈번하게 발생 가능)
+                return []
+            except requests.exceptions.ConnectionError:
+                print(f"[Ollama Error] 연결 실패 - Ollama 서버가 실행 중인지 확인하세요.")
+                return []
             except Exception as e:
                 print(f"[Ollama Error] 추출 실패: {e}")
                 return []
