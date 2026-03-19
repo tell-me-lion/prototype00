@@ -11,16 +11,12 @@ class Formatter:
         pass
         
     def parse_metadata_from_filename(self, filename: str) -> dict:
-        """파일명에서 기수(week/th), 세션(오전/오후) 등 메타데이터 추출
-        예: 2026-02-02_kdt-backendj-21th.txt -> week: 21
+        """파일명에서 세션(오전/오후) 등 메타데이터 추출
+        (주의: 21th는 주차가 아닌 기수이므로 week 할당에서 제외)
+        예: 2026-02-02_kdt-backendj-21th_오전.txt -> session: 오전
         """
         meta = {"week": None, "session": "Unknown"}
         
-        # 기수(th) 추출
-        match_th = re.search(r"(\d+)th", filename)
-        if match_th:
-            meta["week"] = int(match_th.group(1))
-            
         # 오전/오후 추출 (파일명에 명시되어 있는 경우)
         if "오전" in filename:
             meta["session"] = "오전"
