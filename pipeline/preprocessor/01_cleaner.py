@@ -1,19 +1,11 @@
-"""
-Step 01: 시간차 기반 물리적 단락 분할 및 Gemini STT 교정
-- 타임스탬프를 메타데이터로 보존, 화자 ID 제거
-- 인접 라인 병합 (15초 이내), 세션 자동 감지 (30분 gap)
-- 사전에 기반한 고정된 필터링 대신 Gemini API를 활용한 STT 용어 및 문맥 클렌징 (선택적)
-- 출력: data/phase1_sessions/{날짜}.jsonl
-"""
-
 import os
 import re
 import json
 import argparse
+import time
 from pathlib import Path
 from datetime import timedelta
 from collections import defaultdict
-import time
 import google.genai as genai
 from google.genai import types
 from dotenv import load_dotenv
@@ -26,6 +18,8 @@ class Cleaner:
     def __init__(self, use_gemini=False):
         # 정규식 컴파일 (타임스탬프 파싱, 화자 ID 분리)
         self.pattern_line = re.compile(r"^<(\d{2}):(\d{2}):(\d{2})>\s+[a-f0-9]+:\s*(.*)$")
+        # 제미나이 출력 후처리 정규식 (어느 정도 포맷이 깨져도 시간 부분만 잘 가져오도록 유연하게 구성)
+        self.pattern_gemini_out = re.compile(r"^<?(\d{2}:\d{2}:\d{2})>?\s*(.*)$")
         
         # 제미나이 설정
         self.use_gemini = use_gemini
@@ -36,8 +30,10 @@ class Cleaner:
             self.gen_config = types.GenerateContentConfig(
                 system_instruction=(
                     "당신은 한국어 STT(문자 변환) 결과를 전문적으로 교정하는 보조입니다. "
-                    "강의 내용 중 잘못 변환된 IT 전문 용어 등을 문맥에 맞게 수정하여 반환하세요. "
-                    "요약하거나 문장 구조를 바꾸지 말고 오직 오탈자와 불필요한 단어나 추임새(어..., 그... 등) 제거에만 집중하여 정제된 텍스트 원문만 반환하세요."
+                    "아래 텍스트는 <HH:MM:SS> 텍스트 형태의 여러 라인으로 묶여서 입력됩니다.\n"
+                    "1. 각 라인 맨 앞의 시간 태그 <HH:MM:SS>는 절대로 삭제하거나 양식을 수정하지 말고 그대로 출력하세요.\n"
+                    "2. IT 전문 용어 오탈자를 문맥에 맞게 수정하고, 불필요한 단어나 추임새(어..., 그... 등)를 제거하세요.\n"
+                    "3. 절대로 요약하거나 라인을 제멋대로 하나로 통합하지 마세요. (입력된 각 라인을 1:1로 대응하여 교정된 라인들로 반환)"
                 ),
                 temperature=0.1,
                 top_p=0.9
@@ -76,21 +72,59 @@ class Cleaner:
                         })
         return lines
 
-    def clean_text_gemini(self, text: str) -> str:
-        """Gemini API를 이용한 문맥 기반 교정 및 추임새 제거"""
-        if not self.client or len(text.strip()) < 10:
-            return text
+    def clean_lines_gemini_batch(self, lines: list[dict], batch_size: int = 100) -> list[dict]:
+        """개별 라인들을 일정 묶음(배치) 단위로 패킹/모아서 Gemini로 한 방에 정제한 뒤, 다시 분리하여 반환 (응답 속도 10배 이상 감소)"""
+        if not self.client or not lines:
+            return lines
+
+        cleaned_lines = []
+        
+        # 라인을 지정된 사이즈(기본 100줄)씩 배치로 쪼갭니다.
+        batches = [lines[i:i + batch_size] for i in range(0, len(lines), batch_size)]
+        
+        for batch in tqdm(batches, desc="  [Gemini API 배치 일괄 정제]", leave=False):
+            # 100줄 분량의 텍스트를 <09:03:12> 발화문\n 형태로 구성합니다.
+            batch_text = "\n".join([f"<{self.format_time(line['time'])}> {line['text']}" for line in batch])
             
-        try:
-            response = self.client.models.generate_content(
-                model=self.model_name,
-                contents=f"다음 텍스트의 STT 오류(특히 IT 용어)를 수정하고 불필요한 추임새를 제거해주세요. 원래의 맥락을 해치지 않는 선에서 문맥을 자연스럽게 교정하여 텍스트만 곧바로 반환하세요:\n\n{text}",
-                config=self.gen_config
-            )
-            return response.text.strip()
-        except Exception as e:
-            print(f"[Gemini Error]: {e}")
-            return text
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    contents=f"[입력 텍스트]\n{batch_text}",
+                    config=self.gen_config
+                )
+                res_text = response.text.strip()
+                
+                # 결과 텍스트를 파싱하여 원래의 시간 맵 유지한 개별 라인 객체로 변환
+                for out_line in res_text.splitlines():
+                    out_line = out_line.strip()
+                    if not out_line: continue
+                    
+                    match = self.pattern_gemini_out.match(out_line)
+                    if match:
+                        time_str, cleaned_text = match.groups()
+                        h, m, s = time_str.split(":")
+                        # 비어있는 추임새 문장으로 정제된 경우 삭제 처리
+                        if cleaned_text.strip():
+                            cleaned_lines.append({
+                                "time": self.parse_time(h, m, s),
+                                "text": cleaned_text.strip()
+                            })
+                    else:
+                        # 정규식이 깨졌을 경우를 대비해 스킵
+                        pass
+                
+                # 서버 과부하 보호용으로 1초 대기 (배치단위이므로 시간이 적게 소요됨)
+                time.sleep(1.5)
+                
+            except Exception as e:
+                print(f"\n[Gemini Error] 일괄 정제 실패. 해당 구간은 원본 사용. Error: {e}")
+                # API 에러 발생시 해당 배치의 원본 라인을 그대로 붙여서 보존합니다.
+                cleaned_lines.extend(batch)
+                time.sleep(5) # 한도 제한 초과 가능성이 있으므로 조금 더 대기
+                
+        # 타임스탬프 순서대로 다시 무결하게 정렬 (안전 장치)
+        cleaned_lines.sort(key=lambda x: x["time"])
+        return cleaned_lines
 
     def merge_lines(self, lines: list[dict], max_gap_sec: int = 15) -> list[dict]:
         """인접 라인 병합 (직전 발화와의 시간 간격 <= max_gap_sec)"""
@@ -155,29 +189,26 @@ class Cleaner:
         lines = self.parse_lines(filepath)
         stats = {"raw_lines": len(lines)}
 
-        # 2) 인접 라인 병합
+        # 2) 선택적인 일괄 정제 (수백 줄을 뭉쳐서 한 번에 API 호출 후 다시 분리)
+        if self.use_gemini:
+            lines = self.clean_lines_gemini_batch(lines, batch_size=100)
+
+        # 3) 인접 라인 병합 (배치 정제에서 반환된 개별 라인을 모아서 Paragraph 구성)
         paragraphs = self.merge_lines(lines)
         stats["paragraphs"] = len(paragraphs)
 
-        # 3) 세션 자동 감지
+        # 4) 세션 자동 감지
         paragraphs = self.detect_sessions(paragraphs)
 
-        # 4) 출력 포맷팅 및 선택적 Gemini 클리닝
+        # 5) 출력 포맷팅
         result = []
-        
-        # 진행상황을 보여주기 위해 tqdm으로 감쌉니다.
-        for para in tqdm(paragraphs, desc=f"  >> {filepath.name} 정제 중", leave=False):
+        for para in paragraphs:
             text = para["text"].strip()
             # 다중 공백 압축
             text = re.sub(r"\s{2,}", " ", text)
             
             if not text:
                 continue
-                
-            # Gemini가 활성화되었다면 여기서 병합된 하나의 단락(Paragraph) 모델을 호출
-            if self.use_gemini:
-                text = self.clean_text_gemini(text)
-                time.sleep(2)  # 구글 API의 Rate Limit 및 503 에러 완화를 위한 강제 지연
                 
             result.append({
                 "chunk_id": filepath.stem,
