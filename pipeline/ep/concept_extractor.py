@@ -10,8 +10,6 @@ from .schema import ConceptDocument
 TFIDF_THRESHOLD = 1.0
 """TF-IDF 점수 최소값. 이 이상인 키워드만 개념 후보로 고려."""
 
-JACCARD_THRESHOLD = 0.15
-"""Jaccard 유사도 최소값. related_concepts 선정 기준."""
 
 IMPORTANCE_FREQ_WEIGHT = 0.5
 """중요도 계산에서 빈도 신호의 가중치."""
@@ -96,7 +94,7 @@ def extract_concepts(
         concepts.append(doc)
 
     # 4단계: related_concepts 연결
-    concepts = _link_related_concepts(concepts)
+    concepts = _link_related_concepts(concepts, chunks)
 
     # 중요도 내림차순 정렬
     concepts.sort(key=lambda x: x.importance, reverse=True)
@@ -304,36 +302,46 @@ def _pick_definition(
 # ================== 4단계: related_concepts 연결 ==================
 
 
-def _link_related_concepts(concepts: list[ConceptDocument]) -> list[ConceptDocument]:
-    """Jaccard 유사도 기반으로 related_concepts 연결.
+def _link_related_concepts(
+    concepts: list[ConceptDocument],
+    chunks: list[dict[str, Any]],
+) -> list[ConceptDocument]:
+    """같은 fact(문장)에 공동 출현하는 개념을 related_concepts로 연결.
 
-    각 개념 쌍 (i, j)에 대해:
-        jaccard = len(chunks_i ∩ chunks_j) / len(chunks_i ∪ chunks_j)
-
-    임계값 이상이면 관련 개념으로 추가.
-    최소 1개 보장: 임계값 미달 시 유사도 최고인 개념을 강제 연결.
+    각 fact를 순회하며 어떤 개념의 키워드가 포함되는지 확인.
+    같은 fact에 두 개념이 모두 언급되면 서로 연관 개념으로 추가.
+    최소 1개 보장: 공동 출현이 없으면 importance 가장 높은 타 개념을 강제 연결.
     """
-    for i, concept_i in enumerate(concepts):
-        chunks_i = set(concept_i.source_chunk_ids)
-        scored: list[tuple[str, float]] = []
+    # concept_id -> keyword(소문자) 매핑
+    concept_kw: dict[str, str] = {c.concept_id: c.concept.lower() for c in concepts}
 
-        for j, concept_j in enumerate(concepts):
-            if i == j:
-                continue
-            chunks_j = set(concept_j.source_chunk_ids)
-            intersection = len(chunks_i & chunks_j)
-            union = len(chunks_i | chunks_j)
-            jaccard = intersection / union if union > 0 else 0.0
-            scored.append((concept_j.concept_id, jaccard))
+    # {concept_id: set[concept_id]} — fact에서 공동 출현한 개념 집합
+    co_occurrence: dict[str, set[str]] = {c.concept_id: set() for c in concepts}
 
-        related = [cid for cid, score in scored if score >= JACCARD_THRESHOLD]
+    for chunk in chunks:
+        for fact in chunk.get("facts", []):
+            fact_lower = fact.lower()
 
-        # 최소 1개 보장
-        if not related and scored:
-            best_cid = max(scored, key=lambda x: x[1])[0]
-            related = [best_cid]
+            # 이 fact에 언급된 개념 목록
+            present = [cid for cid, kw in concept_kw.items() if kw in fact_lower]
 
-        concept_i.related_concepts = related
+            # 공동 출현 기록 (같은 fact에 함께 등장한 개념 쌍)
+            for cid_i in present:
+                for cid_j in present:
+                    if cid_i != cid_j:
+                        co_occurrence[cid_i].add(cid_j)
+
+    for concept in concepts:
+        related = list(co_occurrence[concept.concept_id])
+
+        # 최소 1개 보장: 공동 출현 없으면 importance 최고인 타 개념 연결
+        if not related:
+            others = [c for c in concepts if c.concept_id != concept.concept_id]
+            if others:
+                best = max(others, key=lambda c: c.importance)
+                related = [best.concept_id]
+
+        concept.related_concepts = related
 
     return concepts
 
