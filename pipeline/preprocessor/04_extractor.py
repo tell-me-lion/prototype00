@@ -13,7 +13,7 @@ from google.genai import types
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
 
 class FactExtractor:
-    def __init__(self, use_gemini=True, use_ollama=False, ollama_url="http://localhost:11434/api/generate", ollama_model="llama-3"):
+    def __init__(self, use_gemini=True, use_ollama=False, ollama_url="http://localhost:11434/api/generate", ollama_model="gemma3:12b"):
         self.use_gemini = use_gemini
         self.use_ollama = use_ollama
         self.ollama_url = ollama_url
@@ -205,7 +205,7 @@ def main():
     parser.add_argument("--input_type", type=str, choices=["base_cleaned", "gemini_cleaned"], default="base_cleaned")
     parser.add_argument("--no_gemini", action="store_true", help="Disable Gemini API (use only patterns or Ollama)")
     parser.add_argument("--use_ollama", action="store_true", help="Enable Ollama Local SLM endpoint")
-    parser.add_argument("--ollama_model", type=str, default="gpt-oss:20b", help="Target Ollama model name")
+    parser.add_argument("--ollama_model", type=str, default="gemma3:12b", help="Target Ollama model name")
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent.parent.parent
