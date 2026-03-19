@@ -10,20 +10,15 @@ class Formatter:
     def __init__(self):
         pass
         
-    def parse_metadata_from_filename(self, filename: str) -> dict:
-        """파일명에서 세션(오전/오후) 등 메타데이터 추출
-        (주의: 21th는 주차가 아닌 기수이므로 week 할당에서 제외)
-        예: 2026-02-02_kdt-backendj-21th_오전.txt -> session: 오전
-        """
-        meta = {"week": None, "session": "Unknown"}
-        
-        # 오전/오후 추출 (파일명에 명시되어 있는 경우)
-        if "오전" in filename:
-            meta["session"] = "오전"
-        elif "오후" in filename:
-            meta["session"] = "오후"
-            
-        return meta
+    def resolve_session_label(self, time_str: str) -> str:
+        """시작 시각 문자열(HH:MM:SS)로부터 오전/오후 세션 라벨을 결정"""
+        if not time_str:
+            return "Unknown"
+        try:
+            hour = int(time_str.split(":")[0])
+            return "오전" if hour < 12 else "오후"
+        except (ValueError, IndexError):
+            return "Unknown"
 
     def format_documents(self, chunks_path: Path, props_path: Path, output_dir: Path):
         # 1. 청크 데이터 로드 (Phase 3 결과물)
@@ -46,19 +41,22 @@ class Formatter:
                         chunk_facts[p["chunk_id"]].append(p)
                         all_props.append(p)
 
-        # 3. 요청하신 Chunk 문서(API 전송용/저장용) 구축
+        # 3. Chunk 문서(API 전송용/저장용) 구축
         formatted_chunks = []
         for cid, c in chunks.items():
-            # 메타데이터 파싱 (주로 소스 파일명 활용)
-            meta = self.parse_metadata_from_filename(c.get("meta", {}).get("source_file", c.get("chunk_id", "")))
+            # Phase 3 chunk에 보존된 시간/세션 메타데이터 활용
+            start_time = c.get("time", "")
+            session_label = self.resolve_session_label(start_time)
+            session_seq = c.get("session_id", 1)
             
             # 이 청크에 소속된 팩트 문장들
             facts_list = [p["text"] for p in chunk_facts.get(cid, [])]
             
             formatted_chunks.append({
                 "chunk_id": cid,
-                "week": meta["week"],
-                "session": meta["session"],
+                "session": session_label,
+                "session_seq": session_seq,
+                "start_time": start_time,
                 "text": c["text"],
                 "facts": facts_list,
                 "tfidf_keywords": c.get("keywords", [])
