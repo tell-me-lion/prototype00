@@ -1,0 +1,28 @@
+{
+  "importance_thresholds": {
+    "high": 0.7,
+    "mid": 0.4
+  },
+  "quiz_plan_by_importance": {
+    "high": [
+      {"quiz_type": "mcq",          "difficulty": "medium", "count": 1},
+      {"quiz_type": "mcq",          "difficulty": "hard",   "count": 1},
+      {"quiz_type": "short_answer", "difficulty": "medium", "count": 1}
+    ],
+    "mid": [
+      {"quiz_type": "mcq",       "difficulty": "easy",   "count": 1},
+      {"quiz_type": "fill_blank","difficulty": "medium", "count": 1}
+    ],
+    "low": [
+      {"quiz_type": "mcq",       "difficulty": "easy",   "count": 1}
+    ]
+  },
+  "type_boost_rules": {
+    "code_keywords": ["SELECT", "코드", "함수", "쿼리", "SQL", "JOIN", "WHERE", "INSERT", "UPDATE", "DELETE"],
+    "code_boost_type": "code_execution",
+    "code_boost_difficulty": "medium",
+    "comparison_boost_min_related": 2
+  },
+  "max_quiz_per_concept": 4,
+  "min_quiz_per_concept": 1
+}
