@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 class Segmenter:
     def __init__(self):
-        # sbg: Space Based Guessing (띄어쓰기 오탈자가 많은 구어체 STT 등에 적합)
-        self.kiwi = Kiwi(model_type='sbg')
+        # 최신 kiwipiepy(v0.22.0+)의 기본 권장 모델 사용
+        self.kiwi = Kiwi()
         
         # 필터링 규칙: 아래에 해당하는 실질 형태소(명사, 동사 등)가 최소 1개는 있어야 통과
         # N*: 명사류, V*: 동사/형용사류
