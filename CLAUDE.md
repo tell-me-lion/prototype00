@@ -129,34 +129,43 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 
 ---
 
+## 오류 기록
+
+반복 발생 오류와 해결 과정은 **`ERRORS.md`** 에 기록한다. 새 오류 발생 시 즉시 추가.
+
+---
+
 ## 프론트엔드 디자인
 
 프론트엔드 UI 작업(컴포넌트, 페이지, 스타일링)을 할 때는 반드시 **`frontend-design` 스킬**을 먼저 호출한다.
 
 디자인 방향·색상·타이포그래피·컴포넌트 명세는 **`DESIGN.md`** 를 참고한다.
 
-### Artifact-first 워크플로우 (UI 작업 전용)
+### Write-and-Preview 워크플로우 (UI 작업 전용)
 
 시각적 결과물이 있는 모든 프론트엔드 작업에 적용한다. 파이프라인·백엔드 작업에는 해당 없음.
 
 **실행 순서 (절대 바꾸지 않는다):**
 1. task 파일 읽기
-2. **JSX Artifact로 프리뷰 렌더링** — 파일을 작성하기 전에 반드시 먼저
-3. 사용자 확인: "맞다" 또는 피드백
-4. 승인 후 → 실제 파일 작성
-5. 다음 task로 이동
+2. **실제 파일 작성 + JSX Artifact 동시 제공** — 파일을 먼저 쓰고 Artifact로도 보여준다
+3. 사용자: `npm run dev`로 브라우저에서 확인 후 "맞다" 또는 피드백
+4. 피드백 있으면 → 파일 수정 → 3단계 반복
+5. "맞다" 후 → **`/frontend-check` 스킬 실행** (format → lint → types 순서)
+6. 다음 task로 이동
 
-**Artifact 프리뷰의 한계:**
+> **핵심 원칙:** 파일과 Artifact는 항상 동시에 제공한다.
+> Artifact만 보여주고 파일 작성을 미루면 `npm run dev`에서 아무것도 보이지 않는다.
+> 사용자 승인("맞다")과 `/frontend-check`는 각자 독립적인 필수 관문이다 — 둘 중 하나가 나머지를 대체하지 않는다.
 
-| 항목 | Artifact 내 동작 |
-|------|----------------|
-| CSS custom properties (`var(--tml-*)`) | 작동 (`:root` 인라인 선언 필요) |
-| Google Fonts (Playfair Display 등) | CDN 로드 불안정 → fallback 폰트로 보일 수 있음 |
-| Tailwind 유틸리티 클래스 | 빌드 없이 미작동 → 인라인 스타일로 대체 |
-| 애니메이션, 노이즈 그레인 | 대체로 작동 |
+**Artifact 프리뷰의 역할:**
 
-→ Artifact로 검증: **색상 팔레트, 레이아웃 비율, 컴포넌트 구조, 전체 분위기**
-→ `npm run dev`로 검증: **폰트 로딩, Tailwind 클래스, 애니메이션 타이밍**
+Artifact는 빠른 레이아웃 스케치가 아니라 **실제 파일의 인라인 렌더링**이다.
+실제 파일(`var(--tml-*)` CSS 변수, Tailwind 클래스 등)은 `npm run dev`에서 완전히 동작한다.
+
+| 확인 채널 | 검증 항목 |
+|-----------|----------|
+| JSX Artifact | 색상 팔레트, 레이아웃 비율, 컴포넌트 구조, 전체 분위기 |
+| `npm run dev` (브라우저) | 실제 폰트 로딩, Tailwind 클래스, 애니메이션 타이밍, 다크모드 전환 |
 
 ---
 
@@ -182,6 +191,20 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 - UI 텍스트와 오류 메시지는 **한국어**.
 - TypeScript 인터페이스는 백엔드 Pydantic 모델과 정확히 일치.
 - 색상은 `DESIGN.md`의 CSS 변수(`var(--tml-*)`) 사용. hex 하드코딩 금지.
+
+### 라우팅 (`react-router-dom`)
+
+페이지 전환은 **React Router v7**(`react-router-dom`)으로 관리한다. `useState`로 페이지를 전환하지 않는다.
+
+| 경로 | 페이지 | 설명 |
+|------|--------|------|
+| `/` | `Home` | 홈 (소개, 모드 선택) |
+| `/lecture` | `Lecture` | 단일 강의 분석 (Mode A) |
+| `/weekly` | `Weekly` | 주차별 학습 가이드 (Mode B) |
+
+- `BrowserRouter`는 `main.tsx`에서 앱 최상위를 감싼다.
+- 네비게이션 활성 상태는 `useLocation()`으로 판단한다. `useState`로 관리하지 않는다.
+- 새 페이지 추가 시 이 표에도 경로를 등록한다.
 
 ### 파이프라인 Mode A / Mode B 구분 규칙
 
