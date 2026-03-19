@@ -4,6 +4,8 @@ FastAPI 앱 진입점.
 - Phase 1: 산출물 API (/api/concepts, /api/learning-points, /api/quizzes, /api/learning-guides)
 """
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,9 +17,15 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# ALLOWED_ORIGINS 환경변수: 쉼표로 구분된 URL 목록
+# 예) https://tell-me-lion.vercel.app,http://localhost:5173
+_extra = os.getenv("ALLOWED_ORIGINS", "")
+_origins = [o.strip() for o in _extra.split(",") if o.strip()]
+CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"] + _origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

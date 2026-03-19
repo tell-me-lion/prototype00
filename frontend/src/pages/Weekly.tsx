@@ -29,7 +29,8 @@ export function Weekly() {
     if (files.length === 0) return
     setStep('loading')
     try {
-      const res = await fetch('http://localhost:8000/api/learning-guides')
+      const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+      const res = await fetch(`${API}/api/learning-guides`)
       if (!res.ok) throw new Error('데이터를 불러오는 데 실패했습니다.')
       const data = res.json() as Promise<LearningGuide[]>
       const resolved = await data
