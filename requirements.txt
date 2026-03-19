@@ -4,3 +4,4 @@ tqdm
 kiwipiepy
 sentence-transformers
 scikit-learn
+requests
