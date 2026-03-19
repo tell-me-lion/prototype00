@@ -51,7 +51,7 @@
 1. [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub**
 2. 레포 선택, **Root Directory는 변경하지 않는다** (루트에 `Procfile` 있음)
 3. 배포 완료 후 **Settings → Networking → Public Networking 활성화**
-4. 생성된 URL 복사 (예: `https://tell-me-lion-production.up.railway.app`)
+4. 생성된 URL: `https://wonder-girls-production.up.railway.app`
 5. Variables 탭에서 `ALLOWED_ORIGINS` 추가 (Vercel 배포 후 설정 가능, 일단 보류)
 
 ### 2단계 — Vercel (프론트엔드)
@@ -61,23 +61,23 @@
 3. Framework Preset: **Vite** (자동 감지됨)
 4. Environment Variables 추가:
    ```
-   VITE_API_URL = https://tell-me-lion-production.up.railway.app
+   VITE_API_URL = https://wonder-girls-production.up.railway.app
    ```
-5. **Deploy** → 생성된 URL 복사 (예: `https://tell-me-lion.vercel.app`)
+5. **Deploy** → 생성된 URL: `https://wonder-girls.vercel.app`
 
 ### 3단계 — CORS 업데이트
 
 Railway 프로젝트 → Variables 탭에 추가 후 저장 (자동 재배포):
 ```
-ALLOWED_ORIGINS = https://tell-me-lion.vercel.app
+ALLOWED_ORIGINS = https://wonder-girls.vercel.app
 ```
 
 ### 4단계 — 동작 확인
 
-- `https://<vercel-url>/` — 홈 화면 로드
-- `https://<vercel-url>/lecture` — 강의 분석 페이지 로드
-- `https://<railway-url>/health` → `{"status": "ok"}` 응답
-- `https://<railway-url>/docs` — FastAPI Swagger UI
+- `https://wonder-girls.vercel.app/` — 홈 화면 로드
+- `https://wonder-girls.vercel.app/lecture` — 강의 분석 페이지 로드
+- `https://wonder-girls-production.up.railway.app/health` → `{"status": "ok"}` 응답
+- `https://wonder-girls-production.up.railway.app/docs` — FastAPI Swagger UI
 
 ---
 
