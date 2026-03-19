@@ -13,7 +13,8 @@ import argparse
 from pathlib import Path
 from datetime import timedelta
 from collections import defaultdict
-import google.generativeai as genai
+import google.genai as genai
+from google.genai import types
 from dotenv import load_dotenv
 
 # .env 로드
@@ -28,18 +29,19 @@ class Cleaner:
         self.use_gemini = use_gemini
         api_key = os.getenv("GOOGLE_API_KEY")
         if self.use_gemini and api_key:
-            genai.configure(api_key=api_key)
-            self.model = genai.GenerativeModel(
-                model_name="gemini-2.5-flash",
+            self.client = genai.Client(api_key=api_key)
+            self.model_name = "gemini-2.5-flash"
+            self.gen_config = types.GenerateContentConfig(
                 system_instruction=(
                     "당신은 한국어 STT(문자 변환) 결과를 전문적으로 교정하는 보조입니다. "
                     "강의 내용 중 잘못 변환된 IT 전문 용어 등을 문맥에 맞게 수정하여 반환하세요. "
                     "요약하거나 문장 구조를 바꾸지 말고 오직 오탈자와 불필요한 단어나 추임새(어..., 그... 등) 제거에만 집중하여 정제된 텍스트 원문만 반환하세요."
                 ),
-                generation_config={"temperature": 0.1, "top_p": 0.9}
+                temperature=0.1,
+                top_p=0.9
             )
         else:
-            self.model = None
+            self.client = None
             if self.use_gemini:
                 print("[Warning] GOOGLE_API_KEY is not set. Gemini API will be disabled.")
 
@@ -74,12 +76,14 @@ class Cleaner:
 
     def clean_text_gemini(self, text: str) -> str:
         """Gemini API를 이용한 문맥 기반 교정 및 추임새 제거"""
-        if not self.model or len(text.strip()) < 10:
+        if not self.client or len(text.strip()) < 10:
             return text
             
         try:
-            response = self.model.generate_content(
-                f"다음 텍스트의 STT 오류(특히 IT 용어)를 수정하고 불필요한 추임새를 제거해주세요. 원래의 맥락을 해치지 않는 선에서 문맥을 자연스럽게 교정하여 텍스트만 곧바로 반환하세요:\n\n{text}"
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=f"다음 텍스트의 STT 오류(특히 IT 용어)를 수정하고 불필요한 추임새를 제거해주세요. 원래의 맥락을 해치지 않는 선에서 문맥을 자연스럽게 교정하여 텍스트만 곧바로 반환하세요:\n\n{text}",
+                config=self.gen_config
             )
             return response.text.strip()
         except Exception as e:
