@@ -75,7 +75,7 @@ tell-me-lion/
 | 백엔드 | Python 3.10+, FastAPI, Uvicorn, Pydantic v2 |
 | 프론트엔드 | React 19, TypeScript 5.9, Vite 8, Tailwind CSS 4 |
 | AI·파이프라인 | Google Gemini API, KiwiPiePy, KR-SBERT, scikit-learn |
-| 배포 | Railway (백엔드), Vercel (프론트엔드) |
+| 실행 | 로컬 환경 (팀원 PC에서 직접 실행) |
 
 ---
 

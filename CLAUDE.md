@@ -231,14 +231,14 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 2. 코드·설정 파일 작성
 3. **`/deploy-check` 스킬 실행** — 빌드·임포트·환경변수·설정파일 자동 검증
 4. 검증 통과 후 GitHub push
-5. `DEPLOY.md`의 배포 순서대로 Railway → Vercel 순으로 배포
+5. 팀원은 `DEPLOY.md`의 로컬 셋업 순서대로 환경 구성 후 실행
 
-### 서비스 구성
+### 실행 환경
 
-| 계층 | 서비스 | 설정 파일 |
-|------|--------|----------|
-| 프론트엔드 | Vercel (Hobby 무료) | `frontend/vercel.json` |
-| 백엔드 | Railway (무료) | `Procfile` |
+| 계층 | 실행 방법 | 주소 |
+|------|-----------|------|
+| 프론트엔드 | `npm run dev` (로컬) | `http://localhost:5173` |
+| 백엔드 | `python -m uvicorn app.main:app --reload` (로컬) | `http://localhost:8000` |
 | DB | localStorage (브라우저) | — |
 
 ---
