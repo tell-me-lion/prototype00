@@ -1,0 +1,14 @@
+{
+  "retrieval_strategy": "keyword_overlap",
+  "top_k": 3,
+  "max_facts_per_chunk": 3,
+  "sentence_type_bonuses": {
+    "definition": 1.2,
+    "comparison": 1.1,
+    "warning": 1.0,
+    "default": 0.9
+  },
+  "source_chunk_bonus": 1.5,
+  "min_score_threshold": 0.1,
+  "related_concept_weight": 0.6
+}
