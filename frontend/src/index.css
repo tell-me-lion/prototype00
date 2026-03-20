@@ -1,0 +1,980 @@
+/* === tell-me-lion Design System === */
+
+/* 1. 폰트 임포트 */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+
+/* 2. Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3. 라이트 테마 변수 (기본) */
+:root {
+  /* === 브랜드 === */
+  --tml-orange:          #FF6B00;
+  --tml-orange-light:    #FFF0E6;
+  --tml-orange-dark:     #CC5500;
+
+  --tml-navy:            #0F1F3D;
+  --tml-navy-mid:        #1E3A5F;
+  --tml-navy-light:      #EBF0F8;
+
+  /* === 라이트 테마 === */
+  --tml-bg:              #FFFFFF;
+  --tml-bg-raised:       #F6F8FB;
+  --tml-bg-overlay:      #EDF1F7;
+
+  --tml-ink:             #0F1F3D;
+  --tml-ink-secondary:   #3D556E;
+  --tml-ink-muted:       #7A92A8;
+
+  --tml-rule:            #DDE3EC;
+  --tml-rule-strong:     #B8C5D4;
+
+  --tml-quiz-fill:       #4D7FA8;
+  --tml-quiz-fill-bg:    #EDF4FA;
+  --tml-quiz-code:       #2D6A4F;
+  --tml-quiz-code-bg:    #E8F4EE;
+
+  --tml-white:           #FFFFFF;
+
+  /* === 폰트 === */
+  --font-display: 'Syne', 'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-body:    'IBM Plex Sans', 'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-mono:    'IBM Plex Mono', 'JetBrains Mono', monospace;
+}
+
+/* 4. 다크 테마 오버라이드 */
+[data-theme="dark"] {
+  --tml-bg:              #0A1628;
+  --tml-bg-raised:       #111E33;
+  --tml-bg-overlay:      #1A2D4A;
+
+  --tml-ink:             #E8EDF5;
+  --tml-ink-secondary:   #B0C8DF;
+  --tml-ink-muted:       #7090A8;   /* 라이트 #7A92A8보다 밝게 조정 */
+
+  --tml-orange:          #E05800;   /* 다크에서 강도 낮춤 */
+  --tml-orange-light:    #2A1800;
+
+  --tml-navy-light:      #1D3050;   /* 배경색(#0A1628)과 구분되게 */
+  --tml-navy-mid:        #7BAEC8;   /* 배지 텍스트 — 밝게 */
+
+  --tml-rule:            #1E3050;
+  --tml-rule-strong:     #2A4068;
+
+  --tml-quiz-fill:       #6A9FBF;
+  --tml-quiz-fill-bg:    #0E1F2E;
+  --tml-quiz-code:       #4A9A6F;
+  --tml-quiz-code-bg:    #0D2018;
+}
+
+/* 5. body 기본 스타일 */
+body {
+  margin: 0;
+  background: var(--tml-bg);
+  color: var(--tml-ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* 6. 노이즈 그레인 (종이 질감) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.5;
+}
+
+/* 7. 페이지 진입 애니메이션 */
+@keyframes tml-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tml-animate {
+  animation: tml-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.tml-animate:nth-child(1) { animation-delay: 0ms; }
+.tml-animate:nth-child(2) { animation-delay: 60ms; }
+.tml-animate:nth-child(3) { animation-delay: 120ms; }
+.tml-animate:nth-child(4) { animation-delay: 180ms; }
+.tml-animate:nth-child(5) { animation-delay: 240ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tml-animate { animation: none; }
+}
+
+/* 8. 베이스 컴포넌트 */
+
+/* 기본 카드 */
+.tml-card {
+  background: var(--tml-bg-raised);
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tml-card:hover {
+  background: var(--tml-bg-overlay);
+  border-color: var(--tml-rule-strong);
+  box-shadow: 0 2px 8px rgba(15, 31, 61, 0.06);
+}
+
+/* 뱃지 */
+.badge-orange {
+  background: var(--tml-orange-light);
+  color: var(--tml-orange-dark);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-body);
+}
+.badge-navy {
+  background: var(--tml-navy-light);
+  color: var(--tml-navy-mid);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-body);
+}
+
+/* CTA 버튼 */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  background: var(--tml-orange);
+  color: var(--tml-white);
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 8px 20px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transition: left 0.45s ease;
+}
+.btn-primary:hover {
+  background: var(--tml-orange-dark);
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.18), 0 4px 18px rgba(255, 107, 0, 0.28);
+}
+.btn-primary:hover::after {
+  left: 150%;
+}
+.btn-primary:active {
+  box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25);
+}
+
+/* === 홈 페이지 === */
+
+/* 5:3 그리드 레이아웃 */
+.tml-home-grid {
+  display: grid;
+  grid-template-columns: 5fr 3fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .tml-home-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 오렌지 글로우 (히어로 섹션) */
+.tml-hero-glow {
+  position: relative;
+}
+
+.tml-hero-glow::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: 10%;
+  width: 300px; height: 120px;
+  background: radial-gradient(ellipse, rgba(255, 107, 0, 0.08), transparent 70%);
+  pointer-events: none;
+}
+
+/* Mode A / Mode B 카드 */
+.tml-mode-card {
+  padding: 20px 20px 20px 0;
+  display: flex;
+  gap: 0;
+  cursor: pointer;
+}
+
+.tml-mode-card__bar {
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+
+/* === 단일 강의 페이지 === */
+
+/* 로딩 스켈레톤 */
+@keyframes tml-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.tml-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--tml-bg-raised)   0%,
+    var(--tml-bg-overlay)  38%,
+    rgba(255, 107, 0, 0.06) 50%,
+    var(--tml-bg-overlay)  62%,
+    var(--tml-bg-raised)   100%
+  );
+  background-size: 300% 100%;
+  animation: tml-shimmer 1.8s ease infinite;
+}
+
+/* 섹션 구분 레이블 */
+.section-label {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tml-ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-top: 28px;
+  border-top: 1px solid var(--tml-rule);
+  margin: 0 0 16px;
+}
+
+/* 핵심 개념 카드 */
+.concept-card {
+  display: flex;
+  gap: 0;
+  padding: 16px 18px 16px 0;
+  cursor: default;
+}
+
+.concept-bar {
+  width: 3px;
+  background: var(--tml-orange);
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-right: 16px;
+  align-self: stretch;
+}
+
+.concept-name {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--tml-ink);
+  letter-spacing: -0.01em;
+}
+
+.concept-score {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  white-space: nowrap;
+}
+
+/* 학습 포인트 아이템 */
+.learning-point-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 18px;
+}
+
+.learning-point-check {
+  color: var(--tml-orange);
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-top: 3px;
+  font-family: var(--font-mono);
+}
+
+.learning-point-text {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--tml-ink-secondary);
+}
+
+/* 빈 상태 영역 */
+.tml-empty {
+  border: 1.5px dashed var(--tml-rule-strong);
+  border-radius: 6px;
+  background: var(--tml-bg-raised);
+}
+
+/* 에러 상태 카드 */
+.tml-error-card {
+  display: flex;
+  gap: 0;
+  padding: 16px 18px 16px 0;
+  background: var(--tml-bg-raised);
+  border: 1px solid #E85454;
+  border-radius: 6px;
+}
+
+.tml-error-card__bar {
+  width: 3px;
+  background: #E85454;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-right: 16px;
+  align-self: stretch;
+}
+
+.tml-error-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.tml-error-card__title {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #E85454;
+}
+
+.tml-error-card__msg {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--tml-ink-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* 스크롤바 커스텀 (WebKit) */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tml-rule-strong);
+  border-radius: 3px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tml-orange);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* === 업로드 화면 === */
+
+.tml-upload-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .tml-upload-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tml-history-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+
+.tml-history-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.tml-history-item:hover {
+  border-color: var(--tml-orange);
+}
+
+.tml-history-item__title {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--tml-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tml-history-item__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tml-history-item__tag {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  color: var(--tml-ink-muted);
+  background: var(--tml-bg);
+  border: 1px solid var(--tml-rule);
+  border-radius: 3px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.tml-history-item__meta {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  color: var(--tml-ink-muted);
+}
+
+.tml-dropzone {
+  padding: 32px 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.tml-dropzone:hover {
+  border-color: var(--tml-orange);
+  background: var(--tml-orange-light);
+}
+
+.tml-dropzone__placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.tml-dropzone__selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tml-dropzone__icon {
+  font-size: 1.25rem;
+}
+
+.tml-dropzone__icon--muted {
+  opacity: 0.4;
+}
+
+.tml-dropzone__filename {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--tml-ink);
+}
+
+.tml-dropzone__size {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+}
+
+.tml-dropzone__hint {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--tml-ink-secondary);
+}
+
+.tml-dropzone__sub {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+}
+
+/* 뒤로가기 버튼 */
+.tml-back-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s ease;
+}
+
+.tml-back-btn:hover {
+  color: var(--tml-ink);
+}
+
+/* 퀴즈 CTA 섹션 */
+.tml-quiz-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 20px 24px;
+  background: var(--tml-bg-raised);
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  border-left: 3px solid var(--tml-orange);
+}
+
+/* === 퀴즈 카드 (타입별 UX) === */
+
+/* 공통 카드 패딩 */
+.quiz-type-card {
+  padding: 24px;
+}
+
+/* 메타 행 (뱃지 + 문제번호) */
+.quiz-type-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+/* 문제 번호 */
+.quiz-meta-id {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--tml-ink-muted);
+}
+
+/* 질문 텍스트 */
+.quiz-question {
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--tml-ink);
+  line-height: 1.6;
+  margin: 0 0 24px;
+  letter-spacing: -0.01em;
+}
+
+/* 피드백 배너 */
+.quiz-feedback {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+}
+
+.quiz-feedback--correct {
+  background: #E8F5EE;
+  color: #2D9966;
+}
+
+.quiz-feedback--wrong {
+  background: #FFF0F0;
+  color: #E85454;
+}
+
+/* 해설 영역 */
+.quiz-explanation {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 4px;
+}
+
+.quiz-explanation__icon {
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.quiz-explanation__text {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* 플래시카드 hover */
+.quiz-flash-card {
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.quiz-flash-card:not(.quiz-flash-card--flipped):hover {
+  background: var(--tml-bg-overlay);
+  border-color: var(--tml-rule-strong);
+}
+
+/* 코드 블록 */
+.quiz-code-block {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  background: var(--tml-bg-overlay);
+  border-radius: 0 4px 4px 0;
+  padding: 14px 16px;
+  line-height: 1.7;
+}
+
+.quiz-code-block--question {
+  border-left: 3px solid var(--tml-quiz-code);
+  color: var(--tml-ink-secondary);
+  margin-bottom: 16px;
+}
+
+.quiz-code-block--answer {
+  border-left: 3px solid var(--tml-quiz-code);
+  color: var(--tml-quiz-code);
+  margin-bottom: 16px;
+}
+
+/* 다시 보기 / 정답 보기 공통 버튼 */
+.quiz-reset-btn {
+  background: none;
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.quiz-reset-btn:hover {
+  border-color: var(--tml-rule-strong);
+  color: var(--tml-ink);
+}
+
+/* 퀴즈 타입 뱃지 */
+.quiz-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--font-body);
+}
+
+.quiz-badge--mcq {
+  background: var(--tml-orange-light);
+  color: var(--tml-orange-dark);
+}
+
+.quiz-badge--short {
+  background: var(--tml-navy-light);
+  color: var(--tml-navy-mid);
+}
+
+.quiz-badge--fill {
+  background: var(--tml-quiz-fill-bg);
+  color: var(--tml-quiz-fill);
+}
+
+.quiz-badge--code {
+  background: var(--tml-quiz-code-bg);
+  color: var(--tml-quiz-code);
+}
+
+/* === 주차별 가이드 페이지 === */
+
+/* 다중 파일 목록 */
+.tml-weekly-filelist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.tml-weekly-filelist__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 10px;
+  background: var(--tml-bg);
+  border: 1px solid var(--tml-rule);
+  border-radius: 4px;
+}
+
+.tml-weekly-filelist__name {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--tml-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tml-weekly-filelist__size {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  flex-shrink: 0;
+}
+
+/* 주차 탭 컨테이너 */
+.tml-week-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--tml-rule);
+  margin-bottom: 40px;
+  gap: 0;
+}
+
+/* 탭 버튼 */
+.tml-week-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0 20px;
+  height: 44px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--tml-ink-muted);
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.tml-week-tab:hover {
+  color: var(--tml-ink);
+}
+
+/* 활성 탭 */
+.tml-week-tab--active {
+  font-weight: 600;
+  color: var(--tml-ink);
+  border-bottom-color: var(--tml-orange);
+}
+
+/* 탭 전환 콘텐츠 fade-in */
+@keyframes tml-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.tml-week-content {
+  animation: tml-fade-in 0.2s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tml-week-content { animation: none; }
+}
+
+/* 학습 가이드 아이템 — 네이비 세로 바 + 번호 목록 */
+.tml-guide-item {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+}
+
+.tml-guide-item__bar {
+  width: 3px;
+  background: var(--tml-navy-mid);
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-right: 16px;
+  align-self: stretch;
+  min-height: 40px;
+}
+
+.tml-guide-item__body {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 0;
+  flex: 1;
+}
+
+.tml-guide-item__num {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  flex-shrink: 0;
+  margin-top: 3px;
+  letter-spacing: 0.04em;
+}
+
+.tml-guide-item__text {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--tml-ink-secondary);
+  margin: 0;
+}
+
+/* 핵심 요약 태그 */
+.tml-concept-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tml-concept-tag {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--tml-navy-mid);
+  background: var(--tml-navy-light);
+  border: 1px solid var(--tml-rule);
+  border-radius: 4px;
+  padding: 5px 12px;
+  line-height: 1;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tml-concept-tag:hover {
+  background: var(--tml-bg-overlay);
+  border-color: var(--tml-rule-strong);
+}
+
+/* === 네비게이션 헤더 === */
+.tml-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 40px;
+  background: var(--tml-bg);
+  border-bottom: 1px solid var(--tml-rule);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+/* 로고 */
+.tml-header__logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* 로고 이미지 박스 */
+.tml-header__icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tml-header__logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.tml-header__wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--tml-ink);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+/* 네비게이션 */
+.tml-header__nav {
+  display: flex;
+  align-items: center;
+}
+
+.tml-header__nav-item {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  padding: 0 14px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-family: var(--font-body);
+  font-weight: 400;
+  color: var(--tml-ink-muted);
+  margin-top: 2px; /* 언더라인 시각적 정렬 */
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tml-header__nav-item:hover {
+  color: var(--tml-ink);
+}
+
+.tml-header__nav-item--active {
+  font-weight: 600;
+  color: var(--tml-ink);
+  border-bottom-color: var(--tml-orange);
+}
+
+/* 다크/라이트 토글 */
+.tml-header__toggle {
+  background: var(--tml-bg-raised);
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 17px;
+  color: var(--tml-ink-muted);
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tml-header__toggle:hover {
+  background: var(--tml-bg-overlay);
+  border-color: var(--tml-rule-strong);
+  color: var(--tml-ink);
+}
