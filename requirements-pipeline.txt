@@ -1,0 +1,10 @@
+# 로컬 파이프라인 실행용 (Railway 배포 대상 아님)
+-r requirements.txt
+
+# preprocessing
+google-genai
+tqdm
+kiwipiepy
+sentence-transformers
+scikit-learn
+requests
