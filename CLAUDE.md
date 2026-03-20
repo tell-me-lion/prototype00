@@ -2,7 +2,7 @@
 
 ## 프로젝트 개요
 
-**tell-me-lion**은 강의 텍스트(STT 스크립트)에서 핵심 개념·학습 포인트·퀴즈·학습 가이드를 자동 생성해 수강생에게 제공하는 풀스택 교육 시스템이다.
+**알려주사자**는 강의 텍스트(STT 스크립트)에서 핵심 개념·학습 포인트·퀴즈·학습 가이드를 자동 생성해 수강생에게 제공하는 풀스택 교육 시스템이다.
 
 > **설계 원칙: 모든 것은 클라이언트 관점에서.**
 > 클라이언트는 수강생뿐 아니라 이 서비스를 도입할 **교육 서비스 업체**도 포함한다.
@@ -15,55 +15,34 @@
 | 강의 스크립트 1개 (`.txt`) | 핵심 개념, 학습 포인트, 퀴즈 |
 | 1주치 강의 스크립트 전체 | 주차별 학습 가이드, 주차별 핵심 요약 |
 
+두 모드는 독립적으로 실행된다. **Mode B는 Mode A의 출력을 읽어선 안 된다.**
+
 ### 퀴즈 유형
 
-객관식(MCQ), 주관식(Short Answer), 빈칸 채우기(Fill-in-the-Blank), 코드 실행형(Code Execution)을 기본으로 하되, 강의 내용과 학습 목표에 따라 더 창의적인 유형도 설계할 수 있다. 각 유형별 해설 포함.
+객관식(MCQ), 주관식(Short Answer), 빈칸 채우기(Fill-in-the-Blank), 코드 실행형(Code Execution). 각 유형별 해설 포함.
 
 퀴즈 생성에는 **RAG 구조**를 사용한다: 팩트·개념 DB를 검색해 근거를 찾고, 블루프린트 기반으로 문항을 생성한다.
 
-### 파이프라인 흐름
-
-두 모드는 독립적으로 실행된다. Mode B는 Mode A의 출력을 재사용하지 않는다.
-
-**Mode A — 강의 1개 → 핵심 개념·학습 포인트·퀴즈**
-```
-스크립트 1개 → 전처리(정제·문장·청크·명제·팩트)
-→ EP(핵심 개념·학습 포인트 추출)
-→ 블루프린트 → 퀴즈 생성 → 퀴즈 검증
-→ [출력: 핵심 개념, 학습 포인트, 퀴즈]
-```
-
-**Mode B — 1주치 전체 → 주차별 학습 가이드·핵심 요약**
-```
-스크립트 N개 → 각각 전처리(정제·문장·청크·명제·팩트)
-→ 주차 통합
-→ 학습 가이드·핵심 요약 생성
-→ [출력: 주차별 학습 가이드, 주차별 핵심 요약]
-```
-
-> 구체적인 단계별 디렉터리 구조와 스키마는 파이프라인 담당 팀원의 코드가 확정되면 업데이트한다.
-
 ### 현재 상태
 
-| 영역 | 상태 |
-|------|------|
-| 백엔드 API | 구조 구현 완료, 더미 데이터로 동작 중 |
-| 프론트엔드 | 미생성 |
-| 파이프라인 전처리 | Phase 1~5 모두 뼈대만 존재 (현재 브랜치) |
-| 파이프라인 상위 블록 | EP·Blueprint·Quiz·QA·Guides 모두 뼈대만 존재 |
-| 실제 입력 데이터 | `data/raw/`에 강의 스크립트 15개 존재 |
-
-> **브랜치 현황:** `preprocessing` 브랜치에 Phase 1 구현체가 별도 존재하나, 현재 브랜치(`frontend-backend`)와 디렉터리 구조가 달라 미병합 상태. 병합 전 구조 통일 필요.
+| 영역 | 상태 | 완성도 |
+|------|------|--------|
+| 전처리 (Phase 1~5) | ✅ 구현 완료 | 100% |
+| EP (핵심 개념 추출) | ✅ 구현 완료 | 100% |
+| Blueprint (퀴즈 설계) | ✅ 구현 완료 | 100% |
+| Quiz Generation | 🔲 구현 중 | 30% |
+| QA Validation | 🔲 뼈대만 | 10% |
+| Guides | 🔲 뼈대만 | 10% |
+| 백엔드 API | ⚙️ 구조 완료 | 60% |
+| 프론트엔드 | ⚙️ 초기 구현 중 | 50% |
 
 ---
 
 ## 명령어
 
-> 아래 명령어는 현재 시점 기준이며, 프로젝트 진행에 따라 변경될 수 있다.
-
 ### 백엔드
 ```bash
-# 프로젝트 루트(tell-me-lion/)에서 실행
+# 프로젝트 루트에서 실행
 python -m uvicorn app.main:app --reload
 # API: http://localhost:8000  |  Docs: http://localhost:8000/docs
 ```
@@ -77,7 +56,6 @@ npm run dev      # http://localhost:5173
 npm run build
 npm run lint
 ```
-> `frontend/` 디렉터리는 아직 미생성. 처음 시작 시 React + TypeScript + Tailwind 설정 필요.
 
 ### 파이프라인
 ```bash
@@ -96,9 +74,37 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 
 ---
 
-## 아키텍처
+## 기술 스택
 
-> 아래 구조는 현재 계획 기준이며, 파이프라인 구현이 진행됨에 따라 변경될 수 있다.
+### 백엔드
+| 기술 | 용도 | 버전 |
+|------|------|------|
+| Python | 서버 언어 | 3.10+ |
+| FastAPI | REST API | ≥ 0.109 |
+| Uvicorn | ASGI 서버 | ≥ 0.27 |
+| Pydantic | 데이터 검증·스키마 | v2 |
+
+### 프론트엔드
+| 기술 | 용도 | 버전 |
+|------|------|------|
+| React | UI 프레임워크 | 19.x |
+| TypeScript | 타입 안전성 | 5.9 |
+| Vite | 빌드 도구 | 8.x |
+| Tailwind CSS | 스타일링 | 4.x |
+| React Router | 라우팅 | 7.x |
+
+### 파이프라인 (AI·데이터 처리)
+| 기술 | 용도 |
+|------|------|
+| Google Gemini API | LLM 기반 텍스트 분석·생성 |
+| KiwiPiePy | 한국어 형태소 분석 |
+| Sentence Transformers (KR-SBERT) | 문장 임베딩, 시맨틱 청킹 |
+| scikit-learn | TF-IDF 계산, 유사도 분석 |
+| Ollama (로컬) | 로컬 LLM 대체 실행 |
+
+---
+
+## 아키텍처
 
 ### 3계층 구조
 1. **Pipeline** (`pipeline/`) — 데이터 처리; `data/raw/*.txt` 읽기, 각 단계 디렉터리에 쓰기
@@ -107,25 +113,108 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 
 ### 백엔드 (`app/`)
 - `app/main.py` — FastAPI 앱, CORS 설정 (`localhost:5173`)
-- `app/api/routes.py` — 엔드포인트: `POST /api/lecture-outputs`, `POST /api/weekly-outputs`, `GET /api/concepts`, `GET /api/quizzes`, `GET /api/learning-guides` 등
+- `app/api/routes.py` — 엔드포인트: `POST /api/lecture-outputs`, `POST /api/weekly-outputs`, `GET /api/concepts`, `GET /api/learning-points`, `GET /api/quizzes`, `GET /api/learning-guides`, `GET /api/learning-guides/{week}`
 - `app/schemas/models.py` — Pydantic 응답 모델 (`Concept`, `LearningPoint`, `Quiz`, `LearningGuide`, `LectureOutputs`, `WeeklyOutputs`)
 - `app/loaders/dummy.py` — `data/dummy/` JSON 로드 (파이프라인 연동 후 제거)
+
+**더미 데이터** (`data/dummy/`, 파이프라인 완성 전까지 사용):
+
+| 파일 | 모드 | 내용 |
+|------|------|------|
+| `concepts.json` | A | 핵심 개념 샘플 3개 |
+| `learning_points.json` | A | 학습 포인트 샘플 3개 |
+| `quizzes.json` | A | 퀴즈 샘플 3개 (mcq·short·fill 각 1개) |
+| `learning_guides.json` | B | 주차별 학습 가이드 샘플 3개 (1~3주차) |
 
 ### 파이프라인 (`pipeline/`)
 
 각 블록은 단일 `run_*()` 진입 함수를 가진 `runner.py`를 포함한다.
 
-| 블록 | 디렉터리 | 모드 | 역할 |
-|------|----------|------|------|
-| Pre-processor | `phase1/` ~ `phase5/` | A, B | STT 정제 → 문장 → 청크 → 명제 → 팩트 |
-| EP | `ep/` | A | 핵심 개념·학습 포인트 식별 |
-| Blueprint | `blueprint/` | A | 문제 블루프린트 작성 |
-| Quiz Generation | `quiz_generation/` | A | 퀴즈·해설 생성 |
-| QA Validation | `qa_validation/` | A | 퀴즈 품질·사실 검증 |
-| Guides | `guides/` | B | 주차 통합 → 학습 가이드·핵심 요약 생성 |
+| 블록 | 디렉터리 | 모드 | 역할 | 입력 | 출력 |
+|------|----------|------|------|------|------|
+| Pre-processor | `preprocessor/` | A, B | STT 정제 → 문장 → 청크 → 명제 → 팩트 | `data/raw/*.txt` | `data/phase5_facts/*.jsonl` |
+| EP | `ep/` | A | 핵심 개념·학습 포인트 식별 | 팩트 데이터 | `data/ep_concepts/*.jsonl` |
+| Blueprint | `blueprint/` | A | 퀴즈 유형·난이도·근거 설계 | 개념 + 팩트 | `data/blueprints/*.jsonl` |
+| Quiz Generation | `quiz_generation/` | A | 실제 퀴즈·해설 생성 | Blueprint | `data/quizzes_raw/*.jsonl` |
+| QA Validation | `qa_validation/` | A | 퀴즈 품질·사실 검증 | 퀴즈 | `data/quizzes_validated/*.jsonl` |
+| Guides | `guides/` | B | 주차 통합 → 학습 가이드·요약 | 각 파일 전처리 결과 | `data/learning_guides/*.jsonl` |
 
 - `pipeline/paths.py` — **모든 경로 상수**. 경로를 하드코딩하지 않는다.
-- `pipeline/config_loader.py` — `load_*()` 함수로 `config/*.json`/`*.yaml` 로드.
+- `pipeline/config_loader.py` — `load_*()` 함수로 설정 파일 로드.
+- `config/quiz_blueprint_rules.json` — 퀴즈 생성 규칙 (블록별 유형·난이도 배분)
+- `config/rag_config.json` — RAG 검색 설정
+
+### 전처리 Phase 상세 (`pipeline/preprocessor/`)
+
+| Phase | 파일 | 핵심 작업 |
+|-------|------|----------|
+| 1 | `01_cleaner.py` | 15초 기준 발화 병합, 30분 공백 시 세션 분할, Gemini API로 오탈자·추임새 교정 |
+| 2 | `02_segmenter.py` | `kiwipiepy` 형태소 분석으로 구어체 문장 복원, 무의미 감탄사 문장 필터링 |
+| 3 | `03_chunker.py` | KR-SBERT 임베딩 코사인 유사도로 문맥 전환 지점 감지 → Chunk 분할, TF-IDF 핵심어 추출 |
+| 4 | `04_extractor.py` | 정규식 + LLM(Gemini / 로컬 Ollama)으로 '정의·규칙·절차' 형태의 핵심 명제(Fact 후보) 추출 |
+| 5 | `05_formatter.py` | 명제를 개념(`concept`) 단위로 그룹화, 역참조·연관어 추가, RAG 최적화 JSON 포맷으로 조립 |
+
+### 데이터 스키마
+
+**Chunk** (Phase 5 출력):
+```json
+{
+  "chunk_id": "2026-02-03_S01_C002",
+  "session": "오전",
+  "session_seq": 1,
+  "start_time": "09:11:04",
+  "text": "...",
+  "facts": ["추상 클래스는 주요 메소드인 추상 메서드를 가지고 있다."],
+  "tfidf_keywords": ["추상", "메소드야", "구현"]
+}
+```
+
+**Concept** (EP 출력):
+```json
+{
+  "concept_id": "concept_union",
+  "concept": "UNION",
+  "definition": "두 SELECT 결과를...",
+  "related_concepts": ["concept_join"],
+  "source_chunk_ids": ["S01-C03"],
+  "importance": 0.87,
+  "week": 21,
+  "lecture_id": "2026-02-11_kdt..."
+}
+```
+
+**Quiz** (Quiz Generation 출력):
+```json
+{
+  "quiz_id": "q_001",
+  "type": "mcq",
+  "question": "UNION의 역할은?",
+  "options": ["A", "B", "C", "D"],
+  "answer": "A",
+  "explanation": "UNION은...",
+  "status": "pass"
+}
+```
+
+---
+
+## 핵심 알고리즘 메모
+
+### EP — 개념 추출 전략
+- **Definition 주어 기반 필터링**: 팩트 문장의 주어로 등장하는 키워드만 핵심 개념 후보로 수집 (보조 개념 자동 제외)
+- **중요도 4항 공식**: 등장 빈도(0.5) + TF-IDF(0.3) + 강조 표현(0.2) → 23단계 변별력
+- **Definition 고유 배정**: 중요도 높은 개념이 고유 정의를 선점
+- **관련 개념 연결**: 같은 문장 공동 출현 기반
+
+### Blueprint — Evidence 분리 구조
+퀴즈 생성 시 LLM에 제공하는 근거를 엄격히 분리:
+
+| 필드 | 역할 | 수집 기준 |
+|------|------|----------|
+| `correct_facts` | 무결점 정답 선지 생성 근거 | 해당 개념이 주어인 문장 |
+| `distractor_facts` | 정교한 오답 선지 조립 재료 | 같은 청크의 나머지 문장 + 연관 개념 문장 |
+
+> 목적: LLM 환각(Hallucination)으로 없는 개념이 오답으로 생성되는 것을 차단.
 
 ---
 
@@ -137,8 +226,6 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 
 ## 배포 워크플로우
 
-배포 관련 작업(설정 파일, 환경변수, 서비스 구성 변경)은 반드시 아래 순서로 진행한다.
-
 **실행 순서 (절대 바꾸지 않는다):**
 1. **`DEPLOY.md` 먼저 작성 또는 업데이트** — 무엇을 왜 바꾸는지 기록
 2. 코드·설정 파일 작성
@@ -146,16 +233,7 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 4. 검증 통과 후 GitHub push
 5. `DEPLOY.md`의 배포 순서대로 Railway → Vercel 순으로 배포
 
-> **핵심 원칙:** 코드 전에 플랜 문서(`DEPLOY.md`)가 먼저다.
-> 배포 설정을 변경한 이유가 문서에 없으면 나중에 아무도 이해하지 못한다.
-
-### 배포 스킬
-
-| 스킬 | 역할 |
-|------|------|
-| `/deploy-check` | 배포 전 자동 검증 (빌드·임포트·환경변수·설정 파일) |
-
-### 서비스 구성 (현재)
+### 서비스 구성
 
 | 계층 | 서비스 | 설정 파일 |
 |------|--------|----------|
@@ -163,36 +241,24 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 | 백엔드 | Railway (무료) | `Procfile` |
 | DB | localStorage (브라우저) | — |
 
-자세한 배포 절차는 **`DEPLOY.md`** 를 참고한다.
-
 ---
 
 ## 프론트엔드 디자인
 
-프론트엔드 UI 작업(컴포넌트, 페이지, 스타일링)을 할 때는 반드시 **`frontend-design` 스킬**을 먼저 호출한다.
-
-디자인 방향·색상·타이포그래피·컴포넌트 명세는 **`DESIGN.md`** 를 참고한다.
+UI 작업(컴포넌트, 페이지, 스타일링) 시 반드시 **`frontend-design` 스킬**을 먼저 호출한다.
+디자인 방향·색상·타이포그래피·컴포넌트 명세는 **`DESIGN.md`** 참고.
 
 ### Write-and-Preview 워크플로우 (UI 작업 전용)
 
-시각적 결과물이 있는 모든 프론트엔드 작업에 적용한다. 파이프라인·백엔드 작업에는 해당 없음.
-
 **실행 순서 (절대 바꾸지 않는다):**
 1. task 파일 읽기
-2. **실제 파일 작성 + JSX Artifact 동시 제공** — 파일을 먼저 쓰고 Artifact로도 보여준다
-3. 사용자: `npm run dev`로 브라우저에서 확인 후 "맞다" 또는 피드백
+2. **실제 파일 작성 + JSX Artifact 동시 제공**
+3. 사용자: `npm run dev`로 브라우저 확인 후 "맞다" 또는 피드백
 4. 피드백 있으면 → 파일 수정 → 3단계 반복
-5. "맞다" 후 → **`/frontend-check` 스킬 실행** (format → lint → types 순서)
+5. "맞다" 후 → **`/frontend-check` 스킬 실행** (format → lint → types)
 6. 다음 task로 이동
 
-> **핵심 원칙:** 파일과 Artifact는 항상 동시에 제공한다.
-> Artifact만 보여주고 파일 작성을 미루면 `npm run dev`에서 아무것도 보이지 않는다.
-> 사용자 승인("맞다")과 `/frontend-check`는 각자 독립적인 필수 관문이다 — 둘 중 하나가 나머지를 대체하지 않는다.
-
-**Artifact 프리뷰의 역할:**
-
-Artifact는 빠른 레이아웃 스케치가 아니라 **실제 파일의 인라인 렌더링**이다.
-실제 파일(`var(--tml-*)` CSS 변수, Tailwind 클래스 등)은 `npm run dev`에서 완전히 동작한다.
+> 사용자 승인("맞다")과 `/frontend-check`는 각자 독립적인 필수 관문 — 둘 중 하나가 나머지를 대체하지 않는다.
 
 | 확인 채널 | 검증 항목 |
 |-----------|----------|
@@ -238,22 +304,6 @@ Artifact는 빠른 레이아웃 스케치가 아니라 **실제 파일의 인라
 - 네비게이션 활성 상태는 `useLocation()`으로 판단한다. `useState`로 관리하지 않는다.
 - 새 페이지 추가 시 이 표에도 경로를 등록한다.
 
-### 파이프라인 Mode A / Mode B 구분 규칙
-
-모든 파이프라인 코드는 자신이 어느 모드에 속하는지 명확히 한다.
-
-| 항목 | Mode A (강의 1개) | Mode B (1주치) |
-|------|-------------------|----------------|
-| 입력 단위 | 스크립트 파일 1개 | 주차 디렉터리 (N개 파일) |
-| 출력 | 핵심 개념·학습 포인트·퀴즈 | 주차별 학습 가이드·핵심 요약 |
-| 해당 블록 | Phase 1~5, EP, Blueprint, Quiz, QA | Phase 1~5, Guides |
-| `run_pipeline.py` 호출 | `--mode a --input <파일>` | `--mode b --week <주차>` |
-
-- **Mode A 블록** (`ep`, `blueprint`, `quiz_generation`, `qa_validation`): 단일 파일 단위로 처리. 입력은 항상 파일 1개 기준의 경로를 받는다.
-- **Mode B 블록** (`guides`): 주차 내 모든 파일의 전처리 결과를 모아서 처리. 입력은 주차 단위 디렉터리.
-- **공통 블록** (`phase1`~`phase5`): Mode A·B 모두에서 호출된다. 단일 파일 단위로 동작하며, Mode B는 N개 파일에 반복 적용한다.
-- 두 모드는 서로 독립적으로 실행된다. **Mode B가 Mode A의 출력을 읽어선 안 된다.**
-
 ### 새 파이프라인 블록 추가
 1. `pipeline/paths.py`에 입출력 경로 상수 추가.
 2. `pipeline/config_loader.py`에 필요한 로더 함수 추가.
@@ -262,17 +312,6 @@ Artifact는 빠른 레이아웃 스케치가 아니라 **실제 파일의 인라
 
 ---
 
-## 더미 데이터 (개발 중)
+## CLAUDE.md 유지보수
 
-백엔드는 파이프라인이 완성되기 전까지 `data/dummy/`의 JSON 파일을 읽는다.
-
-| 파일 | 모드 | 내용 |
-|------|------|------|
-| `concepts.json` | A | 핵심 개념 샘플 3개 |
-| `learning_points.json` | A | 학습 포인트 샘플 3개 |
-| `quizzes.json` | A | 퀴즈 샘플 3개 (mcq·short·fill 각 1개; code 타입 더미 미포함) |
-| `learning_guides.json` | B | 주차별 학습 가이드 샘플 3개 (1~3주차) |
-
-- Mode A 더미(concepts, learning_points, quizzes)와 Mode B 더미(learning_guides)는 서로 참조하지 않는다.
-- 모든 더미 데이터는 실제 파이프라인 출력과 동일한 스키마를 따른다.
-- **파이프라인 연동 후 `app/loaders/dummy.py`를 제거한다.**
+CLAUDE.md를 수정할 때는 반드시 **`/claude-md-improver` 스킬**을 실행해 검토를 받는다.
