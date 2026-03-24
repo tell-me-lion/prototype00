@@ -33,9 +33,9 @@ function App() {
         {/* 로고 — 클릭 시 홈으로 이동 */}
         <Link to="/" className="tml-header__logo">
           <div className="tml-header__icon" aria-hidden="true">
-            <img src="/likelion-logo.png" alt="말해주사자 로고" className="tml-header__logo-img" />
+            <img src="/likelion-logo.png" alt="알려주사자 로고" className="tml-header__logo-img" />
           </div>
-          <span className="tml-header__wordmark">말해주사자</span>
+          <span className="tml-header__wordmark">알려주사자</span>
         </Link>
 
         {/* 네비게이션 */}
