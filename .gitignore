@@ -87,6 +87,5 @@ frontend/.env.*.local
 ########################
 # 개인용 문서 (공유 안 함)
 ########################
-DESIGN.md
 ERRORS.md
 tasks/

@@ -2,18 +2,26 @@
 
 ## 프로젝트 개요
 
-**알려주사자**는 강의 텍스트(STT 스크립트)에서 핵심 개념·학습 포인트·퀴즈·학습 가이드를 자동 생성해 수강생에게 제공하는 풀스택 교육 시스템이다.
+**알려주사자**는 강의 녹화본에서 핵심 개념·학습 포인트·퀴즈·학습 가이드를 자동 생성해 수강생에게 제공하는 풀스택 교육 시스템이다.
 
-> **설계 원칙: 모든 것은 클라이언트 관점에서.**
+> **핵심 목표: 유저가 편할 수 있도록.**
+> 유저는 파일을 일일이 업로드하지 않는다. 대시보드에 강의 목록이 떠 있고, 원하는 강의를 선택하면 서버가 나머지를 모두 처리한다.
 > 클라이언트는 수강생뿐 아니라 이 서비스를 도입할 **교육 서비스 업체**도 포함한다.
-> 시스템이 무엇을 할 수 있는지가 아니라, 클라이언트가 무엇을 필요로 하는지를 기준으로 판단한다.
 
-### 두 가지 사용 모드
+### 서비스 흐름
+
+```
+유저: 대시보드에서 강의 선택 → "가져오기" 클릭
+서버: 강의 녹화 → STT 변환 → 전처리 → 핵심 개념/학습 포인트/퀴즈/학습 가이드 생성
+유저: 결과 확인·학습
+```
+
+### 두 가지 출력 모드
 
 | 입력 | 출력 |
 |------|------|
-| 강의 스크립트 1개 (`.txt`) | 핵심 개념, 학습 포인트, 퀴즈 |
-| 1주치 강의 스크립트 전체 | 주차별 학습 가이드, 주차별 핵심 요약 |
+| 강의 1개 선택 | 핵심 개념, 학습 포인트, 퀴즈 (Mode A) |
+| 1주치 강의 전체 선택 | 주차별 학습 가이드, 주차별 핵심 요약 (Mode B) |
 
 두 모드는 독립적으로 실행된다. **Mode B는 Mode A의 출력을 읽어선 안 된다.**
 
@@ -27,14 +35,22 @@
 
 | 영역 | 상태 | 완성도 |
 |------|------|--------|
-| 전처리 (Phase 1~5) | ✅ 구현 완료 | 100% |
-| EP (핵심 개념 추출) | ✅ 구현 완료 | 100% |
+| 전처리 (Phase 1~5) | ✅ 구현 완료, 고도화 중 | 100% |
+| EP (핵심 개념 추출) | ✅ 구현 완료, 고도화 중 | 100% |
 | Blueprint (퀴즈 설계) | ✅ 구현 완료 | 100% |
-| Quiz Generation | 🔲 구현 중 | 30% |
+| Quiz Generation | ⚙️ 고도화 중 | 30% |
 | QA Validation | 🔲 뼈대만 | 10% |
 | Guides | 🔲 뼈대만 | 10% |
-| 백엔드 API | ⚙️ 구조 완료 | 60% |
-| 프론트엔드 | ⚙️ 초기 구현 중 | 50% |
+| 백엔드 API | ⚙️ 구조 완료, UX 개선 필요 | 60% |
+| 프론트엔드 | ⚙️ 대시보드 기반 UX 전환 중 | 50% |
+
+### 팀 역할
+
+| 담당 | 작업 |
+|------|------|
+| 시훈 | 전처리 고도화 — 배포 시 용량·GPU 최적화, Gemini API 비용 관리 |
+| 경현 | 전처리 데이터 기반 퀴즈 생성·핵심 개념·학습 포인트 등 고도화, 출력 형식 정의 |
+| 주노 | UI/UX 개선 (대시보드 기반 UX), 프론트엔드·백엔드 연동, 배포 인프라 관리 |
 
 ---
 
@@ -107,24 +123,27 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 ## 아키텍처
 
 ### 3계층 구조
-1. **Pipeline** (`pipeline/`) — 데이터 처리; `data/raw/*.txt` 읽기, 각 단계 디렉터리에 쓰기
-2. **Backend** (`app/`) — FastAPI REST API; `data/`의 파이프라인 출력 읽기
-3. **Frontend** (`frontend/src/`) — React SPA; 백엔드 API만 소비
+1. **Pipeline** (`pipeline/`) — 데이터 처리; STT 결과 → 전처리 → 개념 추출 → 퀴즈 생성
+2. **Backend** (`app/`) — FastAPI REST API; 강의 목록 제공, 파이프라인 트리거, 결과 전달
+3. **Frontend** (`frontend/src/`) — React SPA; 대시보드에서 강의 선택 → 결과 소비
+
+### UX 흐름 (파일 업로드 ❌ → 대시보드 선택 ✅)
+
+```
+[대시보드: 강의 목록] → 유저가 강의 선택 → 서버에 처리 요청
+                                              ↓
+                                    STT → 전처리 → EP → Quiz
+                                              ↓
+                                    결과를 프론트엔드에 전달
+```
+
+> 유저는 파일을 직접 만지지 않는다. 강의 목록은 서버가 관리하고, 대시보드에 자동으로 표시된다.
 
 ### 백엔드 (`app/`)
-- `app/main.py` — FastAPI 앱, CORS 설정 (`localhost:5173`)
-- `app/api/routes.py` — 엔드포인트: `POST /api/lecture-outputs`, `POST /api/weekly-outputs`, `GET /api/concepts`, `GET /api/learning-points`, `GET /api/quizzes`, `GET /api/learning-guides`, `GET /api/learning-guides/{week}`
+- `app/main.py` — FastAPI 앱, CORS 설정
+- `app/api/routes.py` — API 엔드포인트
 - `app/schemas/models.py` — Pydantic 응답 모델 (`Concept`, `LearningPoint`, `Quiz`, `LearningGuide`, `LectureOutputs`, `WeeklyOutputs`)
 - `app/loaders/dummy.py` — `data/dummy/` JSON 로드 (파이프라인 연동 후 제거)
-
-**더미 데이터** (`data/dummy/`, 파이프라인 완성 전까지 사용):
-
-| 파일 | 모드 | 내용 |
-|------|------|------|
-| `concepts.json` | A | 핵심 개념 샘플 3개 |
-| `learning_points.json` | A | 학습 포인트 샘플 3개 |
-| `quizzes.json` | A | 퀴즈 샘플 3개 (mcq·short·fill 각 1개) |
-| `learning_guides.json` | B | 주차별 학습 가이드 샘플 3개 (1~3주차) |
 
 ### 파이프라인 (`pipeline/`)
 
@@ -238,11 +257,14 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 
 ### 실행 환경
 
-| 계층 | 실행 방법 | 주소 |
+| 계층 | 배포 위치 | 주소 |
 |------|-----------|------|
-| 프론트엔드 | `npm run dev` (로컬) | `http://localhost:5173` |
-| 백엔드 | `python -m uvicorn app.main:app --reload` (로컬) | `http://localhost:8000` |
+| 프론트엔드 | Vercel (로컬 개발: `npm run dev`) | `https://<vercel-domain>` / `http://localhost:5173` |
+| 백엔드 + 파이프라인 | 팀원 GPU 머신 (Railway 또는 AWS 검토 중) | `https://<backend-domain>` |
 | DB | localStorage (브라우저) | — |
+
+> 백엔드 URL이 확정되면 `DEPLOY.md`, `frontend/.env.local`, Vercel 환경변수를 즉시 업데이트한다.
+> Railway에서 용량·GPU 문제가 발생하면 AWS 등 대안을 검토한다.
 
 ---
 
@@ -289,7 +311,7 @@ UI 작업(컴포넌트, 페이지, 스타일링) 시 반드시 **`frontend-desig
 - **코드 작성 요청엔 즉시 파일에 직접 작성한다.** 계획·설명·제안을 먼저 하지 않는다. 사용자가 명시적으로 "설명해줘"를 요청한 경우만 예외.
 - **작성 후 Read 도구로 해당 파일을 읽어 반영 여부를 검증한다.**
 - **하드코딩 금지**: 색상(`var(--tml-*)` 사용), 데이터(API 연동), URL(환경변수·설정파일). 값을 직접 삽입하지 않는다.
-- 기능 구현 시 기존 파이프라인·아키텍처를 따른다 (예: Mode B는 업로드 우선 흐름, 하드코딩 목 데이터 금지).
+- 기능 구현 시 기존 파이프라인·아키텍처를 따른다.
 
 ### 스킬 사용 원칙
 - 관련 스킬이 존재하면 수동 작업 전에 반드시 Skill 도구로 호출한다.
