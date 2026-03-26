@@ -55,21 +55,6 @@ MIN_SOURCE_CHUNKS = 2
 # ================== 개념 추출 ==================
 
 
-def _has_quality_tfidf(chunks: list[dict[str, Any]]) -> bool:
-    """phase5 청크가 품질 있는 tfidf_scores를 제공하는지 확인.
-
-    품질 기준: 절반 이상의 청크가 비어있지 않은 dict 형태의 tfidf_scores를 가짐.
-    (v11: kiwipiepy 재계산을 건너뛰는 조건 판별용)
-    """
-    if not chunks:
-        return False
-    scored = sum(
-        1 for c in chunks
-        if isinstance(c.get("tfidf_scores"), dict) and c.get("tfidf_scores")
-    )
-    return scored >= len(chunks) // 2
-
-
 def extract_concepts(
     chunks: list[dict[str, Any]],
     lecture_id: str,
@@ -85,27 +70,14 @@ def extract_concepts(
     Returns:
         ConceptDocument 리스트.
     """
-    # ── TF-IDF 조건부 재사용 (v11: 품질 기준 도입) ──
-    if _has_quality_tfidf(chunks):
-        # phase5 tfidf_scores 재사용 — kiwipiepy 재계산 생략
-        # phase5 점수가 1.0 초과(원시 가중치)면 0~1 범위로 정규화
-        for chunk in chunks:
-            scores = chunk.get("tfidf_scores", {})
-            if scores and isinstance(scores, dict):
-                max_s = max(scores.values(), default=1.0)
-                if max_s > 1.0:
-                    chunk["tfidf_scores"] = {k: round(v / max_s, 4) for k, v in scores.items()}
-        new_tfidf = {
-            c["chunk_id"]: c.get("tfidf_scores", {})
-            for c in chunks if c.get("chunk_id")
-        }
-    else:
-        # 폴백: phase5가 flat list이거나 tfidf_scores가 없는 경우 kiwipiepy 재계산
-        new_tfidf = compute_lecture_tfidf(chunks)
-        for chunk in chunks:
-            cid = chunk.get("chunk_id", "")
-            if cid in new_tfidf:
-                chunk["tfidf_scores"] = new_tfidf[cid]
+    # ── v12: 항상 kiwipiepy TF-IDF 재계산 ──
+    # phase5의 tfidf_scores는 synthetic rank-decay (surface token 기반)
+    # → kiwipiepy 형태소 기반 base form으로 재계산 필수
+    new_tfidf = compute_lecture_tfidf(chunks)
+    for chunk in chunks:
+        cid = chunk.get("chunk_id", "")
+        if cid in new_tfidf:
+            chunk["tfidf_scores"] = new_tfidf[cid]
 
     # 1단계: 개념 후보 수집 — definition 문장의 주어인 키워드만
     keywords_pool = _collect_keywords(chunks)
@@ -170,6 +142,24 @@ def extract_concepts(
 # ================== 1단계: 개념 후보 수집 ==================
 
 
+def _extract_fact_subject(fact: str) -> str | None:
+    """fact 문장의 첫 명사 주어를 추출. (v12: 신규)
+
+    주격 조사(SUBJECT_SUFFIXES)의 첫 출현 위치로 경계 결정.
+    2~10자 사이만 반환 (1자: 대명사, 10자 초과: 복합구로 너무 넓음).
+
+    TF-IDF 어휘에 없는 개념을 facts 주어에서 구제하는 보조 수단.
+    예: "직렬화는 오브젝트 단위로..." → "직렬화"
+        "버퍼는 데이터가..." → "버퍼"
+        "IO 패키지는 바이트..." → "IO 패키지"
+    """
+    for suffix in SUBJECT_SUFFIXES:
+        idx = fact.find(suffix)
+        if 2 <= idx <= 10:
+            return fact[:idx]
+    return None
+
+
 def _is_subject_of(keyword: str, fact: str) -> bool:
     """fact 문장에서 keyword가 주어로 등장하는지 확인.
 
@@ -220,12 +210,16 @@ def _has_particle_match(keyword: str, fact: str, suffixes: list[str]) -> bool:
 
 
 def _collect_keywords(chunks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
-    """모든 fact에서 주어인 키워드만 수집 (sentence_type 무관).
+    """강의 전체 단위로 개념 후보 수집. (v12: 청크 경계 제약 제거)
 
-    핵심 개념 / 보조 개념 분리 전략:
-      - 모든 fact를 순회하며 keyword가 주어인지 _is_subject_of()로 판별
-      - 주어가 아닌 키워드(NULL, VARCHAR, WHERE 등)는 수집하지 않음
-      - sentence_type은 신뢰하지 않음 (인덱스 불일치 + 오분류 문제)
+    2단계 구조:
+    1단계: 전체 chunks의 tfidf_scores를 통합해 강의 어휘 구축
+    2단계: 강의 전체 facts에서 어휘별 주어 출현 검색 (청크 무관)
+    보조:  facts 주어 추출로 TF-IDF 어휘 밖의 개념 구제
+
+    개선점 (v12):
+    - 청크 경계 제약 제거: TF-IDF 근거(청크A) ≠ 정의 facts(청크B)도 매칭
+    - facts 주어 추출 추가: TF-IDF 어휘 밖이지만 facts에서 주어로 쓰인 개념 구제
 
     Returns:
         {
@@ -236,31 +230,35 @@ def _collect_keywords(chunks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]
             }
         }
     """
+    # ── 1단계: 강의 전체 TF-IDF 어휘 구축 (청크 경계 무시) ──
+    global_vocab: dict[str, float] = {}
+    for chunk in chunks:
+        for keyword, score in chunk.get("tfidf_scores", {}).items():
+            if score >= TFIDF_THRESHOLD and keyword not in STOPWORDS:
+                global_vocab[keyword] = max(global_vocab.get(keyword, 0.0), score)
+
+    # ── 보조: facts 주어 추출로 TF-IDF 어휘 밖 개념 보완 ──
+    # TF-IDF에 없지만 facts에서 주어로 등장하고 충분히 언급되는 개념 구제
+    fact_subj_candidates: set[str] = set()
+    for chunk in chunks:
+        for fact in chunk.get("facts", []):
+            subj = _extract_fact_subject(fact)
+            if subj and subj not in global_vocab and subj not in STOPWORDS:
+                fact_subj_candidates.add(subj)
+
+    for subj in fact_subj_candidates:
+        text_freq = sum(1 for c in chunks if subj.lower() in c.get("text", "").lower())
+        if text_freq >= MIN_SOURCE_CHUNKS:
+            global_vocab[subj] = TFIDF_THRESHOLD  # 최소 점수로 삽입
+
+    # ── 2단계: 전체 facts에서 어휘별 주어 출현 검색 (청크 경계 무시) ──
     keywords_pool: dict[str, dict[str, Any]] = {}
 
-    for chunk in chunks:
-        tfidf_scores = chunk.get("tfidf_scores", {})
-        facts = chunk.get("facts", [])
-
-        # ✓ sentence_type 체크 제거 (버그: 인덱스 불일치, 오분류)
-        # 주어 조건만으로 충분함 (보조 개념 필터링, 핵심 개념 포함)
-        for fact in facts:
-            # 이 fact에서 주어인 tfidf 키워드만 수집
-            for keyword, tfidf in tfidf_scores.items():
-                if tfidf < TFIDF_THRESHOLD:
-                    continue
-
-                # 불용어 필터: 기술 분야와 무관한 일반 명사 제거
-                if keyword in STOPWORDS:
-                    continue
-
-                # ── 투 트랙 매칭 ──────────────────────────────────────────────────
-                # Track 1 (보수적): 낮은 TF-IDF — 문장 시작 주어 위치만 허용
+    for keyword, max_tfidf in global_vocab.items():
+        for chunk in chunks:
+            for fact in chunk.get("facts", []):
                 is_valid = _is_subject_of(keyword, fact)
-
-                # Track 2 (유연): 높은 TF-IDF — 문장 내 어디서든 정의형 조사 결합 허용
-                # "B를 A이라고 한다" 같은 서술어보어 정의형 패턴 포착
-                if not is_valid and tfidf >= TFIDF_HIGH_THRESHOLD:
+                if not is_valid and max_tfidf >= TFIDF_HIGH_THRESHOLD:
                     is_valid = _has_particle_match(keyword, fact, DEFINITION_SUFFIXES)
 
                 if not is_valid:
@@ -269,14 +267,10 @@ def _collect_keywords(chunks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]
                 if keyword not in keywords_pool:
                     keywords_pool[keyword] = {
                         "freq": 0,
-                        "max_tfidf": 0.0,
+                        "max_tfidf": max_tfidf,
                         "chunks": set(),
                     }
-
                 keywords_pool[keyword]["freq"] += 1
-                keywords_pool[keyword]["max_tfidf"] = max(
-                    keywords_pool[keyword]["max_tfidf"], tfidf
-                )
                 keywords_pool[keyword]["chunks"].add(chunk["chunk_id"])
 
     return keywords_pool
