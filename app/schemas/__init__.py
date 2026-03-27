@@ -7,6 +7,13 @@ from app.schemas.models import (
     Quiz,
     LectureOutputs,
     WeeklyOutputs,
+    LectureCatalog,
+    LectureResultSummary,
+    WeekSummary,
+    ProcessingStatus,
+    ProcessingStep,
+    ProcessingStatusResponse,
+    ProcessTriggerResponse,
 )
 
 __all__ = [
@@ -16,4 +23,11 @@ __all__ = [
     "LearningGuide",
     "LectureOutputs",
     "WeeklyOutputs",
+    "LectureCatalog",
+    "LectureResultSummary",
+    "WeekSummary",
+    "ProcessingStatus",
+    "ProcessingStep",
+    "ProcessingStatusResponse",
+    "ProcessTriggerResponse",
 ]

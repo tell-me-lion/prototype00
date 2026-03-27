@@ -3,6 +3,8 @@ ep_concepts, quizzes_validated, learning_guides 스키마에 맞는 Pydantic 모
 ARCHITECTURE.md §2.3, §2.3.1 기준.
 """
 
+from datetime import date, datetime
+from enum import Enum
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -74,3 +76,79 @@ class WeeklyOutputs(BaseModel):
     """1주일치 입력 → 주차별 가이드·요약 묶음."""
 
     guides: list[LearningGuide] = Field(default_factory=list)
+
+
+# --- 강의 카탈로그 (대시보드 UX) ---
+
+
+class ProcessingStatus(str, Enum):
+    """파이프라인 처리 상태."""
+
+    idle = "idle"
+    processing = "processing"
+    completed = "completed"
+    error = "error"
+
+
+class LectureResultSummary(BaseModel):
+    """처리 완료 시 결과 요약."""
+
+    concept_count: int = 0
+    learning_point_count: int = 0
+    quiz_count: int = 0
+
+
+class LectureCatalog(BaseModel):
+    """강의 카탈로그 항목."""
+
+    lecture_id: str
+    date: date
+    day_of_week: str
+    week: int
+    course_code: str
+    course_name: str
+    status: ProcessingStatus = ProcessingStatus.idle
+    result_summary: LectureResultSummary | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class WeekSummary(BaseModel):
+    """주차 요약."""
+
+    week: int
+    lecture_count: int
+    completed_count: int
+    date_range: str
+    status: ProcessingStatus
+    lectures: list[LectureCatalog] = Field(default_factory=list)
+
+
+# --- 처리 트리거 & 상태 관리 ---
+
+
+class ProcessingStep(BaseModel):
+    """처리 단계 하나."""
+
+    name: str    # "영상 분석", "텍스트 추출", "AI 분석"
+    status: str  # "pending" | "running" | "done"
+
+
+class ProcessingStatusResponse(BaseModel):
+    """처리 상태 조회 응답."""
+
+    lecture_id: str | None = None
+    week: int | None = None
+    status: ProcessingStatus
+    steps: list[ProcessingStep] = Field(default_factory=list)
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    error_message: str | None = None
+
+
+class ProcessTriggerResponse(BaseModel):
+    """처리 시작 응답."""
+
+    lecture_id: str | None = None
+    week: int | None = None
+    status: ProcessingStatus
+    started_at: datetime

@@ -1,16 +1,5 @@
 import { useState } from 'react'
-
-interface Quiz {
-  quiz_id: string
-  status: string
-  type: 'mcq' | 'short' | 'fill' | 'code'
-  question: string
-  options: string[] | null
-  answer: string
-  explanation: string
-  validation_log: Record<string, unknown>
-  meta: Record<string, string>
-}
+import type { Quiz } from '../types/models'
 
 interface QuizCardProps {
   quiz: Quiz
@@ -21,11 +10,15 @@ interface QuizCardProps {
 
 const CIRCLE_NUMS = ['①', '②', '③', '④', '⑤', '⑥']
 
+function answerStr(a: string | string[] | null): string {
+  return Array.isArray(a) ? a.join(', ') : (a ?? '')
+}
+
 /* ── MCQ: 페이지네이션형 ─────────────────────────────── */
 function McqCard({ quiz, quizIndex, totalInType, onNext }: QuizCardProps) {
   const [selected, setSelected] = useState<string | null>(null)
   const submitted = selected !== null
-  const isCorrect = selected === quiz.answer
+  const isCorrect = selected === answerStr(quiz.answer)
 
   return (
     <div className="tml-card quiz-type-card">
@@ -40,14 +33,14 @@ function McqCard({ quiz, quizIndex, totalInType, onNext }: QuizCardProps) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {quiz.options?.map((opt, i) => {
-          const isAnswer = opt === quiz.answer
+          const isAnswer = opt === answerStr(quiz.answer)
           const isSelected = selected === opt
           let bg = 'var(--tml-bg-raised)'
           let border = '1px solid var(--tml-rule)'
           let textColor = 'var(--tml-ink-secondary)'
           if (submitted) {
-            if (isAnswer)                { bg = '#E8F5EE'; border = '1px solid #2D9966'; textColor = '#2D9966' }
-            else if (isSelected)         { bg = '#FFF0F0'; border = '1px solid #E85454'; textColor = '#E85454' }
+            if (isAnswer)                { bg = 'var(--tml-correct-bg)'; border = '1px solid var(--tml-correct)'; textColor = 'var(--tml-correct)' }
+            else if (isSelected)         { bg = 'var(--tml-wrong-bg)'; border = '1px solid var(--tml-wrong)'; textColor = 'var(--tml-wrong)' }
             else                         { textColor = 'var(--tml-ink-muted)' }
           }
           return (
@@ -71,8 +64,8 @@ function McqCard({ quiz, quizIndex, totalInType, onNext }: QuizCardProps) {
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: textColor, fontWeight: submitted && isAnswer ? 600 : 400, flex: 1 }}>
                 {opt}
               </span>
-              {submitted && isAnswer && <span style={{ color: '#2D9966', flexShrink: 0 }}>✓</span>}
-              {submitted && isSelected && !isAnswer && <span style={{ color: '#E85454', flexShrink: 0 }}>✗</span>}
+              {submitted && isAnswer && <span style={{ color: 'var(--tml-correct)', flexShrink: 0 }}>✓</span>}
+              {submitted && isSelected && !isAnswer && <span style={{ color: 'var(--tml-wrong)', flexShrink: 0 }}>✗</span>}
             </button>
           )
         })}
@@ -131,7 +124,7 @@ function ShortCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
               정답
             </p>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--tml-orange)', margin: 0, letterSpacing: '-0.02em' }}>
-              {quiz.answer}
+              {answerStr(quiz.answer)}
             </p>
           </div>
           <div className="quiz-explanation" style={{ marginBottom: 24 }}>
@@ -160,12 +153,12 @@ function FillCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
 
   const handleSubmit = () => {
     if (!value.trim()) return
-    setIsCorrect(value.trim().toLowerCase() === quiz.answer.trim().toLowerCase())
+    setIsCorrect(value.trim().toLowerCase() === answerStr(quiz.answer).trim().toLowerCase())
     setSubmitted(true)
   }
 
   const inputBorder = submitted
-    ? `1px solid ${isCorrect ? '#2D9966' : '#E85454'}`
+    ? `1px solid ${isCorrect ? 'var(--tml-correct)' : 'var(--tml-wrong)'}`
     : '1px solid var(--tml-rule)'
 
   return (
@@ -217,7 +210,7 @@ function FillCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
             <span>{isCorrect ? '✓ 정답입니다!' : '✗ 오답입니다.'}</span>
             {!isCorrect && (
               <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--tml-orange)', marginLeft: 12 }}>
-                정답: {quiz.answer}
+                정답: {answerStr(quiz.answer)}
               </span>
             )}
           </div>
@@ -257,7 +250,7 @@ function CodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
       {showAnswer && (
         <div style={{ marginTop: 16 }}>
           <div className="quiz-code-block quiz-code-block--answer">
-            {quiz.answer}
+            {answerStr(quiz.answer)}
           </div>
           <div className="quiz-explanation">
             <span className="quiz-explanation__icon">💡</span>

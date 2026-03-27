@@ -1,11 +1,4 @@
-interface Concept {
-  week: number | null
-  lecture_id: string
-  concept: string
-  importance: number
-  evidence_facts: string[]
-  meta: Record<string, string>
-}
+import type { Concept } from '../types/models'
 
 interface ConceptCardProps {
   concept: Concept
@@ -34,8 +27,8 @@ export function ConceptCard({ concept }: ConceptCardProps) {
           }}>
             {concept.lecture_id}
           </span>
-          {concept.meta.topic && (
-            <span className="badge-orange">{concept.meta.topic}</span>
+          {concept.meta.topic != null && (
+            <span className="badge-orange">{String(concept.meta.topic)}</span>
           )}
           <span className="badge-navy">개념</span>
         </div>

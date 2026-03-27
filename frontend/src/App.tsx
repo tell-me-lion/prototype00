@@ -1,15 +1,41 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, NavLink, Link } from 'react-router-dom'
+import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
 import './index.css'
-import { Home } from './pages/Home'
-import { Lecture } from './pages/Lecture'
-import { Weekly } from './pages/Weekly'
+import { Dashboard } from './pages/Dashboard'
+import { LectureResult } from './pages/LectureResult'
+import { WeeklyResult } from './pages/WeeklyResult'
+import { NotFound } from './pages/NotFound'
 
-const NAV_ITEMS: { label: string; to: string }[] = [
-  { label: '홈', to: '/' },
-  { label: '단일 강의', to: '/lecture' },
-  { label: '주차별 가이드', to: '/weekly' },
-]
+// ── 컨텍스트 네비게이션 (Option C) ──
+
+function NavBreadcrumb() {
+  const { pathname } = useLocation()
+  const segments = pathname.split('/').filter(Boolean)
+
+  if (pathname === '/') return null
+
+  if (segments[0] === 'lecture' && segments[1]) {
+    return (
+      <nav className="tml-header__breadcrumb">
+        <Link to="/" className="tml-header__back">← 대시보드</Link>
+        <span className="tml-header__breadcrumb-sep">/</span>
+        <span className="tml-header__breadcrumb-current">강의 결과</span>
+      </nav>
+    )
+  }
+
+  if (segments[0] === 'weekly' && segments[1]) {
+    return (
+      <nav className="tml-header__breadcrumb">
+        <Link to="/" className="tml-header__back">← 대시보드</Link>
+        <span className="tml-header__breadcrumb-sep">/</span>
+        <span className="tml-header__breadcrumb-current">{segments[1]}주차 학습 가이드</span>
+      </nav>
+    )
+  }
+
+  return null
+}
 
 function App() {
   const [dark, setDark] = useState<boolean>(() => {
@@ -30,7 +56,7 @@ function App() {
     <div style={{ minHeight: '100vh', background: 'var(--tml-bg)', color: 'var(--tml-ink)' }}>
       {/* 헤더 */}
       <header className="tml-header">
-        {/* 로고 — 클릭 시 홈으로 이동 */}
+        {/* 로고 — 클릭 시 대시보드로 이동 */}
         <Link to="/" className="tml-header__logo">
           <div className="tml-header__icon" aria-hidden="true">
             <img src="/likelion-logo.png" alt="알려주사자 로고" className="tml-header__logo-img" />
@@ -38,21 +64,8 @@ function App() {
           <span className="tml-header__wordmark">알려주사자</span>
         </Link>
 
-        {/* 네비게이션 */}
-        <nav className="tml-header__nav">
-          {NAV_ITEMS.map(({ label, to }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/'}
-              className={({ isActive }) =>
-                `tml-header__nav-item${isActive ? ' tml-header__nav-item--active' : ''}`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        {/* 컨텍스트 브레드크럼 */}
+        <NavBreadcrumb />
 
         {/* 다크/라이트 토글 */}
         <button
@@ -66,9 +79,21 @@ function App() {
       </header>
 
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/lecture" element={<Lecture />} />
-        <Route path="/weekly" element={<Weekly />} />
+        {/* 메인 대시보드 */}
+        <Route path="/" element={<Dashboard />} />
+
+        {/* Mode A: 단일 강의 */}
+        <Route path="/lecture/:id" element={<LectureResult />} />
+
+        {/* Mode B: 주차별 가이드 */}
+        <Route path="/weekly/:week" element={<WeeklyResult />} />
+
+        {/* 하위 호환 리다이렉트 */}
+        <Route path="/lecture" element={<Navigate to="/" replace />} />
+        <Route path="/weekly" element={<Navigate to="/" replace />} />
+
+        {/* 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </div>
   )

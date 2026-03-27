@@ -348,9 +348,11 @@ UI 작업(컴포넌트, 페이지, 스타일링) 시 반드시 **`frontend-desig
 
 | 경로 | 페이지 | 설명 |
 |------|--------|------|
-| `/` | `Home` | 홈 (소개, 모드 선택) |
-| `/lecture` | `Lecture` | 단일 강의 분석 (Mode A) |
-| `/weekly` | `Weekly` | 주차별 학습 가이드 (Mode B) |
+| `/` | `Dashboard` | 대시보드 (강의 목록, 주차 필터, 통계) |
+| `/lecture/:id` | `LectureResult` | 단일 강의 결과 (Mode A) |
+| `/weekly/:week` | `WeeklyResult` | 주차별 학습 가이드 (Mode B) |
+| `/lecture` | → `/` 리다이렉트 | 하위 호환 |
+| `/weekly` | → `/` 리다이렉트 | 하위 호환 |
 
 - `BrowserRouter`는 `main.tsx`에서 앱 최상위를 감싼다.
 - 네비게이션 활성 상태는 `useLocation()`으로 판단한다. `useState`로 관리하지 않는다.
