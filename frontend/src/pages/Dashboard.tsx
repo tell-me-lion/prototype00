@@ -51,8 +51,10 @@ interface WeekFilterProps {
 
 function WeekFilter({ weeks, activeWeek, onSelect }: WeekFilterProps) {
   return (
-    <div className="tml-week-tabs tml-animate" style={{ marginTop: 8 }}>
+    <div className="tml-week-tabs tml-animate" role="tablist" aria-label="주차 필터" style={{ marginTop: 8 }}>
       <button
+        role="tab"
+        aria-selected={activeWeek === null}
         className={`tml-week-tab${activeWeek === null ? ' tml-week-tab--active' : ''}`}
         onClick={() => onSelect(null)}
       >
@@ -61,6 +63,8 @@ function WeekFilter({ weeks, activeWeek, onSelect }: WeekFilterProps) {
       {weeks.map((week) => (
         <button
           key={week}
+          role="tab"
+          aria-selected={activeWeek === week}
           className={`tml-week-tab${activeWeek === week ? ' tml-week-tab--active' : ''}`}
           onClick={() => onSelect(week)}
         >

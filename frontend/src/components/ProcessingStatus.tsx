@@ -41,7 +41,7 @@ export function ProcessingStatus({
   }
 
   return (
-    <div className="tml-processing-status">
+    <div className="tml-processing-status" aria-live="polite" aria-atomic="false" aria-label="처리 진행 상태">
       {steps.map((step: ProcessingStep, i: number) => (
         <StepRow key={step.name} step={step} index={i} />
       ))}

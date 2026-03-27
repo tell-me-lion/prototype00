@@ -25,6 +25,7 @@ DATA_PHASE5_FACTS = DATA_DIR / "phase5_facts"
 
 # 상위 단계 (EP, Blueprint, Quiz, Guides)
 DATA_EP_CONCEPTS = DATA_DIR / "ep_concepts"
+DATA_EP_LEARNING_POINTS = DATA_DIR / "ep_learning_points"
 DATA_BLUEPRINTS = DATA_DIR / "blueprints"
 DATA_QUIZZES_RAW = DATA_DIR / "quizzes_raw"
 DATA_QUIZZES_VALIDATED = DATA_DIR / "quizzes_validated"

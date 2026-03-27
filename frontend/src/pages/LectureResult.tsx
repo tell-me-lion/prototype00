@@ -251,10 +251,13 @@ export function LectureResult() {
       </div>
 
       {/* 섹션 탭 */}
-      <div className="tml-animate tml-week-tabs" style={{ marginBottom: 24 }}>
+      <div className="tml-animate tml-week-tabs" role="tablist" aria-label="강의 결과 섹션" style={{ marginBottom: 24 }}>
         {SECTION_TABS.map(({ key, label }) => (
           <button
             key={key}
+            role="tab"
+            aria-selected={activeSection === key}
+            aria-controls={`tabpanel-${key}`}
             className={`tml-week-tab${activeSection === key ? ' tml-week-tab--active' : ''}`}
             onClick={() => {
               setActiveSection(key)
@@ -284,6 +287,9 @@ export function LectureResult() {
       {/* 섹션 콘텐츠 */}
       <div
         key={activeSection}
+        role="tabpanel"
+        id={`tabpanel-${activeSection}`}
+        aria-label={SECTION_TABS.find(t => t.key === activeSection)?.label}
         style={{ animation: 'tml-rise 0.2s cubic-bezier(0.16, 1, 0.3, 1) both' }}
       >
         {/* 핵심 개념 */}

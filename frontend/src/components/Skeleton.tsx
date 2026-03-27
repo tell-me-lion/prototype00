@@ -2,7 +2,7 @@
 
 import type { CSSProperties } from 'react'
 
-/* ── 기본 단형 스켈레톤 ── */
+/* ── 기본 단형 스켈레톤 (내부 전용) ── */
 interface SkeletonProps {
   height?: number | string
   width?: number | string
@@ -10,7 +10,7 @@ interface SkeletonProps {
   style?: CSSProperties
 }
 
-export function Skeleton({
+function Skeleton({
   height = 72,
   width = '100%',
   borderRadius = 6,
@@ -24,27 +24,8 @@ export function Skeleton({
   )
 }
 
-/* ── 텍스트 줄 스켈레톤 ── */
-export function SkeletonText({ lines = 3 }: { lines?: number }) {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {[...Array(lines)].map((_, i) => (
-        <div
-          key={i}
-          className="tml-skeleton"
-          style={{
-            height: 15,
-            width: i === lines - 1 ? '58%' : '100%',
-            borderRadius: 4,
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-/* ── 컨셉 카드 스켈레톤 (세로 바 + 줄) ── */
-export function SkeletonCard() {
+/* ── 컨셉 카드 스켈레톤 (내부 전용) ── */
+function SkeletonCard() {
   return (
     <div
       className="tml-card"
@@ -90,7 +71,7 @@ interface SkeletonGroupProps {
 
 export function SkeletonGroup({ count = 3, variant = 'card' }: SkeletonGroupProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div aria-busy="true" aria-label="콘텐츠 로딩 중" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {[...Array(count)].map((_, i) =>
         variant === 'card'
           ? <SkeletonCard key={i} />

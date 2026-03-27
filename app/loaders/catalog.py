@@ -4,6 +4,7 @@ data/raw/*.txt 를 스캔해 강의 목록과 주차 요약을 반환한다.
 """
 
 import re
+import time
 from datetime import date
 from pathlib import Path
 
@@ -67,8 +68,32 @@ def _get_result_summary(lecture_id: str, status: ProcessingStatus) -> LectureRes
     )
 
 
+_cache: dict[str, tuple[float, object]] = {}
+_CACHE_TTL = 30  # 초
+
+
+def _get_cached(key: str) -> object | None:
+    """TTL 기반 캐시 조회. 만료 시 None 반환."""
+    entry = _cache.get(key)
+    if entry and (time.monotonic() - entry[0]) < _CACHE_TTL:
+        return entry[1]
+    return None
+
+
+def _set_cached(key: str, value: object) -> None:
+    _cache[key] = (time.monotonic(), value)
+
+
+def invalidate_catalog_cache() -> None:
+    """캐시 무효화 (처리 완료 시 호출)."""
+    _cache.clear()
+
+
 def load_lectures() -> list[LectureCatalog]:
-    """data/raw/*.txt 를 스캔해 강의 카탈로그 반환 (날짜 오름차순)."""
+    """data/raw/*.txt 를 스캔해 강의 카탈로그 반환 (날짜 오름차순). 30초 캐시."""
+    cached = _get_cached("lectures")
+    if cached is not None:
+        return cached  # type: ignore[return-value]
     txt_files = sorted(DATA_RAW.glob("*.txt"))
     if not txt_files:
         return []
@@ -109,11 +134,15 @@ def load_lectures() -> list[LectureCatalog]:
             )
         )
 
+    _set_cached("lectures", lectures)
     return lectures
 
 
 def load_weeks() -> list[WeekSummary]:
-    """존재하는 주차만 요약해서 반환 (주차 오름차순)."""
+    """존재하는 주차만 요약해서 반환 (주차 오름차순). 30초 캐시."""
+    cached = _get_cached("weeks")
+    if cached is not None:
+        return cached  # type: ignore[return-value]
     lectures = load_lectures()
     week_map: dict[int, list[LectureCatalog]] = {}
 
@@ -147,4 +176,5 @@ def load_weeks() -> list[WeekSummary]:
             )
         )
 
+    _set_cached("weeks", summaries)
     return summaries

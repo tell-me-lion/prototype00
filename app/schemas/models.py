@@ -5,7 +5,7 @@ ARCHITECTURE.md §2.3, §2.3.1 기준.
 
 from datetime import date, datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -42,8 +42,8 @@ class Quiz(BaseModel):
     """퀴즈 (quizzes_validated)."""
 
     quiz_id: str
-    status: str = "pass"  # pass | fail
-    type: str  # mcq | short | fill | code
+    status: Literal["pass", "fail"] = "pass"
+    type: Literal["mcq", "short", "fill", "code"]
     question: str
     options: list[str] | None = None
     answer: str | list[str] | None = None  # short/fill은 str, mcq는 보통 str
@@ -130,7 +130,7 @@ class ProcessingStep(BaseModel):
     """처리 단계 하나."""
 
     name: str    # "영상 분석", "텍스트 추출", "AI 분석"
-    status: str  # "pending" | "running" | "done"
+    status: Literal["pending", "running", "done"]
 
 
 class ProcessingStatusResponse(BaseModel):

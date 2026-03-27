@@ -395,7 +395,7 @@ function MiniLectureCard({ date, dayOfWeek, status, lectureId }: MiniLectureCard
     <button
       onClick={() => isCompleted && navigate(`/lecture/${lectureId}`)}
       style={{
-        background: 'var(--tml-surface)',
+        background: 'var(--tml-bg-raised)',
         border: '1px solid var(--tml-rule)',
         borderRadius: 8,
         padding: '16px 14px',

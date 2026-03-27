@@ -5,12 +5,13 @@
 """
 
 import asyncio
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi.responses import JSONResponse
 
-from app.loaders.dummy import load_concepts, load_learning_guides, load_learning_points, load_quizzes
-from app.loaders.catalog import load_lectures, load_weeks
+from app.loaders.catalog import load_lectures, load_weeks, invalidate_catalog_cache
 from app.loaders.results import load_lecture_results, load_week_results
 from app.schemas import (
     Concept,
@@ -26,9 +27,29 @@ from app.schemas import (
     ProcessTriggerResponse,
     ProcessingStatus,
 )
-from app import state
+from app.state import JobState, get_lecture_job, set_lecture_job, get_week_job, set_week_job
 
 router = APIRouter(prefix="/api", tags=["산출물"])
+
+# 입력 검증 패턴
+_LECTURE_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_.+$")
+
+
+def _validate_lecture_id(lecture_id: str) -> str:
+    """lecture_id 포맷 검증 (YYYY-MM-DD_코스코드)."""
+    if not _LECTURE_ID_RE.match(lecture_id):
+        raise HTTPException(
+            status_code=400,
+            detail=f"잘못된 강의 ID 형식입니다: {lecture_id} (예: 2026-02-03_kdt-backendj-21th)",
+        )
+    return lecture_id
+
+
+def _validate_week(week: int) -> int:
+    """week 범위 검증 (1 이상)."""
+    if week < 1:
+        raise HTTPException(status_code=400, detail="주차는 1 이상이어야 합니다.")
+    return week
 
 
 # --- 강의 카탈로그 ---
@@ -43,6 +64,7 @@ def get_lectures():
 @router.get("/lectures/{lecture_id}", response_model=LectureCatalog)
 def get_lecture(lecture_id: str):
     """단일 강의 상세. 없으면 404."""
+    _validate_lecture_id(lecture_id)
     lectures = load_lectures()
     for lec in lectures:
         if lec.lecture_id == lecture_id:
@@ -59,6 +81,7 @@ def get_weeks():
 @router.get("/weeks/{week}", response_model=WeekSummary)
 def get_week(week: int):
     """특정 주차 상세. 없으면 404."""
+    _validate_week(week)
     weeks = load_weeks()
     for w in weeks:
         if w.week == week:
@@ -77,24 +100,30 @@ _STEPS_TEMPLATE = [
 
 async def _simulate_lecture(lecture_id: str) -> None:
     """MVP: 강의 처리 시뮬레이션 (2초 × 3단계)."""
-    job = state.lecture_jobs[lecture_id]
+    job = await get_lecture_job(lecture_id)
+    if not job:
+        return
     for i in range(len(job.steps)):
         job.steps[i]["status"] = "running"
         await asyncio.sleep(2)
         job.steps[i]["status"] = "done"
     job.status = ProcessingStatus.completed
     job.completed_at = datetime.now()
+    invalidate_catalog_cache()
 
 
 async def _simulate_week(week: int) -> None:
     """MVP: 주차 처리 시뮬레이션 (2초 × 3단계)."""
-    job = state.week_jobs[week]
+    job = await get_week_job(week)
+    if not job:
+        return
     for i in range(len(job.steps)):
         job.steps[i]["status"] = "running"
         await asyncio.sleep(2)
         job.steps[i]["status"] = "done"
     job.status = ProcessingStatus.completed
     job.completed_at = datetime.now()
+    invalidate_catalog_cache()
 
 
 @router.post(
@@ -102,18 +131,18 @@ async def _simulate_week(week: int) -> None:
     response_model=ProcessTriggerResponse,
     status_code=202,
 )
-def process_lecture(
+async def process_lecture(
     lecture_id: str,
     background_tasks: BackgroundTasks,
     force: bool = False,
 ):
     """강의 처리 시작 트리거 (Mode A)."""
-    # 강의 존재 검증
+    _validate_lecture_id(lecture_id)
     lectures = load_lectures()
     if not any(lec.lecture_id == lecture_id for lec in lectures):
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
-    job = state.lecture_jobs.get(lecture_id)
+    job = await get_lecture_job(lecture_id)
 
     if job and job.status == ProcessingStatus.processing:
         raise HTTPException(status_code=409, detail="이미 처리 중인 강의입니다.")
@@ -124,13 +153,12 @@ def process_lecture(
             detail="이미 처리 완료된 강의입니다. 재처리하려면 ?force=true 를 사용하세요.",
         )
 
-    from app.state import JobState
     job = JobState(
         status=ProcessingStatus.processing,
         steps=[dict(s) for s in _STEPS_TEMPLATE],
         started_at=datetime.now(),
     )
-    state.lecture_jobs[lecture_id] = job
+    await set_lecture_job(lecture_id, job)
     background_tasks.add_task(_simulate_lecture, lecture_id)
 
     return ProcessTriggerResponse(
@@ -141,13 +169,14 @@ def process_lecture(
 
 
 @router.get("/lectures/{lecture_id}/status", response_model=ProcessingStatusResponse)
-def get_lecture_status(lecture_id: str):
+async def get_lecture_status(lecture_id: str):
     """강의 처리 상태 조회."""
+    _validate_lecture_id(lecture_id)
     lectures = load_lectures()
     if not any(lec.lecture_id == lecture_id for lec in lectures):
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
-    job = state.lecture_jobs.get(lecture_id)
+    job = await get_lecture_job(lecture_id)
     if not job:
         return ProcessingStatusResponse(
             lecture_id=lecture_id,
@@ -165,15 +194,16 @@ def get_lecture_status(lecture_id: str):
 
 
 @router.get("/lectures/{lecture_id}/results", response_model=LectureOutputs)
-def get_lecture_results(lecture_id: str):
+async def get_lecture_results(lecture_id: str):
     """강의 처리 결과 조회. 완료 전이면 202 반환."""
+    _validate_lecture_id(lecture_id)
     lectures = load_lectures()
     if not any(lec.lecture_id == lecture_id for lec in lectures):
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
-    job = state.lecture_jobs.get(lecture_id)
+    job = await get_lecture_job(lecture_id)
     if not job or job.status != ProcessingStatus.completed:
-        raise HTTPException(status_code=202, detail={"status": "processing"})
+        return JSONResponse(status_code=202, content={"status": "processing"})
 
     concepts_raw, lp_raw, quizzes_raw = load_lecture_results(lecture_id)
     return LectureOutputs(
@@ -184,13 +214,14 @@ def get_lecture_results(lecture_id: str):
 
 
 @router.post("/weeks/{week}/process", response_model=ProcessTriggerResponse, status_code=202)
-def process_week(week: int, background_tasks: BackgroundTasks, force: bool = False):
+async def process_week(week: int, background_tasks: BackgroundTasks, force: bool = False):
     """주차 처리 시작 트리거 (Mode B)."""
+    _validate_week(week)
     weeks = load_weeks()
     if not any(w.week == week for w in weeks):
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
-    job = state.week_jobs.get(week)
+    job = await get_week_job(week)
 
     if job and job.status == ProcessingStatus.processing:
         raise HTTPException(status_code=409, detail="이미 처리 중인 주차입니다.")
@@ -201,13 +232,12 @@ def process_week(week: int, background_tasks: BackgroundTasks, force: bool = Fal
             detail="이미 처리 완료된 주차입니다. 재처리하려면 ?force=true 를 사용하세요.",
         )
 
-    from app.state import JobState
     job = JobState(
         status=ProcessingStatus.processing,
         steps=[dict(s) for s in _STEPS_TEMPLATE],
         started_at=datetime.now(),
     )
-    state.week_jobs[week] = job
+    await set_week_job(week, job)
     background_tasks.add_task(_simulate_week, week)
 
     return ProcessTriggerResponse(
@@ -218,13 +248,14 @@ def process_week(week: int, background_tasks: BackgroundTasks, force: bool = Fal
 
 
 @router.get("/weeks/{week}/status", response_model=ProcessingStatusResponse)
-def get_week_status(week: int):
+async def get_week_status(week: int):
     """주차 처리 상태 조회."""
+    _validate_week(week)
     weeks = load_weeks()
     if not any(w.week == week for w in weeks):
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
-    job = state.week_jobs.get(week)
+    job = await get_week_job(week)
     if not job:
         return ProcessingStatusResponse(week=week, status=ProcessingStatus.idle)
 
@@ -239,60 +270,17 @@ def get_week_status(week: int):
 
 
 @router.get("/weeks/{week}/results", response_model=WeeklyOutputs)
-def get_week_results(week: int):
+async def get_week_results(week: int):
     """주차 처리 결과 조회. 완료 전이면 202 반환."""
+    _validate_week(week)
     weeks = load_weeks()
     if not any(w.week == week for w in weeks):
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
-    job = state.week_jobs.get(week)
+    job = await get_week_job(week)
     if not job or job.status != ProcessingStatus.completed:
-        raise HTTPException(status_code=202, detail={"status": "processing"})
+        return JSONResponse(status_code=202, content={"status": "processing"})
 
     guides_raw = load_week_results(week)
     return WeeklyOutputs(guides=[LearningGuide.model_validate(d) for d in guides_raw])
-
-
-# --- 단일 강의 산출물 (1.3) ---
-
-
-@router.get("/concepts", response_model=list[Concept])
-def get_concepts():
-    """핵심 개념 목록 (단일 강의 입력 대응)."""
-    raw = load_concepts()
-    return [Concept.model_validate(d) for d in raw]
-
-
-@router.get("/learning-points", response_model=list[LearningPoint])
-def get_learning_points():
-    """학습 포인트 목록 (단일 강의 입력 대응)."""
-    raw = load_learning_points()
-    return [LearningPoint.model_validate(d) for d in raw]
-
-
-@router.get("/quizzes", response_model=list[Quiz])
-def get_quizzes():
-    """퀴즈 목록 (단일 강의 입력 대응)."""
-    raw = load_quizzes()
-    return [Quiz.model_validate(d) for d in raw]
-
-
-# --- 1주일치 산출물 (1.4) ---
-
-
-@router.get("/learning-guides", response_model=list[LearningGuide])
-def get_learning_guides():
-    """주차별 학습 가이드·핵심 요약 전체."""
-    raw = load_learning_guides()
-    return [LearningGuide.model_validate(d) for d in raw]
-
-
-@router.get("/learning-guides/{week}", response_model=LearningGuide)
-def get_learning_guide_by_week(week: int):
-    """특정 주차 학습 가이드·핵심 요약."""
-    raw = load_learning_guides()
-    for d in raw:
-        if d.get("week") == week:
-            return LearningGuide.model_validate(d)
-    raise HTTPException(status_code=404, detail=f"주차 {week}에 해당하는 학습 가이드가 없습니다.")
 

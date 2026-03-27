@@ -348,13 +348,13 @@ body::after {
   gap: 0;
   padding: 16px 18px 16px 0;
   background: var(--tml-bg-raised);
-  border: 1px solid #E85454;
+  border: 1px solid var(--tml-wrong);
   border-radius: 6px;
 }
 
 .tml-error-card__bar {
   width: 3px;
-  background: #E85454;
+  background: var(--tml-wrong);
   border-radius: 2px;
   flex-shrink: 0;
   margin-right: 16px;
@@ -372,7 +372,7 @@ body::after {
   font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 600;
-  color: #E85454;
+  color: var(--tml-wrong);
 }
 
 .tml-error-card__msg {
@@ -616,13 +616,13 @@ body::after {
 }
 
 .quiz-feedback--correct {
-  background: #E8F5EE;
-  color: #2D9966;
+  background: var(--tml-correct-bg);
+  color: var(--tml-correct);
 }
 
 .quiz-feedback--wrong {
-  background: #FFF0F0;
-  color: #E85454;
+  background: var(--tml-wrong-bg);
+  color: var(--tml-wrong);
 }
 
 /* 해설 영역 */
@@ -1088,7 +1088,7 @@ body::after {
 .tml-lecture-card__error {
   font-family: var(--font-body);
   font-size: 0.75rem;
-  color: #E85454;
+  color: var(--tml-wrong);
   margin: 0 0 4px;
 }
 
@@ -1178,7 +1178,7 @@ body::after {
 }
 
 .tml-processing-step--done .tml-processing-step__icon {
-  background: #2D9966;
+  background: var(--tml-correct);
   color: var(--tml-white);
 }
 
@@ -1230,7 +1230,7 @@ body::after {
 
 .tml-processing-fill--done {
   width: 100%;
-  background: #2D9966;
+  background: var(--tml-correct);
 }
 
 /* 상태 라벨 */
@@ -1244,7 +1244,7 @@ body::after {
 
 .tml-processing-step--pending .tml-processing-step__label { color: var(--tml-ink-muted); }
 .tml-processing-step--running .tml-processing-step__label { color: var(--tml-orange); font-weight: 700; }
-.tml-processing-step--done   .tml-processing-step__label { color: #2D9966; }
+.tml-processing-step--done   .tml-processing-step__label { color: var(--tml-correct); }
 
 /* 에러 메시지 */
 .tml-processing-error {
@@ -1256,7 +1256,7 @@ body::after {
 .tml-processing-error__msg {
   font-family: var(--font-body);
   font-size: 0.6875rem;
-  color: #E85454;
+  color: var(--tml-wrong);
   line-height: 1.4;
 }
 

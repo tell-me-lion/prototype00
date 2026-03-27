@@ -57,14 +57,18 @@ export async function triggerLectureProcess(
   lectureId: string,
   force?: boolean,
 ): Promise<ProcessTriggerResponse> {
-  return request(`/api/lectures/${lectureId}/process`, {
+  const query = force ? '?force=true' : ''
+  return request(`/api/lectures/${lectureId}/process${query}`, {
     method: 'POST',
-    body: JSON.stringify({ force: force ?? false }),
   })
 }
 
-export async function triggerWeekProcess(week: number): Promise<ProcessTriggerResponse> {
-  return request(`/api/weeks/${week}/process`, { method: 'POST' })
+export async function triggerWeekProcess(
+  week: number,
+  force?: boolean,
+): Promise<ProcessTriggerResponse> {
+  const query = force ? '?force=true' : ''
+  return request(`/api/weeks/${week}/process${query}`, { method: 'POST' })
 }
 
 // ===== 처리 상태 =====
