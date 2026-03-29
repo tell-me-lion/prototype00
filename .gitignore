@@ -19,8 +19,12 @@ Desktop.ini
 __pycache__/
 *.py[cod]
 *$py.class
-*.pyc
 *.pyo
+*.pyd
+*.pyi
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
 
 ########################
 # Python 가상환경
@@ -31,6 +35,7 @@ venv/
 ########################
 # Node / Frontend
 ########################
+node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/dist-ssr/
@@ -59,23 +64,14 @@ data/
 .env.*
 .env.local
 .env.*.local
-
-# 프로젝트 데이터 (raw, 파이프라인 출력 등)
-data/
-
-# python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pyi
-
-# IDE
-.idea/
-.vscode/
-
 frontend/.env
 frontend/.env.*.local
+
+########################
+# 로컬 DB
+########################
+*.sqlite3
+*.db
 
 ########################
 # Cursor / Claude / 기타 도구 메타데이터
@@ -83,6 +79,7 @@ frontend/.env.*.local
 .agent/
 .cursor/
 .claude/
+.vercel/
 
 ########################
 # 개인용 문서 (공유 안 함)
