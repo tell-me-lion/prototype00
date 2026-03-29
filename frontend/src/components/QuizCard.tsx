@@ -239,7 +239,9 @@ function CodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
 
       <p className="quiz-question">{quiz.question}</p>
 
-      <pre className="quiz-code-block quiz-code-block--question"><code>{quiz.question}</code></pre>
+      {quiz.code && (
+        <pre className="quiz-code-block quiz-code-block--question"><code>{quiz.code}</code></pre>
+      )}
 
       <button className="quiz-reset-btn" onClick={() => setShowAnswer((s) => !s)}>
         정답 보기 {showAnswer ? '▴' : '▾'}

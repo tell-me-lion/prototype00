@@ -77,12 +77,13 @@ export interface LearningPoint {
 
 export interface Quiz {
   quiz_id: string
-  status: string
+  status: 'pass' | 'fail'
   type: 'mcq' | 'short' | 'fill' | 'code'
   question: string
   options: string[] | null
   answer: string | string[] | null
   explanation: string | null
+  code?: string
   validation_log: Record<string, unknown>
   meta: Record<string, unknown>
 }
