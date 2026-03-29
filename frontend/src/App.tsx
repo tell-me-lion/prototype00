@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard'
 import { LectureResult } from './pages/LectureResult'
 import { WeeklyResult } from './pages/WeeklyResult'
 import { NotFound } from './pages/NotFound'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 // ── 컨텍스트 네비게이션 (Option C) ──
 
@@ -78,23 +79,25 @@ function App() {
         </button>
       </header>
 
-      <Routes>
-        {/* 메인 대시보드 */}
-        <Route path="/" element={<Dashboard />} />
+      <ErrorBoundary>
+        <Routes>
+          {/* 메인 대시보드 */}
+          <Route path="/" element={<Dashboard />} />
 
-        {/* Mode A: 단일 강의 */}
-        <Route path="/lecture/:id" element={<LectureResult />} />
+          {/* Mode A: 단일 강의 */}
+          <Route path="/lecture/:id" element={<LectureResult />} />
 
-        {/* Mode B: 주차별 가이드 */}
-        <Route path="/weekly/:week" element={<WeeklyResult />} />
+          {/* Mode B: 주차별 가이드 */}
+          <Route path="/weekly/:week" element={<WeeklyResult />} />
 
-        {/* 하위 호환 리다이렉트 */}
-        <Route path="/lecture" element={<Navigate to="/" replace />} />
-        <Route path="/weekly" element={<Navigate to="/" replace />} />
+          {/* 하위 호환 리다이렉트 */}
+          <Route path="/lecture" element={<Navigate to="/" replace />} />
+          <Route path="/weekly" element={<Navigate to="/" replace />} />
 
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </ErrorBoundary>
     </div>
   )
 }

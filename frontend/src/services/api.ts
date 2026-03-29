@@ -21,16 +21,33 @@ export class ApiError extends Error {
   }
 }
 
+const DEFAULT_TIMEOUT = 15_000
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ detail: '알 수 없는 오류' }))
-    throw new ApiError(res.status, body.detail ?? `오류 (${res.status})`)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT)
+
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      ...options,
+    })
+    clearTimeout(timeout)
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new ApiError(res.status, body.detail ?? `오류 (${res.status})`)
+    }
+    return (await res.json()) as T
+  } catch (err) {
+    clearTimeout(timeout)
+    if (err instanceof ApiError) throw err
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError(408, '요청 시간이 초과되었습니다')
+    }
+    throw new ApiError(0, '서버에 연결할 수 없습니다')
   }
-  return res.json()
 }
 
 // ===== 강의 카탈로그 =====

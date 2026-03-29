@@ -40,8 +40,15 @@ export function useProcessingStatus({
 
   useEffect(() => {
     if (!enabled) return
+    if (!lectureId && week === undefined) {
+      console.error('useProcessingStatus: lectureId 또는 week 중 하나를 제공해야 합니다')
+      return
+    }
 
     let stopped = false
+    let timer: ReturnType<typeof setTimeout>
+    let retryCount = 0
+    const MAX_RETRIES = 5
 
     async function poll() {
       if (stopped) return
@@ -50,6 +57,8 @@ export function useProcessingStatus({
           ? await fetchLectureStatus(lectureId)
           : await fetchWeekStatus(week!)
         if (stopped) return
+
+        retryCount = 0
         setStatus(result)
 
         if (result.status === 'completed') {
@@ -62,16 +71,25 @@ export function useProcessingStatus({
           onErrorRef.current?.(msg)
           return
         }
+
+        timer = setTimeout(poll, interval)
       } catch {
-        // 네트워크 오류 시 폴링 유지
+        if (stopped) return
+        retryCount++
+        if (retryCount >= MAX_RETRIES) {
+          const msg = '서버와 연결할 수 없습니다. 네트워크를 확인해주세요.'
+          setError(msg)
+          onErrorRef.current?.(msg)
+          return
+        }
+        timer = setTimeout(poll, interval * Math.pow(2, retryCount))
       }
     }
 
     poll()
-    const id = setInterval(poll, interval)
     return () => {
       stopped = true
-      clearInterval(id)
+      clearTimeout(timer)
     }
   }, [enabled, lectureId, week, interval])
 
