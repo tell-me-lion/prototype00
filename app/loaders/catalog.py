@@ -3,12 +3,16 @@
 data/raw/*.txt 를 스캔해 강의 목록과 주차 요약을 반환한다.
 """
 
+import logging
+import os
 import re
 import time
 from datetime import date
 from pathlib import Path
 
-from pipeline.paths import DATA_RAW, DATA_EP_CONCEPTS, DATA_PHASE1_SESSIONS
+from pipeline.paths import DATA_RAW, DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED, DATA_PHASE1_SESSIONS
+
+logger = logging.getLogger(__name__)
 from app.schemas.models import (
     LectureCatalog,
     LectureResultSummary,
@@ -35,10 +39,9 @@ def _parse_course_name(code: str) -> str:
 
 
 def _calculate_week(lecture_date: date, first_date: date) -> int:
-    """첫 강의 날짜 기준 ISO week 오프셋으로 주차 계산."""
-    first_iso = first_date.isocalendar()[1]
-    current_iso = lecture_date.isocalendar()[1]
-    return current_iso - first_iso + 1
+    """첫 강의 날짜 기준 경과 일수로 주차 계산 (연도 경계 안전)."""
+    delta_days = (lecture_date - first_date).days
+    return (delta_days // 7) + 1
 
 
 def _get_status(lecture_id: str) -> ProcessingStatus:
@@ -50,26 +53,28 @@ def _get_status(lecture_id: str) -> ProcessingStatus:
     return ProcessingStatus.idle
 
 
+def _count_jsonl_lines(path: Path) -> int:
+    """JSONL 파일의 줄 수를 빠르게 카운트한다."""
+    if not path.exists():
+        return 0
+    with path.open(encoding="utf-8") as f:
+        return sum(1 for line in f if line.strip())
+
+
 def _get_result_summary(lecture_id: str, status: ProcessingStatus) -> LectureResultSummary | None:
     """처리 완료된 강의의 결과 요약 집계."""
     if status != ProcessingStatus.completed:
         return None
 
-    concept_count = 0
-    ep_file = DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"
-    if ep_file.exists():
-        lines = ep_file.read_text(encoding="utf-8").splitlines()
-        concept_count = len([ln for ln in lines if ln.strip()])
-
     return LectureResultSummary(
-        concept_count=concept_count,
-        learning_point_count=0,
-        quiz_count=0,
+        concept_count=_count_jsonl_lines(DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"),
+        learning_point_count=_count_jsonl_lines(DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl"),
+        quiz_count=_count_jsonl_lines(DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl"),
     )
 
 
 _cache: dict[str, tuple[float, object]] = {}
-_CACHE_TTL = 30  # 초
+_CACHE_TTL = int(os.getenv("CATALOG_CACHE_TTL", "30"))
 
 
 def _get_cached(key: str) -> object | None:
@@ -105,7 +110,11 @@ def load_lectures() -> list[LectureCatalog]:
         m = _FILE_PATTERN.match(f.stem)
         if not m:
             continue
-        d = date.fromisoformat(m.group(1))
+        try:
+            d = date.fromisoformat(m.group(1))
+        except ValueError:
+            logger.warning("유효하지 않은 날짜 형식: %s, 건너뜀", f.stem)
+            continue
         course_code = m.group(2)
         dates.append(d)
         parsed.append((d, f.stem, course_code))

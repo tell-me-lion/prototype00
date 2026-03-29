@@ -10,6 +10,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 
 from app.loaders.catalog import load_lectures, load_weeks, invalidate_catalog_cache
 from app.loaders.results import load_lecture_results, load_week_results
@@ -206,10 +207,26 @@ async def get_lecture_results(lecture_id: str):
         return JSONResponse(status_code=202, content={"status": "processing"})
 
     concepts_raw, lp_raw, quizzes_raw = load_lecture_results(lecture_id)
+
+    try:
+        concepts = [Concept.model_validate(d) for d in concepts_raw]
+    except ValidationError as e:
+        raise HTTPException(422, detail=f"개념 데이터 형식 오류: {e.error_count()}건")
+
+    try:
+        learning_points = [LearningPoint.model_validate(d) for d in lp_raw]
+    except ValidationError as e:
+        raise HTTPException(422, detail=f"학습 포인트 데이터 형식 오류: {e.error_count()}건")
+
+    try:
+        quizzes = [Quiz.model_validate(d) for d in quizzes_raw]
+    except ValidationError as e:
+        raise HTTPException(422, detail=f"퀴즈 데이터 형식 오류: {e.error_count()}건")
+
     return LectureOutputs(
-        concepts=[Concept.model_validate(d) for d in concepts_raw],
-        learning_points=[LearningPoint.model_validate(d) for d in lp_raw],
-        quizzes=[Quiz.model_validate(d) for d in quizzes_raw],
+        concepts=concepts,
+        learning_points=learning_points,
+        quizzes=quizzes,
     )
 
 

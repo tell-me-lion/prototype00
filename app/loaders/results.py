@@ -25,12 +25,13 @@ def _load_jsonl(path: Path) -> list[dict[str, Any]]:
         return []
     lines = path.read_text(encoding="utf-8").splitlines()
     result = []
-    for ln in lines:
+    for i, ln in enumerate(lines):
         ln = ln.strip()
         if ln:
             try:
                 result.append(json.loads(ln))
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                logger.warning("JSONL 파싱 실패 (%s, %d행): %s", path.name, i + 1, e)
                 continue
     return result
 

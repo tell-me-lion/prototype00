@@ -48,6 +48,7 @@ class Quiz(BaseModel):
     options: list[str] | None = None
     answer: str | list[str] | None = None  # short/fill은 str, mcq는 보통 str
     explanation: str | None = None
+    code: str | None = None
     validation_log: dict[str, Any] = Field(default_factory=dict)
     meta: dict[str, Any] = Field(default_factory=dict)
 
