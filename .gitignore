@@ -86,3 +86,15 @@ frontend/.env.*.local
 ########################
 ERRORS.md
 tasks/
+
+
+
+
+*.pem
+.vercel
+.env*.local
+
+########################
+# 테스트 산출물
+########################
+**/test_*_result.json
