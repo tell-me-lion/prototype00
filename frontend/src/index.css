@@ -1252,57 +1252,167 @@ body::after {
   .tml-dashboard-stagger { animation: none; }
 }
 
-/* ── 히어로: 프로그레스 링 + 환영 ── */
-.tml-dashboard-hero {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  padding: 32px 36px;
-  background: var(--tml-bg-raised);
-  border: 1px solid var(--tml-rule);
-  border-radius: 10px;
-  margin-bottom: 28px;
+/* ── 히어로 (다크 네이비) ── */
+.tml-hero {
   position: relative;
+  background: linear-gradient(135deg, var(--tml-navy) 0%, #1A3558 60%, #0D2240 100%);
+  border-radius: 16px;
+  padding: 44px 40px 20px;
+  margin-bottom: 24px;
   overflow: hidden;
 }
 
-.tml-dashboard-hero::before {
-  content: '';
+.tml-hero__decor {
   position: absolute;
-  top: -40px;
-  right: -20px;
-  width: 260px;
-  height: 260px;
-  background: radial-gradient(circle, rgba(255, 107, 0, 0.06), transparent 70%);
+  inset: 0;
   pointer-events: none;
 }
 
-.tml-dashboard-hero__text {
+.tml-hero__ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 107, 0, 0.12);
+}
+
+.tml-hero__ring--1 {
+  width: 340px;
+  height: 340px;
+  top: -120px;
+  right: -60px;
+}
+
+.tml-hero__ring--2 {
+  width: 220px;
+  height: 220px;
+  top: -60px;
+  right: 0;
+}
+
+.tml-hero__ring--3 {
+  width: 120px;
+  height: 120px;
+  bottom: -40px;
+  left: -30px;
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+.tml-hero__glow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  top: -50%;
+  right: -5%;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.1), transparent 65%);
+}
+
+.tml-hero__content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  z-index: 1;
+}
+
+.tml-hero__info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.tml-dashboard-hero__greeting {
+.tml-hero__eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tml-orange);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.tml-hero__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--tml-ink);
+  font-size: 1.5rem;
+  color: #fff;
   margin: 0;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
-.tml-dashboard-hero__summary {
+.tml-hero__desc {
   font-family: var(--font-body);
   font-size: 0.9375rem;
-  color: var(--tml-ink-secondary);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.6;
 }
 
-.tml-dashboard-hero__summary strong {
-  color: var(--tml-ink);
+.tml-hero__desc strong {
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
+}
+
+.tml-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 9px 22px;
+  background: var(--tml-orange);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+  width: fit-content;
+}
+
+.tml-hero__cta:hover {
+  background: var(--tml-orange-dark);
+  transform: translateY(-1px);
+}
+
+.tml-hero__cta-arrow {
+  transition: transform 0.2s ease;
+}
+
+.tml-hero__cta:hover .tml-hero__cta-arrow {
+  transform: translateX(3px);
+}
+
+.tml-hero__bar {
+  position: relative;
+  margin-top: 28px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.tml-hero__bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--tml-orange), #FF9F4A);
+  border-radius: 2px;
+  transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+
+/* 히어로 안 프로그레스 링 색상 오버라이드 */
+.tml-hero .tml-progress-ring__percent { color: #fff; }
+.tml-hero .tml-progress-ring__unit { color: rgba(255, 255, 255, 0.45); }
+.tml-hero .tml-progress-ring__svg circle:first-of-type { stroke: rgba(255, 255, 255, 0.1); }
+
+[data-theme="dark"] .tml-hero {
+  background: linear-gradient(135deg, #0D1B2E 0%, #152942 60%, #0A1628 100%);
+  border: 1px solid rgba(255, 107, 0, 0.06);
+}
+
+@media (max-width: 768px) {
+  .tml-hero { padding: 32px 24px 16px; }
+  .tml-hero__content { flex-direction: column; gap: 24px; text-align: center; align-items: center; }
+  .tml-hero__info { align-items: center; }
 }
 
 /* ── 프로그레스 링 ── */
@@ -1350,46 +1460,76 @@ body::after {
   margin-top: 4px;
 }
 
-/* ── 통계 카드 (4개) ── */
-.tml-dashboard-stats {
+/* ── 벤토 그리드 ── */
+.tml-bento {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr 2fr;
+  grid-template-rows: auto auto;
   gap: 12px;
   margin-bottom: 32px;
 }
 
-@media (max-width: 768px) {
-  .tml-dashboard-stats {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.tml-bento > .tml-stat:nth-child(1) { grid-column: 1; grid-row: 1; }
+.tml-bento > .tml-stat:nth-child(2) { grid-column: 2; grid-row: 1; }
+.tml-bento > .tml-stat:nth-child(3) { grid-column: 1; grid-row: 2; }
+.tml-bento > .tml-stat:nth-child(4) { grid-column: 2; grid-row: 2; }
+
+.tml-bento__map {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.tml-stat-card {
-  padding: 18px 20px;
-  border-top: 2px solid var(--tml-orange);
+.tml-bento__map-label {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tml-ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .tml-bento {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto;
+  }
+  .tml-bento > .tml-stat:nth-child(1) { grid-column: 1; grid-row: 1; }
+  .tml-bento > .tml-stat:nth-child(2) { grid-column: 2; grid-row: 1; }
+  .tml-bento > .tml-stat:nth-child(3) { grid-column: 1; grid-row: 2; }
+  .tml-bento > .tml-stat:nth-child(4) { grid-column: 2; grid-row: 2; }
+  .tml-bento__map { grid-column: 1 / -1; grid-row: 3; }
+}
+
+/* ── 통계 카드 ── */
+.tml-stat {
+  background: var(--tml-bg-raised);
+  border: 1px solid var(--tml-rule);
+  border-radius: 12px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.tml-stat-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(15, 31, 61, 0.08);
+.tml-stat:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 31, 61, 0.06);
+  border-color: var(--tml-rule-strong);
 }
 
-.tml-stat-card__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.tml-stat__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
-.tml-stat-card__icon {
-  font-size: 1rem;
-  line-height: 1;
-}
-
-.tml-stat-card__label {
+.tml-stat__label {
   font-family: var(--font-body);
   font-size: 0.75rem;
   color: var(--tml-ink-muted);
@@ -1397,88 +1537,110 @@ body::after {
   letter-spacing: 0.02em;
 }
 
-.tml-stat-card__value {
-  font-family: var(--font-mono);
-  font-size: 1.75rem;
-  font-weight: 600;
+.tml-stat__value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--tml-ink);
   line-height: 1;
+  letter-spacing: -0.02em;
 }
 
-/* ── 2컬럼 그리드 ── */
-.tml-dashboard-grid {
+/* ── 최근 강의 타일 (3열 그리드) ── */
+.tml-recent-grid {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
-  gap: 32px;
-  margin-top: 4px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 @media (max-width: 768px) {
-  .tml-dashboard-grid {
-    grid-template-columns: 1fr;
-  }
+  .tml-recent-grid { grid-template-columns: 1fr; }
 }
 
-/* ── 최근 완료 카드 ── */
-.tml-recent-card {
+.tml-lecture-tile {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
+  flex-direction: column;
+  padding: 20px;
   text-decoration: none;
   color: inherit;
-  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+  border-top: 3px solid var(--tml-orange);
+  border-radius: 2px 2px 6px 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.tml-recent-card:hover {
-  border-color: var(--tml-orange);
-  box-shadow: 0 2px 8px var(--tml-shadow-hover);
-  transform: translateY(-1px);
+.tml-lecture-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(15, 31, 61, 0.08);
 }
 
-.tml-recent-card__badge {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  background: var(--tml-orange);
+.tml-lecture-tile__header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.tml-lecture-tile__week {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
   color: #fff;
+  background: var(--tml-navy);
+  padding: 3px 10px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+.tml-lecture-tile__arrow {
+  font-size: 0.875rem;
+  color: var(--tml-orange);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tml-lecture-tile:hover .tml-lecture-tile__arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.tml-lecture-tile__date {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 700;
-  flex-shrink: 0;
+  color: var(--tml-ink-muted);
+  margin: 0 0 4px;
 }
 
-.tml-recent-card__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.tml-recent-card__title {
+.tml-lecture-tile__course {
   font-family: var(--font-body);
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--tml-ink);
-  margin: 0 0 2px;
+  margin: 0 0 16px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tml-recent-card__meta {
+.tml-lecture-tile__stats {
+  display: flex;
+  gap: 16px;
+  margin-top: auto;
+}
+
+.tml-lecture-tile__stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--tml-ink-muted);
-  margin: 0;
 }
 
-.tml-recent-card__arrow {
-  font-family: var(--font-body);
-  font-size: 0.8125rem;
-  color: var(--tml-orange);
-  flex-shrink: 0;
+.tml-lecture-tile__stat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
 }
 
 /* ── 활동 히트맵 ── */
@@ -1587,43 +1749,10 @@ body::after {
   padding: 0 2px;
 }
 
-/* ── 개념 클라우드 ── */
-@keyframes tml-tag-fade {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.tml-concept-cloud {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-}
-
-.tml-concept-cloud__tag {
-  background: var(--tml-bg-overlay);
-  border: 1px solid var(--tml-rule);
-  border-radius: 6px;
-  padding: 6px 14px;
-  font-family: var(--font-body);
-  font-weight: 500;
-  color: var(--tml-ink-secondary);
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
-  animation: tml-tag-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-.tml-concept-cloud__tag:hover {
-  background: var(--tml-orange-light);
-  border-color: var(--tml-orange);
-  color: var(--tml-orange-dark);
-  transform: translateY(-2px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .tml-heatmap__cell { animation: none; }
-  .tml-concept-cloud__tag { animation: none; }
   .tml-progress-ring__circle { transition: none; }
+  .tml-hero__bar-fill { transition: none; }
 }
 
 /* 주차 섹션 */
