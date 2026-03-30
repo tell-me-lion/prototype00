@@ -38,3 +38,8 @@ def load_quizzes() -> list[dict[str, Any]]:
 def load_learning_guides() -> list[dict[str, Any]]:
     """주차별 학습 가이드·핵심 요약 더미 (learning_guides 형식)."""
     return _load_json("learning_guides.json")
+
+
+def load_lecture_catalog() -> list[dict[str, Any]]:
+    """더미 강의 카탈로그 (data/raw 비어있을 때 대시보드용)."""
+    return _load_json("lectures.json")

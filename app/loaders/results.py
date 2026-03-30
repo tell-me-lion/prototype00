@@ -44,21 +44,30 @@ def load_lecture_results(lecture_id: str) -> tuple[list[dict], list[dict], list[
     if concepts:
         logger.info("concepts 로드: pipeline (lecture=%s)", lecture_id)
     else:
-        concepts = load_concepts()
+        all_concepts = load_concepts()
+        concepts = [c for c in all_concepts if c.get("lecture_id") == lecture_id]
+        if not concepts:
+            concepts = all_concepts
         logger.warning("concepts 로드: dummy fallback (lecture=%s)", lecture_id)
 
     learning_points = _load_jsonl(DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl")
     if learning_points:
         logger.info("learning_points 로드: pipeline (lecture=%s)", lecture_id)
     else:
-        learning_points = load_learning_points()
+        all_lp = load_learning_points()
+        learning_points = [lp for lp in all_lp if lp.get("lecture_id") == lecture_id]
+        if not learning_points:
+            learning_points = all_lp
         logger.warning("learning_points 로드: dummy fallback (lecture=%s)", lecture_id)
 
     quizzes = _load_jsonl(DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl")
     if quizzes:
         logger.info("quizzes 로드: pipeline (lecture=%s)", lecture_id)
     else:
-        quizzes = load_quizzes()
+        all_quizzes = load_quizzes()
+        quizzes = [q for q in all_quizzes if q.get("meta", {}).get("lecture_id") == lecture_id]
+        if not quizzes:
+            quizzes = all_quizzes
         logger.warning("quizzes 로드: dummy fallback (lecture=%s)", lecture_id)
 
     return concepts, learning_points, quizzes

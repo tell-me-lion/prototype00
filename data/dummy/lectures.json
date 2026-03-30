@@ -1,0 +1,52 @@
+[
+  {
+    "lecture_id": "2026-02-02_kdt-backendj-21th",
+    "date": "2026-02-02",
+    "day_of_week": "월",
+    "week": 1,
+    "course_code": "kdt-backendj-21th",
+    "course_name": "KDT 백엔드 Java 21기",
+    "status": "completed",
+    "result_summary": { "concept_count": 3, "learning_point_count": 2, "quiz_count": 3 }
+  },
+  {
+    "lecture_id": "2026-02-03_kdt-backendj-21th",
+    "date": "2026-02-03",
+    "day_of_week": "화",
+    "week": 1,
+    "course_code": "kdt-backendj-21th",
+    "course_name": "KDT 백엔드 Java 21기",
+    "status": "completed",
+    "result_summary": { "concept_count": 2, "learning_point_count": 2, "quiz_count": 3 }
+  },
+  {
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "date": "2026-02-04",
+    "day_of_week": "수",
+    "week": 1,
+    "course_code": "kdt-backendj-21th",
+    "course_name": "KDT 백엔드 Java 21기",
+    "status": "completed",
+    "result_summary": { "concept_count": 3, "learning_point_count": 2, "quiz_count": 2 }
+  },
+  {
+    "lecture_id": "2026-02-09_kdt-backendj-21th",
+    "date": "2026-02-09",
+    "day_of_week": "월",
+    "week": 2,
+    "course_code": "kdt-backendj-21th",
+    "course_name": "KDT 백엔드 Java 21기",
+    "status": "completed",
+    "result_summary": { "concept_count": 2, "learning_point_count": 2, "quiz_count": 2 }
+  },
+  {
+    "lecture_id": "2026-02-10_kdt-backendj-21th",
+    "date": "2026-02-10",
+    "day_of_week": "화",
+    "week": 2,
+    "course_code": "kdt-backendj-21th",
+    "course_name": "KDT 백엔드 Java 21기",
+    "status": "completed",
+    "result_summary": { "concept_count": 2, "learning_point_count": 2, "quiz_count": 2 }
+  }
+]
