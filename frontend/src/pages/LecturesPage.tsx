@@ -52,22 +52,47 @@ function WeekFilter({ weeks, activeWeek, onSelect }: WeekFilterProps) {
 
 interface LectureCardProps {
   lecture: Lecture
-  onProcess: (lectureId: string) => void
+  isSelected: boolean
+  onToggleSelect: (lectureId: string) => void
   onViewResults: (lectureId: string) => void
   onProcessComplete: (lectureId: string) => void
   onProcessError: (lectureId: string) => void
+  onRetry: (lectureId: string) => void
 }
 
-function LectureCard({ lecture, onProcess, onViewResults, onProcessComplete, onProcessError }: LectureCardProps) {
+function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onProcessComplete, onProcessError, onRetry }: LectureCardProps) {
   const { lecture_id, date, day_of_week, week, course_name, status, result_summary } = lecture
   const gradient = getLectureThumbnailGradient(date, week)
 
+  const handleCardClick = () => {
+    if (status === 'idle') onToggleSelect(lecture_id)
+    else if (status === 'completed') onViewResults(lecture_id)
+  }
+
+  const isClickable = status === 'idle' || status === 'completed'
+
   return (
-    <div className="tml-lecture-card tml-card">
-      <div className="tml-lecture-card__thumb" style={{ background: gradient }}>
+    <div
+      className={[
+        'tml-lecture-card tml-card',
+        isClickable ? 'tml-lecture-card--selectable' : '',
+        isSelected ? 'tml-lecture-card--selected' : '',
+      ].join(' ').trim()}
+      onClick={isClickable ? handleCardClick : undefined}
+    >
+      <div className="tml-lecture-card__thumb" style={{ background: gradient, position: 'relative' }}>
         <span className="tml-lecture-card__date-badge">
           {date.slice(5)} ({day_of_week})
         </span>
+        {status === 'idle' && (
+          <span className={`tml-lecture-card__checkbox${isSelected ? ' tml-lecture-card__checkbox--checked' : ''}`}>
+            {isSelected && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            )}
+          </span>
+        )}
       </div>
 
       <div className="tml-lecture-card__body">
@@ -75,18 +100,6 @@ function LectureCard({ lecture, onProcess, onViewResults, onProcessComplete, onP
         <p className="tml-lecture-card__week-label">Week {week}</p>
 
         <hr className="tml-lecture-card__rule" />
-
-        {status === 'idle' && (
-          <div className="tml-lecture-card__footer">
-            <button
-              className="btn-primary"
-              style={{ fontSize: '0.8125rem', padding: '6px 14px', width: '100%' }}
-              onClick={() => onProcess(lecture_id)}
-            >
-              가져오기
-            </button>
-          </div>
-        )}
 
         {status === 'processing' && (
           <div className="tml-lecture-card__footer">
@@ -104,12 +117,7 @@ function LectureCard({ lecture, onProcess, onViewResults, onProcessComplete, onP
               <span>개념 {result_summary.concept_count}개</span>
               <span>퀴즈 {result_summary.quiz_count}개</span>
             </div>
-            <button
-              className="tml-lecture-card__result-btn"
-              onClick={() => onViewResults(lecture_id)}
-            >
-              결과 보기 →
-            </button>
+            <span className="tml-lecture-card__result-btn">결과 보기 →</span>
           </div>
         )}
 
@@ -124,7 +132,7 @@ function LectureCard({ lecture, onProcess, onViewResults, onProcessComplete, onP
                 width: '100%',
                 background: 'var(--tml-wrong)',
               }}
-              onClick={() => onProcess(lecture_id)}
+              onClick={(e) => { e.stopPropagation(); onRetry(lecture_id) }}
             >
               재시도
             </button>
@@ -214,10 +222,12 @@ interface WeekSectionProps {
   weekSummary: WeekSummary
   processingLectures: Set<string>
   processingWeeks: Set<number>
-  onProcess: (lectureId: string) => void
+  selectedIds: Set<string>
+  onToggleSelect: (lectureId: string) => void
   onViewResults: (lectureId: string) => void
   onProcessComplete: (lectureId: string) => void
   onProcessError: (lectureId: string) => void
+  onRetry: (lectureId: string) => void
   onProcessWeek: (week: number) => void
   onViewWeekResults: (week: number) => void
   onWeekProcessComplete: (week: number) => void
@@ -228,10 +238,12 @@ function WeekSection({
   weekSummary,
   processingLectures,
   processingWeeks,
-  onProcess,
+  selectedIds,
+  onToggleSelect,
   onViewResults,
   onProcessComplete,
   onProcessError,
+  onRetry,
   onProcessWeek,
   onViewWeekResults,
   onWeekProcessComplete,
@@ -239,7 +251,6 @@ function WeekSection({
 }: WeekSectionProps) {
   const { week, lecture_count, completed_count, date_range, lectures } = weekSummary
 
-  // WeekSummary status 버그 보정: 실제 processing 아닌데 processing으로 오는 경우 idle 처리
   const effectiveWeekStatus: ProcessingStatus = processingWeeks.has(week)
     ? 'processing'
     : weekSummary.status === 'processing' && !processingWeeks.has(week)
@@ -259,19 +270,21 @@ function WeekSection({
       </div>
 
       <div className="tml-lecture-grid">
-        {lectures.map((lecture) => (
-          <LectureCard
-            key={lecture.lecture_id}
-            lecture={{
-              ...lecture,
-              status: processingLectures.has(lecture.lecture_id) ? 'processing' : lecture.status,
-            }}
-            onProcess={onProcess}
-            onViewResults={onViewResults}
-            onProcessComplete={onProcessComplete}
-            onProcessError={onProcessError}
-          />
-        ))}
+        {lectures.map((lecture) => {
+          const effectiveStatus: ProcessingStatus = processingLectures.has(lecture.lecture_id) ? 'processing' : lecture.status
+          return (
+            <LectureCard
+              key={lecture.lecture_id}
+              lecture={{ ...lecture, status: effectiveStatus }}
+              isSelected={selectedIds.has(lecture.lecture_id)}
+              onToggleSelect={onToggleSelect}
+              onViewResults={onViewResults}
+              onProcessComplete={onProcessComplete}
+              onProcessError={onProcessError}
+              onRetry={onRetry}
+            />
+          )
+        })}
       </div>
 
       <WeekGuideCard
@@ -287,6 +300,155 @@ function WeekSection({
   )
 }
 
+// ── RightPanel ──
+
+interface RightPanelProps {
+  weeks: WeekSummary[]
+  selectedIds: Set<string>
+  processingLectures: Set<string>
+  processingWeeks: Set<number>
+  onDeselect: (lectureId: string) => void
+  onStartSelected: () => void
+  onViewResults: (lectureId: string) => void
+  onViewWeekResults: (week: number) => void
+  onProcessWeek: (week: number) => void
+}
+
+function RightPanel({
+  weeks,
+  selectedIds,
+  processingLectures,
+  processingWeeks,
+  onDeselect,
+  onStartSelected,
+  onViewResults,
+  onViewWeekResults,
+  onProcessWeek,
+}: RightPanelProps) {
+  // 모든 강의 플랫 리스트
+  const allLectures = weeks.flatMap((w) => w.lectures)
+
+  // 선택된 강의 (idle)
+  const selectedLectures = allLectures.filter((l) => selectedIds.has(l.lecture_id))
+
+  // 분석 완료된 강의
+  const completedLectures = allLectures.filter((l) => l.status === 'completed')
+
+  return (
+    <aside className="tml-right-panel">
+      {/* 분석 대기 */}
+      <div className="tml-right-panel__section">
+        <p className="tml-right-panel__section-title">
+          분석 대기 ({selectedIds.size}개)
+        </p>
+        {selectedLectures.length === 0 ? (
+          <p className="tml-right-panel__empty">강의를 선택하세요</p>
+        ) : (
+          <ul className="tml-right-panel__list">
+            {selectedLectures.map((l) => (
+              <li key={l.lecture_id} className="tml-right-panel__item">
+                <span className="tml-right-panel__item-label">
+                  {l.date.slice(5)} ({l.day_of_week})
+                </span>
+                <button
+                  className="tml-right-panel__remove"
+                  onClick={() => onDeselect(l.lecture_id)}
+                  aria-label="선택 해제"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button
+          className="btn-primary"
+          style={{
+            width: '100%',
+            marginTop: 12,
+            fontSize: '0.8125rem',
+            padding: '8px 14px',
+            opacity: selectedIds.size === 0 ? 0.4 : 1,
+            cursor: selectedIds.size === 0 ? 'not-allowed' : 'pointer',
+          }}
+          disabled={selectedIds.size === 0}
+          onClick={onStartSelected}
+        >
+          분석 시작 →
+        </button>
+      </div>
+
+      {/* 분석 완료 */}
+      <div className="tml-right-panel__section">
+        <p className="tml-right-panel__section-title">
+          분석 완료 ({completedLectures.length}개)
+        </p>
+        {completedLectures.length === 0 ? (
+          <p className="tml-right-panel__empty">완료된 강의 없음</p>
+        ) : (
+          <ul className="tml-right-panel__list">
+            {completedLectures.map((l) => (
+              <li key={l.lecture_id} className="tml-right-panel__item">
+                <span className="tml-right-panel__item-label">
+                  {l.date.slice(5)} ({l.day_of_week})
+                </span>
+                <button
+                  className="tml-lecture-card__result-btn"
+                  style={{ fontSize: '0.75rem' }}
+                  onClick={() => onViewResults(l.lecture_id)}
+                >
+                  결과보기→
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* 학습 가이드 */}
+      <div className="tml-right-panel__section">
+        <p className="tml-right-panel__section-title">학습 가이드</p>
+        {weeks.length === 0 ? (
+          <p className="tml-right-panel__empty">데이터 없음</p>
+        ) : (
+          <ul className="tml-right-panel__list">
+            {weeks.map((w) => {
+              const effectiveStatus: ProcessingStatus = processingWeeks.has(w.week)
+                ? 'processing'
+                : w.status === 'processing' && !processingWeeks.has(w.week)
+                  ? 'idle'
+                  : w.status
+              return (
+                <li key={w.week} className="tml-right-panel__item">
+                  <span className="tml-right-panel__item-label">{w.week}주차</span>
+                  {effectiveStatus === 'completed' ? (
+                    <button
+                      className="tml-lecture-card__result-btn"
+                      style={{ fontSize: '0.75rem' }}
+                      onClick={() => onViewWeekResults(w.week)}
+                    >
+                      완료 →
+                    </button>
+                  ) : effectiveStatus === 'processing' ? (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--tml-ink-muted)' }}>분석 중…</span>
+                  ) : (
+                    <button
+                      className="tml-right-panel__guide-btn"
+                      onClick={() => onProcessWeek(w.week)}
+                    >
+                      생성 →
+                    </button>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </aside>
+  )
+}
+
 // ── LecturesPage (메인 export) ──
 
 export function LecturesPage() {
@@ -295,6 +457,7 @@ export function LecturesPage() {
   const [error, setError] = useState<string | null>(null)
   const [processingLectures, setProcessingLectures] = useState<Set<string>>(new Set())
   const [processingWeeks, setProcessingWeeks] = useState<Set<number>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
@@ -311,16 +474,49 @@ export function LecturesPage() {
 
   const handleWeekSelect = useCallback(
     (week: number | null) => {
-      if (week === null) {
-        setSearchParams({})
-      } else {
-        setSearchParams({ week: String(week) })
-      }
+      if (week === null) setSearchParams({})
+      else setSearchParams({ week: String(week) })
     },
     [setSearchParams],
   )
 
-  const handleProcess = useCallback(async (lectureId: string) => {
+  const handleToggleSelect = useCallback((lectureId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(lectureId)) next.delete(lectureId)
+      else next.add(lectureId)
+      return next
+    })
+  }, [])
+
+  const handleDeselect = useCallback((lectureId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      next.delete(lectureId)
+      return next
+    })
+  }, [])
+
+  const handleStartSelected = useCallback(async () => {
+    const ids = [...selectedIds]
+    setSelectedIds(new Set())
+    await Promise.all(
+      ids.map(async (id) => {
+        setProcessingLectures((prev) => new Set(prev).add(id))
+        try {
+          await triggerLectureProcess(id)
+        } catch {
+          setProcessingLectures((prev) => {
+            const next = new Set(prev)
+            next.delete(id)
+            return next
+          })
+        }
+      }),
+    )
+  }, [selectedIds])
+
+  const handleRetry = useCallback(async (lectureId: string) => {
     setProcessingLectures((prev) => new Set(prev).add(lectureId))
     try {
       await triggerLectureProcess(lectureId)
@@ -391,7 +587,7 @@ export function LecturesPage() {
     activeWeek !== null ? weeks.filter((w) => w.week === activeWeek) : weeks
 
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 40px 80px' }}>
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
 
       {/* 페이지 헤더 */}
       <div className="tml-animate">
@@ -432,47 +628,54 @@ export function LecturesPage() {
         <ErrorCard message={error} title="강의 목록 로드 실패" />
       )}
 
-      {/* 필터 + 주차 목록 */}
+      {/* 분할 패널 레이아웃 */}
       {!loading && !error && (
         <>
           {weeks.length === 0 ? (
-            <div
-              className="tml-empty"
-              style={{ padding: '48px 24px', textAlign: 'center' }}
-            >
-              <p style={{
-                fontFamily: 'var(--font-body)',
-                color: 'var(--tml-ink-muted)',
-                margin: 0,
-              }}>
+            <div className="tml-empty" style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)', margin: 0 }}>
                 등록된 강의가 없습니다.
               </p>
             </div>
           ) : (
             <>
-              <WeekFilter
-                weeks={weekNumbers}
-                activeWeek={activeWeek}
-                onSelect={handleWeekSelect}
-              />
+              <WeekFilter weeks={weekNumbers} activeWeek={activeWeek} onSelect={handleWeekSelect} />
 
-              <div className="tml-week-content" style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
-                {filteredWeeks.map((weekSummary) => (
-                  <WeekSection
-                    key={weekSummary.week}
-                    weekSummary={weekSummary}
-                    processingLectures={processingLectures}
-                    processingWeeks={processingWeeks}
-                    onProcess={handleProcess}
-                    onViewResults={(id) => navigate(`/lecture/${id}`)}
-                    onProcessComplete={handleProcessComplete}
-                    onProcessError={handleProcessError}
-                    onProcessWeek={handleProcessWeek}
-                    onViewWeekResults={(w) => navigate(`/weekly/${w}`)}
-                    onWeekProcessComplete={handleWeekProcessComplete}
-                    onWeekProcessError={handleWeekProcessError}
-                  />
-                ))}
+              <div className="tml-split-layout">
+                {/* 왼쪽: 강의 목록 */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+                  {filteredWeeks.map((weekSummary) => (
+                    <WeekSection
+                      key={weekSummary.week}
+                      weekSummary={weekSummary}
+                      processingLectures={processingLectures}
+                      processingWeeks={processingWeeks}
+                      selectedIds={selectedIds}
+                      onToggleSelect={handleToggleSelect}
+                      onViewResults={(id) => navigate(`/lecture/${id}`)}
+                      onProcessComplete={handleProcessComplete}
+                      onProcessError={handleProcessError}
+                      onRetry={handleRetry}
+                      onProcessWeek={handleProcessWeek}
+                      onViewWeekResults={(w) => navigate(`/weekly/${w}`)}
+                      onWeekProcessComplete={handleWeekProcessComplete}
+                      onWeekProcessError={handleWeekProcessError}
+                    />
+                  ))}
+                </div>
+
+                {/* 오른쪽: 분석 현황 패널 */}
+                <RightPanel
+                  weeks={weeks}
+                  selectedIds={selectedIds}
+                  processingLectures={processingLectures}
+                  processingWeeks={processingWeeks}
+                  onDeselect={handleDeselect}
+                  onStartSelected={handleStartSelected}
+                  onViewResults={(id) => navigate(`/lecture/${id}`)}
+                  onViewWeekResults={(w) => navigate(`/weekly/${w}`)}
+                  onProcessWeek={handleProcessWeek}
+                />
               </div>
             </>
           )}
