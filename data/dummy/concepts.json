@@ -38,5 +38,37 @@
     "importance": 0.80,
     "evidence_facts": ["fact-012"],
     "meta": {"source": "dummy", "topic": "SQL"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-03_kdt-backendj-21th",
+    "concept": "집계 함수와 GROUP BY",
+    "importance": 0.76,
+    "evidence_facts": ["fact-013"],
+    "meta": {"source": "dummy", "topic": "SQL"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "인덱스(Index)",
+    "importance": 0.91,
+    "evidence_facts": ["fact-020", "fact-021"],
+    "meta": {"source": "dummy", "topic": "DB 최적화"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "정규화(Normalization)",
+    "importance": 0.87,
+    "evidence_facts": ["fact-022", "fact-023"],
+    "meta": {"source": "dummy", "topic": "DB 설계"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "함수 종속성(Functional Dependency)",
+    "importance": 0.78,
+    "evidence_facts": ["fact-024"],
+    "meta": {"source": "dummy", "topic": "DB 설계"}
   }
 ]

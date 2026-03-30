@@ -884,6 +884,154 @@ body::after {
   border-color: var(--tml-rule-strong);
 }
 
+/* === 개념 맵 (WeeklyResult Mode B) === */
+
+.tml-concept-map-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--tml-navy);
+  color: var(--tml-white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  padding: 8px 20px;
+  border-radius: 20px;
+  letter-spacing: 0.01em;
+}
+
+[data-theme="dark"] .tml-concept-map-root {
+  background: var(--tml-navy-mid);
+}
+
+.tml-concept-map-branches {
+  display: flex;
+  justify-content: center;
+}
+
+/* 각 브랜치 셀 — 수평선(border-top) + 수직 드롭(::before) */
+.tml-concept-map-cell {
+  flex: 1;
+  min-width: 72px;
+  max-width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-top: 2px solid var(--tml-rule-strong);
+  padding-top: 22px;
+  position: relative;
+}
+
+/* 수직 드롭 선 */
+.tml-concept-map-cell::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 24px;
+  background: var(--tml-rule-strong);
+}
+
+/* 첫 셀 — 왼쪽 절반 선 감추기 */
+.tml-concept-map-cell--first {
+  border-radius: 4px 0 0 0;
+}
+.tml-concept-map-cell--first::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 0;
+  width: calc(50% - 1px);
+  height: 6px;
+  background: var(--tml-bg-raised);
+}
+
+/* 마지막 셀 — 오른쪽 절반 선 감추기 */
+.tml-concept-map-cell--last {
+  border-radius: 0 4px 0 0;
+}
+
+/* 단일 셀(개념 1개)인 경우 — 수평선 없이 바로 연결 */
+.tml-concept-map-cell--only {
+  border-top: none;
+}
+.tml-concept-map-cell--only::before {
+  top: -20px;
+  height: 20px;
+}
+.tml-concept-map-cell--only::after { display: none; }
+
+/* 마지막 셀의 오른쪽 마스크 — ::after 덮어쓰기 */
+.tml-concept-map-cell--last::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  right: 0;
+  width: calc(50% - 1px);
+  height: 6px;
+  background: var(--tml-bg-raised);
+}
+
+/* 리프 노드 */
+.tml-concept-map-node {
+  background: var(--tml-bg);
+  border: 1.5px solid var(--tml-rule);
+  border-top: 3px solid var(--tml-orange);
+  border-radius: 6px;
+  padding: 9px 12px;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--tml-ink);
+  text-align: center;
+  word-break: keep-all;
+  width: calc(100% - 20px);
+  box-sizing: border-box;
+  line-height: 1.45;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.tml-concept-map-node:hover {
+  border-top-color: var(--tml-orange-dark);
+  border-color: var(--tml-rule-strong);
+  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.1);
+}
+
+/* 모바일 — 수직 리스트로 전환 */
+@media (max-width: 480px) {
+  .tml-concept-map-branches {
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding-top: 0;
+  }
+
+  .tml-concept-map-cell {
+    border-top: none;
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    padding-top: 0;
+  }
+
+  .tml-concept-map-cell::before,
+  .tml-concept-map-cell::after {
+    display: none;
+  }
+
+  .tml-concept-map-node {
+    width: 100%;
+    font-size: 0.8125rem;
+    border-top-width: 2px;
+    border-left: 3px solid var(--tml-orange);
+    border-top: 1.5px solid var(--tml-rule);
+    text-align: left;
+    padding: 10px 14px;
+  }
+}
+
 /* === 대시보드 === */
 
 /* 통계 패널 */

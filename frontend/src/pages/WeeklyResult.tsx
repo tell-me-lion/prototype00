@@ -220,18 +220,9 @@ export function WeeklyResult() {
             </div>
           </div>
 
-          {/* 핵심 개념 태그 */}
+          {/* 개념 맵 */}
           {guide.key_concepts.length > 0 && (
-            <div style={{ marginBottom: 40 }} className="tml-animate">
-              <p className="section-label">핵심 개념</p>
-              <div className="tml-concept-tags">
-                {guide.key_concepts.map((concept, i) => (
-                  <span key={i} className="tml-concept-tag">
-                    {concept}
-                  </span>
-                ))}
-              </div>
-            </div>
+            <ConceptMapSection weekNum={week} concepts={guide.key_concepts} />
           )}
         </div>
       )}
@@ -258,6 +249,67 @@ export function WeeklyResult() {
         </div>
       )}
     </main>
+  )
+}
+
+// ── 개념 맵 ───────────────────────────────────────────────
+
+interface ConceptMapSectionProps {
+  weekNum: number
+  concepts: string[]
+}
+
+function ConceptMapSection({ weekNum, concepts }: ConceptMapSectionProps) {
+  const isSingle = concepts.length === 1
+
+  return (
+    <div style={{ marginBottom: 40 }} className="tml-animate">
+      <p className="section-label">개념 맵</p>
+      <div style={{
+        background: 'var(--tml-bg-raised)',
+        border: '1px solid var(--tml-rule)',
+        borderRadius: 6,
+        padding: '24px 20px',
+        overflowX: 'auto',
+      }}>
+        {/* 루트 노드 */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 0 }}>
+          <div className="tml-concept-map-root">
+            <span style={{ color: 'var(--tml-orange)', fontSize: '0.75rem' }}>●</span>
+            {weekNum}주차 핵심 개념
+          </div>
+        </div>
+
+        {/* 루트에서 내려오는 수직선 */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{
+            width: 2,
+            height: 20,
+            background: 'var(--tml-rule-strong)',
+          }} />
+        </div>
+
+        {/* 브랜치 행 */}
+        <div className="tml-concept-map-branches">
+          {concepts.map((concept, i) => {
+            const isFirst = i === 0
+            const isLast = i === concepts.length - 1
+            const cellClass = [
+              'tml-concept-map-cell',
+              isSingle ? 'tml-concept-map-cell--only' : '',
+              !isSingle && isFirst ? 'tml-concept-map-cell--first' : '',
+              !isSingle && isLast ? 'tml-concept-map-cell--last' : '',
+            ].filter(Boolean).join(' ')
+
+            return (
+              <div key={i} className={cellClass}>
+                <div className="tml-concept-map-node">{concept}</div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
   )
 }
 
