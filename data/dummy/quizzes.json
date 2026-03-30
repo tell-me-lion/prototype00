@@ -1,0 +1,144 @@
+[
+  {
+    "quiz_id": "quiz-001",
+    "status": "pass",
+    "type": "mcq",
+    "question": "트랜잭션의 네 가지 속성(ACID)에 포함되지 않는 것은?",
+    "options": ["원자성(Atomicity)", "일관성(Consistency)", "고립성(Isolation)", "동시성(Concurrency)"],
+    "answer": "동시성(Concurrency)",
+    "explanation": "ACID는 원자성, 일관성, 고립성, 지속성(Durability)을 의미합니다. 동시성은 ACID에 포함되지 않습니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-02_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-002",
+    "status": "pass",
+    "type": "short",
+    "question": "트랜잭션의 변경 사항을 데이터베이스에 확정 반영할 때 사용하는 SQL 명령어는?",
+    "options": null,
+    "answer": "COMMIT",
+    "explanation": "COMMIT은 트랜잭션의 변경을 확정하고 디스크에 반영합니다. ROLLBACK은 취소할 때 사용합니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-02_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-003",
+    "status": "pass",
+    "type": "fill",
+    "question": "동시성 제어에서, 두 트랜잭션이 같은 데이터를 동시에 수정할 때 발생하는 문제를 _____이라 한다.",
+    "options": null,
+    "answer": "갱신 분실",
+    "explanation": "갱신 분실(Lost Update)은 두 트랜잭션이 동시에 같은 데이터를 수정할 때, 먼저 완료된 트랜잭션의 변경이 덮어써지는 문제입니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-02_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-004",
+    "status": "pass",
+    "type": "mcq",
+    "question": "INNER JOIN과 LEFT JOIN의 차이로 올바른 것은?",
+    "options": [
+      "INNER JOIN은 왼쪽 테이블의 모든 행을 포함한다",
+      "LEFT JOIN은 교집합만 반환한다",
+      "INNER JOIN은 조건을 만족하는 행만, LEFT JOIN은 왼쪽 테이블의 모든 행을 포함한다",
+      "둘 사이에 차이가 없다"
+    ],
+    "answer": "INNER JOIN은 조건을 만족하는 행만, LEFT JOIN은 왼쪽 테이블의 모든 행을 포함한다",
+    "explanation": "INNER JOIN은 양쪽 테이블에서 조인 조건을 만족하는 행만 반환하고, LEFT JOIN은 왼쪽 테이블의 모든 행 + 오른쪽에서 매칭되는 행을 반환합니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-03_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-005",
+    "status": "pass",
+    "type": "code",
+    "question": "다음 SQL의 실행 결과로 올바른 것을 고르세요.",
+    "code": "SELECT e.name, d.dept_name\nFROM employees e\nINNER JOIN departments d\n  ON e.dept_id = d.id\nWHERE d.dept_name = 'Engineering';",
+    "answer": "Engineering 부서에 속한 직원의 이름과 부서명만 반환됩니다.",
+    "explanation": "INNER JOIN은 dept_id가 매칭되는 행만 반환하고, WHERE 절이 Engineering 부서로 추가 필터링합니다. 부서가 없는 직원이나 다른 부서 직원은 제외됩니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-03_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-006",
+    "status": "pass",
+    "type": "short",
+    "question": "SELECT 문 안에 또 다른 SELECT 문이 포함된 쿼리를 무엇이라 하는가?",
+    "options": null,
+    "answer": "서브쿼리",
+    "explanation": "서브쿼리(Subquery)는 다른 쿼리 내부에 중첩된 SELECT 문입니다. 인라인 뷰, 스칼라 서브쿼리 등 위치에 따라 종류가 나뉩니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-03_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-007",
+    "status": "pass",
+    "type": "fill",
+    "question": "제1정규형(1NF)의 핵심 조건은 모든 컬럼 값이 _____이어야 한다는 것이다.",
+    "options": null,
+    "answer": "원자값",
+    "explanation": "제1정규형은 각 컬럼이 더 이상 분해할 수 없는 원자값(Atomic Value)만 가져야 합니다. 배열이나 중첩 구조는 허용되지 않습니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-04_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-008",
+    "status": "pass",
+    "type": "mcq",
+    "question": "B-Tree 인덱스에 대한 설명으로 올바르지 않은 것은?",
+    "options": [
+      "범위 검색(BETWEEN, <, >)에 효율적이다",
+      "모든 리프 노드가 같은 깊이에 있다",
+      "해시 인덱스보다 등가 검색(=)이 항상 빠르다",
+      "정렬된 순서로 데이터에 접근할 수 있다"
+    ],
+    "answer": "해시 인덱스보다 등가 검색(=)이 항상 빠르다",
+    "explanation": "해시 인덱스는 등가 검색(=)에서 O(1)로 B-Tree의 O(log N)보다 빠릅니다. 그러나 해시 인덱스는 범위 검색이 불가능합니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-04_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-009",
+    "status": "pass",
+    "type": "code",
+    "question": "다음 Spring 코드에서 @Autowired가 하는 역할을 설명하세요.",
+    "code": "@Service\npublic class OrderService {\n    private final OrderRepository orderRepository;\n\n    @Autowired\n    public OrderService(OrderRepository orderRepository) {\n        this.orderRepository = orderRepository;\n    }\n\n    public Order findById(Long id) {\n        return orderRepository.findById(id)\n            .orElseThrow(() -> new RuntimeException(\"주문을 찾을 수 없습니다\"));\n    }\n}",
+    "answer": "Spring 컨테이너가 OrderRepository 빈을 자동으로 찾아 생성자를 통해 주입합니다.",
+    "explanation": "@Autowired는 Spring의 의존성 주입(DI) 어노테이션입니다. 컨테이너가 OrderRepository 타입의 빈을 찾아 생성자 파라미터로 전달합니다. 생성자가 하나면 @Autowired를 생략할 수 있습니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-09_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-010",
+    "status": "pass",
+    "type": "short",
+    "question": "Spring에서 객체의 생성과 의존성 관리를 프레임워크가 대신 하는 원칙을 무엇이라 하는가?",
+    "options": null,
+    "answer": "제어의 역전",
+    "explanation": "IoC(Inversion of Control, 제어의 역전)는 개발자가 아닌 프레임워크가 객체의 생성·주입·소멸을 제어하는 원칙입니다. Spring 컨테이너가 이 역할을 수행합니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-09_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-011",
+    "status": "pass",
+    "type": "fill",
+    "question": "REST API에서 새로운 자원을 생성할 때 사용하는 HTTP 메서드는 _____이다.",
+    "options": null,
+    "answer": "POST",
+    "explanation": "POST는 서버에 새로운 자원을 생성할 때 사용합니다. GET은 조회, PUT은 수정, DELETE는 삭제에 해당합니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-10_kdt-backendj-21th"}
+  },
+  {
+    "quiz_id": "quiz-012",
+    "status": "pass",
+    "type": "code",
+    "question": "다음 REST 컨트롤러 코드에서 잘못된 부분을 찾고 수정하세요.",
+    "code": "@RestController\n@RequestMapping(\"/api/users\")\npublic class UserController {\n\n    @GetMapping\n    public List<User> getUsers() { ... }\n\n    @PostMapping(\"/{id}\")\n    public User getUser(@PathVariable Long id) { ... }\n\n    @DeleteMapping(\"/{id}\")\n    public void deleteUser(@PathVariable Long id) { ... }\n}",
+    "answer": "getUser 메서드는 단건 조회이므로 @PostMapping이 아닌 @GetMapping(\"/{id}\")을 사용해야 합니다.",
+    "explanation": "REST 원칙에서 자원 조회는 GET, 생성은 POST입니다. 단건 조회에 @PostMapping을 사용하면 REST 규약에 어긋나고, 브라우저 캐싱도 불가능해집니다.",
+    "validation_log": {"checked": true, "source": "dummy"},
+    "meta": {"lecture_id": "2026-02-10_kdt-backendj-21th"}
+  }
+]

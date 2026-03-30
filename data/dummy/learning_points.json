@@ -1,0 +1,82 @@
+[
+  {
+    "week": 1,
+    "lecture_id": "2026-02-02_kdt-backendj-21th",
+    "concept": "트랜잭션은 원자성·일관성·고립성·지속성(ACID)을 만족해야 한다.",
+    "importance": 0.90,
+    "evidence_facts": ["fact-003"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-02_kdt-backendj-21th",
+    "concept": "COMMIT과 ROLLBACK으로 트랜잭션을 종료할 수 있다.",
+    "importance": 0.82,
+    "evidence_facts": ["fact-004"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-03_kdt-backendj-21th",
+    "concept": "INNER JOIN은 두 테이블의 교집합 행만 반환한다.",
+    "importance": 0.87,
+    "evidence_facts": ["fact-010"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-03_kdt-backendj-21th",
+    "concept": "서브쿼리는 WHERE, FROM, SELECT 절 어디서든 사용할 수 있다.",
+    "importance": 0.78,
+    "evidence_facts": ["fact-012"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "제3정규형(3NF)까지 정규화하면 대부분의 이상 현상을 방지할 수 있다.",
+    "importance": 0.85,
+    "evidence_facts": ["fact-020"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "인덱스는 조회 속도를 높이지만, 삽입·수정·삭제 성능은 저하시킨다.",
+    "importance": 0.84,
+    "evidence_facts": ["fact-022"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-09_kdt-backendj-21th",
+    "concept": "Spring 컨테이너가 객체 생성·의존성 주입·생명주기를 관리한다.",
+    "importance": 0.89,
+    "evidence_facts": ["fact-030"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-09_kdt-backendj-21th",
+    "concept": "@Component, @Service, @Repository 등 스테레오타입으로 빈을 등록한다.",
+    "importance": 0.81,
+    "evidence_facts": ["fact-032"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-10_kdt-backendj-21th",
+    "concept": "REST는 URI로 자원을 식별하고 HTTP 메서드로 행위를 표현한다.",
+    "importance": 0.88,
+    "evidence_facts": ["fact-040"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-10_kdt-backendj-21th",
+    "concept": "상태 코드 2xx는 성공, 4xx는 클라이언트 오류, 5xx는 서버 오류를 의미한다.",
+    "importance": 0.80,
+    "evidence_facts": ["fact-042"],
+    "meta": {"source": "dummy", "type": "learning_point"}
+  }
+]

@@ -174,14 +174,15 @@ async def get_lecture_status(lecture_id: str):
     """강의 처리 상태 조회."""
     _validate_lecture_id(lecture_id)
     lectures = load_lectures()
-    if not any(lec.lecture_id == lecture_id for lec in lectures):
+    lec = next((l for l in lectures if l.lecture_id == lecture_id), None)
+    if not lec:
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
     job = await get_lecture_job(lecture_id)
     if not job:
         return ProcessingStatusResponse(
             lecture_id=lecture_id,
-            status=ProcessingStatus.idle,
+            status=lec.status,
         )
 
     return ProcessingStatusResponse(
@@ -199,11 +200,16 @@ async def get_lecture_results(lecture_id: str):
     """강의 처리 결과 조회. 완료 전이면 202 반환."""
     _validate_lecture_id(lecture_id)
     lectures = load_lectures()
-    if not any(lec.lecture_id == lecture_id for lec in lectures):
+    lec = next((l for l in lectures if l.lecture_id == lecture_id), None)
+    if not lec:
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
     job = await get_lecture_job(lecture_id)
-    if not job or job.status != ProcessingStatus.completed:
+    is_completed = (
+        (job and job.status == ProcessingStatus.completed)
+        or lec.status == ProcessingStatus.completed
+    )
+    if not is_completed:
         return JSONResponse(status_code=202, content={"status": "processing"})
 
     concepts_raw, lp_raw, quizzes_raw = load_lecture_results(lecture_id)
@@ -269,12 +275,13 @@ async def get_week_status(week: int):
     """주차 처리 상태 조회."""
     _validate_week(week)
     weeks = load_weeks()
-    if not any(w.week == week for w in weeks):
+    ws = next((w for w in weeks if w.week == week), None)
+    if not ws:
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
     job = await get_week_job(week)
     if not job:
-        return ProcessingStatusResponse(week=week, status=ProcessingStatus.idle)
+        return ProcessingStatusResponse(week=week, status=ws.status)
 
     return ProcessingStatusResponse(
         week=week,
@@ -291,11 +298,16 @@ async def get_week_results(week: int):
     """주차 처리 결과 조회. 완료 전이면 202 반환."""
     _validate_week(week)
     weeks = load_weeks()
-    if not any(w.week == week for w in weeks):
+    ws = next((w for w in weeks if w.week == week), None)
+    if not ws:
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
     job = await get_week_job(week)
-    if not job or job.status != ProcessingStatus.completed:
+    is_completed = (
+        (job and job.status == ProcessingStatus.completed)
+        or ws.status == ProcessingStatus.completed
+    )
+    if not is_completed:
         return JSONResponse(status_code=202, content={"status": "processing"})
 
     guides_raw = load_week_results(week)

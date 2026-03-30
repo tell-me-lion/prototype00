@@ -1,0 +1,98 @@
+[
+  {
+    "week": 1,
+    "lecture_id": "2026-02-02_kdt-backendj-21th",
+    "concept": "데이터베이스 트랜잭션",
+    "importance": 0.92,
+    "evidence_facts": ["fact-001", "fact-002"],
+    "meta": {"source": "dummy", "topic": "DB 기초"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-02_kdt-backendj-21th",
+    "concept": "ACID 속성",
+    "importance": 0.88,
+    "evidence_facts": ["fact-003"],
+    "meta": {"source": "dummy", "topic": "DB 기초"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-02_kdt-backendj-21th",
+    "concept": "동시성 제어(Concurrency Control)",
+    "importance": 0.79,
+    "evidence_facts": ["fact-004", "fact-005"],
+    "meta": {"source": "dummy", "topic": "DB 기초"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-03_kdt-backendj-21th",
+    "concept": "SQL 조인(JOIN)",
+    "importance": 0.85,
+    "evidence_facts": ["fact-010", "fact-011"],
+    "meta": {"source": "dummy", "topic": "SQL"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-03_kdt-backendj-21th",
+    "concept": "서브쿼리(Subquery)",
+    "importance": 0.80,
+    "evidence_facts": ["fact-012"],
+    "meta": {"source": "dummy", "topic": "SQL"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "정규화(Normalization)",
+    "importance": 0.90,
+    "evidence_facts": ["fact-020", "fact-021"],
+    "meta": {"source": "dummy", "topic": "DB 설계"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "인덱스(Index)",
+    "importance": 0.86,
+    "evidence_facts": ["fact-022"],
+    "meta": {"source": "dummy", "topic": "DB 설계"}
+  },
+  {
+    "week": 1,
+    "lecture_id": "2026-02-04_kdt-backendj-21th",
+    "concept": "B-Tree 구조",
+    "importance": 0.75,
+    "evidence_facts": ["fact-023", "fact-024"],
+    "meta": {"source": "dummy", "topic": "DB 설계"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-09_kdt-backendj-21th",
+    "concept": "Spring IoC/DI",
+    "importance": 0.91,
+    "evidence_facts": ["fact-030", "fact-031"],
+    "meta": {"source": "dummy", "topic": "Spring"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-09_kdt-backendj-21th",
+    "concept": "Bean 생명주기",
+    "importance": 0.83,
+    "evidence_facts": ["fact-032"],
+    "meta": {"source": "dummy", "topic": "Spring"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-10_kdt-backendj-21th",
+    "concept": "REST API 설계 원칙",
+    "importance": 0.88,
+    "evidence_facts": ["fact-040", "fact-041"],
+    "meta": {"source": "dummy", "topic": "REST API"}
+  },
+  {
+    "week": 2,
+    "lecture_id": "2026-02-10_kdt-backendj-21th",
+    "concept": "HTTP 메서드와 상태 코드",
+    "importance": 0.82,
+    "evidence_facts": ["fact-042"],
+    "meta": {"source": "dummy", "topic": "REST API"}
+  }
+]

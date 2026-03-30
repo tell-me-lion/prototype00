@@ -95,13 +95,20 @@ def invalidate_catalog_cache() -> None:
 
 
 def load_lectures() -> list[LectureCatalog]:
-    """data/raw/*.txt 를 스캔해 강의 카탈로그 반환 (날짜 오름차순). 30초 캐시."""
+    """data/raw/*.txt 를 스캔해 강의 카탈로그 반환 (날짜 오름차순). 30초 캐시.
+    raw 디렉터리가 비어있으면 더미 카탈로그로 대체한다.
+    """
     cached = _get_cached("lectures")
     if cached is not None:
         return cached  # type: ignore[return-value]
     txt_files = sorted(DATA_RAW.glob("*.txt"))
     if not txt_files:
-        return []
+        from app.loaders.dummy import load_lecture_catalog
+        raw = load_lecture_catalog()
+        lectures = [LectureCatalog.model_validate(d) for d in raw]
+        logger.info("카탈로그 로드: dummy fallback (%d건)", len(lectures))
+        _set_cached("lectures", lectures)
+        return lectures
 
     dates: list[date] = []
     parsed: list[tuple[date, str, str]] = []  # (date, lecture_id, course_code)
