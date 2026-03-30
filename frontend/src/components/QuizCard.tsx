@@ -1,5 +1,9 @@
 import { useState } from 'react'
 import type { Quiz } from '../types/models'
+import { CodeEditor } from './CodeEditor'
+import { OutputPanel, runTestCases } from './OutputPanel'
+import type { TestResult } from './OutputPanel'
+import { executeCode } from '../services/piston'
 
 interface QuizCardProps {
   quiz: Quiz
@@ -224,8 +228,8 @@ function FillCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
   )
 }
 
-/* ── CODE: 코드 뷰어형 ───────────────────────────────── */
-function CodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
+/* ── CODE (정적): 코드 뷰어형 ────────────────────────── */
+function StaticCodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
   const [showAnswer, setShowAnswer] = useState(false)
 
   return (
@@ -258,6 +262,101 @@ function CodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
       )}
     </div>
   )
+}
+
+/* ── CODE (인터랙티브): 에디터 + 실행 + 채점 ─────────── */
+function InteractiveCodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
+  const [running, setRunning] = useState(false)
+  const [stdout, setStdout] = useState<string | null>(null)
+  const [stderr, setStderr] = useState<string | null>(null)
+  const [testResults, setTestResults] = useState<TestResult[] | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [showAnswer, setShowAnswer] = useState(false)
+
+  const allPassed = testResults?.every((r) => r.passed) ?? false
+  const hasResult = stdout !== null || stderr !== null || error !== null
+
+  const handleRun = async (code: string) => {
+    setRunning(true)
+    setStdout(null)
+    setStderr(null)
+    setTestResults(null)
+    setError(null)
+
+    try {
+      const res = await executeCode(quiz.language ?? 'python', code)
+      const out = res.run.stdout
+      const err = res.compile?.stderr || res.run.stderr
+
+      setStdout(out)
+      setStderr(err || null)
+
+      if (quiz.test_cases && quiz.test_cases.length > 0) {
+        setTestResults(runTestCases(out, quiz.test_cases))
+      } else if (quiz.expected_output) {
+        setTestResults(runTestCases(out, [{ expected_output: quiz.expected_output }]))
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '코드 실행 중 오류가 발생했습니다.')
+    } finally {
+      setRunning(false)
+    }
+  }
+
+  return (
+    <div className="tml-card quiz-type-card">
+      <div className="quiz-type-card__meta">
+        <span className="quiz-badge quiz-badge--code">코드 실행</span>
+        <span className="quiz-meta-id">
+          {quizIndex + 1} / {totalInType} · Q-{String(quizIndex + 1).padStart(3, '0')}
+        </span>
+      </div>
+
+      <p className="quiz-question">{quiz.question}</p>
+
+      <CodeEditor
+        language={quiz.language ?? 'python'}
+        starterCode={quiz.starter_code ?? ''}
+        onRun={handleRun}
+        running={running}
+      />
+
+      <OutputPanel
+        stdout={stdout}
+        stderr={stderr}
+        testResults={testResults}
+        error={error}
+      />
+
+      {hasResult && testResults && (
+        <div className={`quiz-feedback ${allPassed ? 'quiz-feedback--correct' : 'quiz-feedback--wrong'}`}>
+          {allPassed ? '✓ 정답입니다!' : '✗ 테스트를 통과하지 못했습니다.'}
+        </div>
+      )}
+
+      <button className="quiz-reset-btn" onClick={() => setShowAnswer((s) => !s)}>
+        정답 보기 {showAnswer ? '▴' : '▾'}
+      </button>
+
+      {showAnswer && (
+        <div style={{ marginTop: 16 }}>
+          <pre className="quiz-code-block quiz-code-block--answer"><code>{answerStr(quiz.answer)}</code></pre>
+          <div className="quiz-explanation">
+            <span className="quiz-explanation__icon">💡</span>
+            <p className="quiz-explanation__text">{quiz.explanation}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── CODE: 분기 — starter_code 유무로 인터랙티브/정적 결정 */
+function CodeCard(props: QuizCardProps) {
+  if (props.quiz.starter_code) {
+    return <InteractiveCodeCard {...props} />
+  }
+  return <StaticCodeCard {...props} />
 }
 
 /* ── 진입점 ──────────────────────────────────────────── */
