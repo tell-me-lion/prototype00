@@ -1279,6 +1279,150 @@ body::after {
   line-height: 1.5;
 }
 
+/* === 분할 패널 레이아웃 (TASK-001) === */
+
+.tml-split-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 32px;
+  align-items: start;
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .tml-split-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 오른쪽 패널 */
+.tml-right-panel {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tml-right-panel__section {
+  background: var(--tml-surface);
+  border: 1px solid var(--tml-border);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.tml-right-panel__section-title {
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tml-ink-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.tml-right-panel__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tml-right-panel__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--tml-rule);
+}
+
+.tml-right-panel__item:last-child {
+  border-bottom: none;
+}
+
+.tml-right-panel__item-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tml-ink-secondary);
+}
+
+.tml-right-panel__remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.6875rem;
+  color: var(--tml-ink-muted);
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s;
+  line-height: 1;
+}
+
+.tml-right-panel__remove:hover {
+  color: var(--tml-wrong);
+  background: rgba(255, 80, 80, 0.08);
+}
+
+.tml-right-panel__empty {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  text-align: center;
+  padding: 6px 0 2px;
+  margin: 0;
+}
+
+.tml-right-panel__guide-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tml-navy-mid);
+  padding: 0;
+  transition: color 0.15s;
+}
+
+.tml-right-panel__guide-btn:hover {
+  color: var(--tml-ink);
+}
+
+/* 강의 카드 선택 인터랙션 */
+.tml-lecture-card--selectable {
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.tml-lecture-card--selectable:hover {
+  transform: translateY(-2px);
+}
+
+.tml-lecture-card--selected {
+  outline: 2px solid var(--tml-orange);
+  outline-offset: -2px;
+}
+
+.tml-lecture-card__checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  pointer-events: none;
+}
+
+.tml-lecture-card__checkbox--checked {
+  background: var(--tml-orange);
+  border-color: var(--tml-orange);
+}
+
 /* === 처리 상태 인디케이터 (Task 05) === */
 
 @keyframes tml-progress-shimmer {

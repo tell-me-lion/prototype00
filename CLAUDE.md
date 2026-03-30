@@ -22,26 +22,77 @@
 
 ---
 
+## 디렉터리 구조
+
+```
+tell-me-lion/
+├── frontend/          # React + TypeScript + Vite (주노 담당)
+│   └── src/
+│       ├── pages/     # 라우트별 페이지 컴포넌트
+│       ├── components/# 공용 컴포넌트
+│       ├── services/  # API 호출 (api.ts)
+│       ├── types/     # TypeScript 타입 (models.ts)
+│       ├── hooks/     # 커스텀 훅
+│       └── index.css  # 전역 스타일 (CSS 변수 포함)
+├── app/               # FastAPI 백엔드
+│   ├── api/           # 라우터
+│   ├── schemas/       # Pydantic 모델
+│   └── main.py        # 엔트리포인트
+├── pipeline/          # 전처리 파이프라인 (시훈 담당)
+├── data/              # 더미 데이터 (백엔드 연동 전 시연용)
+├── docs/tasks/        # 태스크 명세 파일
+├── DESIGN.md          # 색상·타이포·컴포넌트 스펙
+└── PROJECT_GOALS.md   # 전체 평가 기준·제출물 목록
+```
+
+---
+
+## 커맨드
+
+```bash
+# 프론트엔드 (frontend/ 디렉터리에서)
+npm run dev        # 개발 서버 (localhost:5173)
+npm run build      # 프로덕션 빌드 (tsc -b && vite build)
+npm run lint       # ESLint
+npm run test       # Vitest 단위 테스트
+npm run preview    # 빌드 결과 미리보기
+
+# 백엔드 (루트에서)
+uvicorn app.main:app --reload   # 개발 서버 (localhost:8000)
+```
+
+---
+
 ## 실행 원칙
 
-- 코드 작성 요청 → 즉시 파일에 직접 작성 (계획·설명 먼저 금지)
+- **명시적 코드 작성 요청** → 즉시 파일에 직접 작성 (계획·설명 먼저 금지)
+- **변경·기능 제안 시** → 유저에게 먼저 확인 → `docs/tasks/`에 태스크 파일 작성 → 승인 후 구현
 - 작성 후 Read 도구로 반영 확인
 - 하드코딩 금지: 색상(`var(--tml-*)`), 데이터(API 연동), URL(환경변수)
 - 관련 스킬이 있으면 수동 작업 전에 Skill 도구 먼저 호출
+
+### docs/tasks/ 태스크 파일 규칙
+
+- 파일명: `TASK-{번호}-{간단설명}.md` (예: `TASK-001-lectures-page-redesign.md`)
+- 내용: 목적, 변경 파일, 작업 항목 체크리스트
+- 구현 완료 후 체크리스트 업데이트
 
 ---
 
 ## 핵심 코딩 규칙
 
 ### 프론트엔드
-- TypeScript 인터페이스 ↔ 백엔드 Pydantic 모델 일치
-- 색상: `DESIGN.md`의 CSS 변수(`var(--tml-*)`) 사용
+
+- TypeScript 인터페이스 ↔ 백엔드 Pydantic 모델 일치 (`types/models.ts` ↔ `app/schemas/`)
+- 색상: `DESIGN.md`의 CSS 변수(`var(--tml-*)`) 사용, 하드코딩 금지
+- 더미 데이터는 `data/` 디렉터리 참조 (백엔드 연동 전)
 
 ### 라우팅 (`react-router-dom` v7)
 
 | 경로 | 페이지 | 설명 |
 |------|--------|------|
 | `/` | `Dashboard` | 대시보드 |
+| `/lectures` | `LecturesPage` | 강의 목록 + 분석 시작 |
 | `/lecture/:id` | `LectureResult` | 단일 강의 결과 (Mode A) |
 | `/weekly/:week` | `WeeklyResult` | 주차별 학습 가이드 (Mode B) |
 | `/lecture`, `/weekly` | → `/` 리다이렉트 | 하위 호환 |
@@ -51,21 +102,30 @@
 
 ---
 
+## 환경 변수
+
+```bash
+# frontend/.env.local (로컬 개발)
+VITE_API_URL=http://localhost:8000
+
+# Vercel 환경변수 (배포)
+VITE_API_URL=http://15.165.140.229
+```
+
+---
+
 ## 배포 환경
 
-| 레이어 | 플랫폼 | 비고 |
+| 레이어 | 플랫폼 | 주소 |
 |--------|--------|------|
 | 프론트엔드 | Vercel | `wonder-girls.vercel.app` |
 | 백엔드 | AWS EC2 | `15.165.140.229` |
-
-- 프론트 API 요청 URL은 환경변수(`VITE_API_BASE_URL`)로 관리
-- 로컬 개발: `.env.local`, 배포: Vercel 환경변수 설정
 
 ---
 
 ## 참고 파일
 
-- `DESIGN.md` — 색상·타이포·컴포넌트 스펙 (UI 작업 시 읽기)
+- `DESIGN.md` — 색상·타이포·컴포넌트 스펙 (UI 작업 시 반드시 읽기)
 - `PROJECT_GOALS.md` — 전체 평가 기준·제출물 목록
 - `docs/tasks/` — 태스크 명세
 
