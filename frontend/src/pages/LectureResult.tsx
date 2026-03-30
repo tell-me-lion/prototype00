@@ -6,6 +6,7 @@ import { ProcessingStatus } from '../components/ProcessingStatus'
 import {
   fetchLecture,
   fetchLectureResults,
+  fetchLectureStatus,
   triggerLectureProcess,
   ApiError,
 } from '../services/api'
@@ -43,14 +44,22 @@ export function LectureResult() {
       }
       setState({ tag: 'loading' })
       try {
-        const lecture = await fetchLecture(id!)
+        const [lecture, jobStatus] = await Promise.all([
+          fetchLecture(id!),
+          fetchLectureStatus(id!).catch(() => null),
+        ])
         if (cancelled) return
 
-        if (lecture.status === 'completed') {
+        const isCompleted =
+          lecture.status === 'completed' || jobStatus?.status === 'completed'
+        const isProcessing =
+          lecture.status === 'processing' || jobStatus?.status === 'processing'
+
+        if (isCompleted) {
           const outputs = await fetchLectureResults(id!)
           if (cancelled) return
           setState({ tag: 'results', lecture, outputs })
-        } else if (lecture.status === 'processing') {
+        } else if (isProcessing) {
           setState({ tag: 'processing', lecture })
         } else {
           setState({ tag: 'not-processed', lecture })
