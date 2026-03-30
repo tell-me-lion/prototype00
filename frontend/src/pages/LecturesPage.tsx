@@ -502,7 +502,7 @@ export function LecturesPage() {
       ids.map(async (id) => {
         setProcessingLectures((prev) => new Set(prev).add(id))
         try {
-          await triggerLectureProcess(id)
+          await triggerLectureProcess(id, true)
         } catch {
           setProcessingLectures((prev) => {
             const next = new Set(prev)
