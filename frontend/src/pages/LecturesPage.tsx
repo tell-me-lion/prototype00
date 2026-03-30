@@ -305,7 +305,6 @@ function WeekSection({
 interface RightPanelProps {
   weeks: WeekSummary[]
   selectedIds: Set<string>
-  processingLectures: Set<string>
   processingWeeks: Set<number>
   onDeselect: (lectureId: string) => void
   onStartSelected: () => void
@@ -317,7 +316,6 @@ interface RightPanelProps {
 function RightPanel({
   weeks,
   selectedIds,
-  processingLectures,
   processingWeeks,
   onDeselect,
   onStartSelected,
@@ -668,7 +666,6 @@ export function LecturesPage() {
                 <RightPanel
                   weeks={weeks}
                   selectedIds={selectedIds}
-                  processingLectures={processingLectures}
                   processingWeeks={processingWeeks}
                   onDeselect={handleDeselect}
                   onStartSelected={handleStartSelected}
