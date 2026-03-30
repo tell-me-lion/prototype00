@@ -1,3 +1,8 @@
+"""
+Phase 1: 데이터 분리 및 물리적 세척 (Cleaner)
+시간 흐름에 따른 맥락 보존을 위해 발화 구간을 병합하거나 세션을 분할하며,
+문맥 기반으로 오탈자 교정 및 추임새를 제거합니다.
+"""
 import os
 import re
 import json
@@ -6,22 +11,22 @@ import time
 from pathlib import Path
 from datetime import timedelta
 from collections import defaultdict
+from typing import Any
+
 import google.genai as genai
 from google.genai import types
 from dotenv import load_dotenv
 from tqdm import tqdm
 
-# .env 로드
-load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
+from pipeline import paths
+
+load_dotenv(paths.ROOT / '.env')
 
 class Cleaner:
-    def __init__(self, use_gemini=False):
-        # 정규식 컴파일 (타임스탬프 파싱, 화자 ID 분리)
+    def __init__(self, use_gemini: bool = False) -> None:
         self.pattern_line = re.compile(r"^<(\d{2}):(\d{2}):(\d{2})>\s+[a-f0-9]+:\s*(.*)$")
-        # 제미나이 출력 후처리 정규식 (어느 정도 포맷이 깨져도 시간 부분만 잘 가져오도록 유연하게 구성)
         self.pattern_gemini_out = re.compile(r"^<?(\d{2}:\d{2}:\d{2})>?\s*(.*)$")
         
-        # 제미나이 설정
         self.use_gemini = use_gemini
         api_key = os.getenv("GOOGLE_API_KEY")
         if self.use_gemini and api_key:
@@ -53,9 +58,9 @@ class Cleaner:
         ss = total % 60
         return f"{hh:02d}:{mm:02d}:{ss:02d}"
 
-    def parse_lines(self, filepath: Path) -> list[dict]:
+    def parse_lines(self, filepath: Path) -> list[dict[str, Any]]:
         """원본 파일에서 (time, text) 라인 목록 추출"""
-        lines = []
+        lines: list[dict[str, Any]] = []
         with open(filepath, "r", encoding="utf-8") as f:
             for raw in f:
                 raw = raw.strip()
@@ -72,18 +77,15 @@ class Cleaner:
                         })
         return lines
 
-    def clean_lines_gemini_batch(self, lines: list[dict], batch_size: int = 100) -> list[dict]:
-        """개별 라인들을 일정 묶음(배치) 단위로 패킹/모아서 Gemini로 한 방에 정제한 뒤, 다시 분리하여 반환 (응답 속도 10배 이상 감소)"""
+    def clean_lines_gemini_batch(self, lines: list[dict[str, Any]], batch_size: int = 100) -> list[dict[str, Any]]:
+        """개별 라인들을 일정 묶음(배치) 단위로 패킹/모아서 Gemini로 한 방에 정제한 뒤, 다시 분리하여 반환"""
         if not self.client or not lines:
             return lines
 
-        cleaned_lines = []
-        
-        # 라인을 지정된 사이즈(기본 100줄)씩 배치로 쪼갭니다.
+        cleaned_lines: list[dict[str, Any]] = []
         batches = [lines[i:i + batch_size] for i in range(0, len(lines), batch_size)]
         
         for batch in tqdm(batches, desc="  [Gemini API 배치 일괄 정제]", leave=False):
-            # 100줄 분량의 텍스트를 <09:03:12> 발화문\n 형태로 구성합니다.
             batch_text = "\n".join([f"<{self.format_time(line['time'])}> {line['text']}" for line in batch])
             
             try:
@@ -94,7 +96,6 @@ class Cleaner:
                 )
                 res_text = response.text.strip()
                 
-                # 결과 텍스트를 파싱하여 원래의 시간 맵 유지한 개별 라인 객체로 변환
                 for out_line in res_text.splitlines():
                     out_line = out_line.strip()
                     if not out_line: continue
@@ -103,35 +104,30 @@ class Cleaner:
                     if match:
                         time_str, cleaned_text = match.groups()
                         h, m, s = time_str.split(":")
-                        # 비어있는 추임새 문장으로 정제된 경우 삭제 처리
                         if cleaned_text.strip():
                             cleaned_lines.append({
                                 "time": self.parse_time(h, m, s),
                                 "text": cleaned_text.strip()
                             })
                     else:
-                        # 정규식이 깨졌을 경우를 대비해 스킵
                         pass
                 
-                # 서버 과부하 보호용으로 1초 대기 (배치단위이므로 시간이 적게 소요됨)
                 time.sleep(1.5)
                 
             except Exception as e:
                 print(f"\n[Gemini Error] 일괄 정제 실패. 해당 구간은 원본 사용. Error: {e}")
-                # API 에러 발생시 해당 배치의 원본 라인을 그대로 붙여서 보존합니다.
                 cleaned_lines.extend(batch)
-                time.sleep(5) # 한도 제한 초과 가능성이 있으므로 조금 더 대기
+                time.sleep(5)
                 
-        # 타임스탬프 순서대로 다시 무결하게 정렬 (안전 장치)
         cleaned_lines.sort(key=lambda x: x["time"])
         return cleaned_lines
 
-    def merge_lines(self, lines: list[dict], max_gap_sec: int = 15) -> list[dict]:
+    def merge_lines(self, lines: list[dict[str, Any]], max_gap_sec: int = 15) -> list[dict[str, Any]]:
         """인접 라인 병합 (직전 발화와의 시간 간격 <= max_gap_sec)"""
         if not lines:
             return []
 
-        paragraphs = []
+        paragraphs: list[dict[str, Any]] = []
         current_start_time = lines[0]["time"]
         last_line_time = lines[0]["time"]
         current_texts = [lines[0]["text"]]
@@ -150,7 +146,6 @@ class Cleaner:
                 current_texts = [line["text"]]
             last_line_time = line["time"]
 
-        # 마지막 단락
         paragraphs.append({
             "time": current_start_time,
             "end_time": last_line_time,
@@ -159,13 +154,13 @@ class Cleaner:
 
         return paragraphs
 
-    def detect_sessions(self, paragraphs: list[dict], session_gap_min: int = 30) -> list[dict]:
+    def detect_sessions(self, paragraphs: list[dict[str, Any]], session_gap_min: int = 30) -> list[dict[str, Any]]:
         """세션 자동 감지 (시간 gap >= session_gap_min분이면 새 세션)"""
         if not paragraphs:
             return []
 
         session = 1
-        result = []
+        result: list[dict[str, Any]] = []
 
         for i, para in enumerate(paragraphs):
             if i > 0:
@@ -181,30 +176,24 @@ class Cleaner:
         match = re.match(r"(\d{4}-\d{2}-\d{2})", filename)
         return match.group(1) if match else filename.replace(".txt", "")
 
-    def process_file(self, filepath: Path, output_dir: Path):
+    def process_file(self, filepath: Path, output_dir: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
         """단일 파일 처리 -> 클리닝된 단락 리스트 jsonl 저장"""
         day = self.extract_date(filepath.name)
 
-        # 1) 라인 파싱
         lines = self.parse_lines(filepath)
         stats = {"raw_lines": len(lines)}
 
-        # 2) 선택적인 일괄 정제 (수백 줄을 뭉쳐서 한 번에 API 호출 후 다시 분리)
         if self.use_gemini:
             lines = self.clean_lines_gemini_batch(lines, batch_size=100)
 
-        # 3) 인접 라인 병합 (배치 정제에서 반환된 개별 라인을 모아서 Paragraph 구성)
         paragraphs = self.merge_lines(lines)
         stats["paragraphs"] = len(paragraphs)
 
-        # 4) 세션 자동 감지
         paragraphs = self.detect_sessions(paragraphs)
 
-        # 5) 출력 포맷팅
-        result = []
+        result: list[dict[str, Any]] = []
         for para in paragraphs:
             text = para["text"].strip()
-            # 다중 공백 압축
             text = re.sub(r"\s{2,}", " ", text)
             
             if not text:
@@ -216,11 +205,11 @@ class Cleaner:
                 "session": para["session"],
                 "time": self.format_time(para["time"]),
                 "paragraph": text,
+                "processing_type": "gemini" if self.use_gemini else "base"
             })
 
         stats["output_paragraphs"] = len(result)
         
-        # 파일 저장
         output_dir.mkdir(parents=True, exist_ok=True)
         out_path = output_dir / f"{day}.jsonl"
         with open(out_path, "w", encoding="utf-8") as f:
@@ -229,22 +218,13 @@ class Cleaner:
                 
         return result, stats
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Step 01: Preprocessor Cleaner (Gap Merge & Gemini STT Correction)")
-    parser.add_argument("--input", type=str, default="data/raw", help="Input directory")
-    parser.add_argument("--output", type=str, default="data/phase1_sessions", help="Output directory")
     parser.add_argument("--gemini", action="store_true", help="Use Gemini API for text correction")
     args = parser.parse_args()
 
-    base_dir = Path(__file__).resolve().parent.parent.parent
-    input_dir = base_dir / args.input
-    output_dir = base_dir / args.output
-    
-    # 제미나이 사용 여부에 따라 결과물 폴더 분리
-    if args.gemini:
-        output_dir = output_dir / "gemini_cleaned"
-    else:
-        output_dir = output_dir / "base_cleaned"
+    input_dir = paths.DATA_RAW
+    output_dir = paths.DATA_PHASE1_SESSIONS
     
     if not input_dir.exists():
         print(f"[ERROR] Input directory not found: {input_dir}")

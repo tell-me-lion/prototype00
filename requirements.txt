@@ -7,11 +7,15 @@ uvicorn[standard]>=0.27.0
 python-dotenv>=1.0.0
 python-multipart>=0.0.9
 
-# preprocessing
+# preprocessing & AI (Lightweight Base)
 python-dotenv
 google-genai
 tqdm
 kiwipiepy
-sentence-transformers
 scikit-learn
 requests
+
+# [Optional] Local GPU / PyTorch 지원 모듈
+# 배포 환경에서 용량(5GB 등) 부담이 크다면, 아래 라이브러리 설치를 생략
+# sentence-transformers
+

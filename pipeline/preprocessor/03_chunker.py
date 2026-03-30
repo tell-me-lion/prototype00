@@ -1,42 +1,103 @@
+"""
+Phase 3: 시맨틱 청킹 및 스코어링 (Semantic Chunker)
+의미 기반으로 인접 문장 간의 문맥 전환 지점을 감지하여 청크(Chunk)로 분할하고, 
+TF-IDF를 통해 핵심어를 추출합니다.
+[옵션] --use_gemini_embed 플래그 적용 시 로컬 GPU(PyTorch) 대신 Gemini Embedding API를 사용합니다.
+"""
 import os
 import json
 import argparse
+import time
 import numpy as np
 from pathlib import Path
+from typing import Any
 from tqdm import tqdm
-from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import warnings
-warnings.filterwarnings('ignore') # TF-IDF 경고 등 무시
+
+# 배포 환경 대비: 로컬 GPU 모듈 지연 로딩
+from pipeline import paths
+
+warnings.filterwarnings('ignore')
 
 class SemanticChunker:
-    def __init__(self, model_name="jhgan/ko-sroberta-multitask", threshold=0.40, max_sentences=15):
-        # 한국어 텍스트 문장 임베딩에 성능이 좋은 SRoBERTa 모델
-        print(f"[Model Load] 임베딩 모델 '{model_name}' 로드 중...")
-        self.model = SentenceTransformer(model_name)
+    def __init__(self, model_name: str = "jhgan/ko-sroberta-multitask", 
+                 threshold: float = 0.40, 
+                 max_sentences: int = 15,
+                 use_gemini_embed: bool = False) -> None:
         self.threshold = threshold
         self.max_sentences = max_sentences
+        self.use_gemini_embed = use_gemini_embed
+        
+        if self.use_gemini_embed:
+            print("[Model Load] GPU 의존성 제거 모드: Gemini API 임베딩 준비 중...")
+            import google.genai as genai
+            from google.genai import types
+            from dotenv import load_dotenv
+            load_dotenv(paths.ROOT / '.env')
+            
+            api_key = os.getenv("GOOGLE_API_KEY")
+            if not api_key:
+                raise ValueError("GOOGLE_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")
+            self.gemini_client = genai.Client(api_key=api_key)
+            self.embed_model = "gemini-embedding-2-preview"
+        else:
+            print(f"[Model Load] 로컬 임베딩 모델 '{model_name}' 로드 중... (GPU/PyTorch 환경 권장)")
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(model_name)
 
-    def chunk_sentences(self, sentences: list[dict]) -> list[dict]:
+    def _get_embeddings(self, texts: list[str]) -> list[list[float]]:
+        """Gemini API 또는 로컬 SBERT를 통해 임베딩 벡터 목록을 반환"""
+        if self.use_gemini_embed:
+            # Gemini Embedding API 한도 보호를 위해 청크 요청 (최대 100개)
+            all_embeddings = []
+            try:
+                for i in range(0, len(texts), 90):
+                    batch_texts = texts[i:i+90]
+                    response = self.gemini_client.models.embed_content(
+                        model=self.embed_model,
+                        contents=batch_texts
+                    )
+                    time.sleep(0.5) # API Rate Limit 회피
+                    
+                    # 만약 embeddings가 리스트라면 extend
+                    if hasattr(response, 'embeddings'):
+                        all_embeddings.extend([emb.values for emb in response.embeddings])
+                    else:
+                        # 예외적으로 단일 결과일 때
+                        all_embeddings.append(response.embeddings.values)
+
+                # 만약 어떤 이유로든 반환 길이가 다르면 패딩처리
+                if len(all_embeddings) != len(texts):
+                    print(f"[Warning] Mismatched embedding length. texts: {len(texts)}, embeds: {len(all_embeddings)}")
+                    return [[0.0]*768 for _ in texts]
+                    
+                return all_embeddings
+            except Exception as e:
+                print(f"[Gemini Embed Error] API 호출 실패: {e}")
+                # 오류 발생 시 임시로 0 벡터 반환 (실패 방지)
+                return [[0.0]*768 for _ in texts]
+        else:
+            return self.model.encode(texts).tolist()
+
+    def chunk_sentences(self, sentences: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
         """세션 단위의 문장 리스트를 의미 기반 청크로 분리"""
         if not sentences:
             return []
             
         texts = [s["text"] for s in sentences]
-        # 문장 전체 임베딩
-        embeddings = self.model.encode(texts)
+        embeddings = self._get_embeddings(texts)
         
-        chunks = []
+        chunks: list[list[dict[str, Any]]] = []
         current_chunk = [sentences[0]]
         current_embeds = [embeddings[0]]
         
         for i in range(1, len(sentences)):
-            # 병합 중인 현재 청크의 평균 벡터와 다음 문장 간의 유사도
             chunk_embed = np.mean(current_embeds, axis=0)
+            # 1D 배열을 2D 형태로 변환하여 cosine_similarity 계산
             sim = cosine_similarity([chunk_embed], [embeddings[i]])[0][0]
             
-            # 유사도가 임계치보다 떨어지거나(문맥전환 방어선), 청크가 너무 길어지면 새 청크로 분리
             if sim < self.threshold or len(current_chunk) >= self.max_sentences:
                 chunks.append(current_chunk)
                 current_chunk = [sentences[i]]
@@ -50,9 +111,9 @@ class SemanticChunker:
             
         return chunks
 
-    def compute_tfidf(self, chunks_data: list[dict]):
+    def compute_tfidf(self, chunks_data: list[dict[str, Any]]) -> None:
         """강의 1개(파일) 전체 코퍼스 내 TF-IDF를 계산하고 상위 키워드를 각 청크에 부여"""
-        # 정규식을 이용해 너무 짧은 글자나 의미 없는 기호 제외 (명사 위주 추출 지향)
+        # (TF-IDF는 scikit-learn 기반이므로 CPU에서 고속 동작. 변경 불필요)
         corpus = [c["text"] for c in chunks_data]
         if not corpus or len(corpus) < 2:
             for chunk in chunks_data:
@@ -60,7 +121,6 @@ class SemanticChunker:
                 chunk["tfidf_scores"] = {}
             return
             
-        # max_df: 85% 이상 문서를 차지하는 단어는 불용어로 처리
         vectorizer = TfidfVectorizer(max_df=0.85, min_df=1) 
         try:
             tfidf_matrix = vectorizer.fit_transform(corpus)
@@ -68,14 +128,13 @@ class SemanticChunker:
             
             for i, chunk in enumerate(chunks_data):
                 row = tfidf_matrix.getrow(i).toarray()[0]
-                # 점수 높은 상위 5개 추출
                 top_indices = row.argsort()[-5:][::-1]
                 
                 keywords = []
                 tfidf_scores = {}
                 for idx in top_indices:
                     score = float(row[idx])
-                    if score > 0.1: # 유의미한 점수만 저장
+                    if score > 0.1:
                         word = feature_names[idx]
                         keywords.append(word)
                         tfidf_scores[word] = round(score, 3)
@@ -87,30 +146,31 @@ class SemanticChunker:
                 chunk["keywords"] = []
                 chunk["tfidf_scores"] = {}
 
-    def process_file(self, filepath: Path, output_dir: Path) -> dict:
+    def process_file(self, filepath: Path, output_dir: Path) -> dict[str, int]:
         day = filepath.stem
-        sentences = []
+        sentences: list[dict[str, Any]] = []
         
         with open(filepath, "r", encoding="utf-8") as f:
             for line in f:
                 if line.strip():
-                    sentences.append(json.loads(line))
+                    try:
+                        sentences.append(json.loads(line))
+                    except json.JSONDecodeError:
+                        continue
         
         if not sentences:
             return {"input_sents": 0, "output_chunks": 0}
             
-        # 세션별로 문장 먼저 그룹화 (서로 다른 세션을 억지로 이어붙이는 것 방지)
-        sessions = {}
+        sessions: dict[int, list[dict[str, Any]]] = {}
         for s in sentences:
             sid = s.get("session", 1)
             if sid not in sessions:
                 sessions[sid] = []
             sessions[sid].append(s)
             
-        all_chunks = []
+        all_chunks: list[dict[str, Any]] = []
         chunk_counter = 1
         
-        # 세션 각각에 대해 시맨틱 청킹 수행
         for sid, sents in tqdm(sessions.items(), desc=f"  [임베딩 청킹] {filepath.name}", leave=False):
             chunked_lists = self.chunk_sentences(sents)
             
@@ -119,8 +179,8 @@ class SemanticChunker:
                 sent_ids = [s["sent_id"] for s in chunk_sents]
                 
                 base_time = chunk_sents[0].get("time", "")
-                # 원본 파일명 보존
                 source_f = chunk_sents[0].get("source_file", filepath.name)
+                proc_type = chunk_sents[0].get("processing_type", "base")
                 
                 chunk_id = f"{day}_S{sid:02d}_C{chunk_counter:03d}"
                 
@@ -130,6 +190,7 @@ class SemanticChunker:
                     "sent_ids": sent_ids,
                     "time": base_time,
                     "text": combined_text,
+                    "processing_type": proc_type,
                     "meta": {
                         "source_file": source_f,
                         "sentence_count": len(chunk_sents)
@@ -137,7 +198,6 @@ class SemanticChunker:
                 })
                 chunk_counter += 1
                 
-        # 문서 단위로 TF-IDF 키워드 추출하여 병합
         self.compute_tfidf(all_chunks)
         
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -148,23 +208,20 @@ class SemanticChunker:
                 
         return {"input_sents": len(sentences), "output_chunks": len(all_chunks)}
 
-def main():
-    parser = argparse.ArgumentParser(description="Step 03: Semantic Chunker & TF-IDF Extraction")
-    parser.add_argument("--input_type", type=str, choices=["base_cleaned", "gemini_cleaned"], default="base_cleaned")
-    # 유사도 임계치: 실험해보고 싶을 때 조절 (기본값 0.40은 한국어 SRoBERTa에서 준수한 성능)
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Step 03: Semantic Chunker (Local GPU or Gemini Cloud) & TF-IDF Extraction")
     parser.add_argument("--threshold", type=float, default=0.40, help="문맥 전환 판단을 위한 코사인 유사도 기준점")
+    parser.add_argument("--use_gemini_embed", action="store_true", help="로컬 PyTorch 대신 Gemini Embedding API 사용")
     args = parser.parse_args()
 
-    base_dir = Path(__file__).resolve().parent.parent.parent
-    
-    input_dir = base_dir / "data" / "phase2_sentences" / args.input_type
-    output_dir = base_dir / "data" / "phase3_chunks" / args.input_type
+    input_dir = paths.DATA_PHASE2_SENTENCES
+    output_dir = paths.DATA_PHASE3_CHUNKS
     
     if not input_dir.exists():
         print(f"[ERROR] Input directory not found: {input_dir}")
         return
 
-    chunker = SemanticChunker(threshold=args.threshold)
+    chunker = SemanticChunker(threshold=args.threshold, use_gemini_embed=args.use_gemini_embed)
     
     jsonl_files = sorted(input_dir.glob("*.jsonl"))
     if not jsonl_files:
@@ -184,7 +241,8 @@ def main():
         print(f"  [OK] {filepath.name} (sent {stats['input_sents']} -> chunk {stats['output_chunks']})")
 
     print(f"\n{'='*60}")
-    print(f"[Phase 3 전체 통계 ({args.input_type})]")
+    print(f"[Phase 3 전체 통계]")
+    print(f"  API 모드:       {'Gemini' if args.use_gemini_embed else 'Local SROBERTa'}")
     print(f"  처리 파일 수:   {total_stats['files']}")
     print(f"  입력 문장 수:   {total_stats['input_sents']}")
     print(f"  시맨틱 청크 수: {total_stats['output_chunks']}")
