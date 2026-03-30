@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ConceptCard } from '../components/ConceptCard'
-import { QuizCard } from '../components/QuizCard'
 import { SkeletonGroup, ErrorCard } from '../components/Skeleton'
 import { ProcessingStatus } from '../components/ProcessingStatus'
 import {
@@ -12,7 +11,7 @@ import {
 } from '../services/api'
 import type { Lecture, LectureOutputs } from '../types/models'
 
-type ResultSection = 'concepts' | 'learning-points' | 'quiz'
+type ResultSection = 'concepts' | 'learning-points'
 
 type PageState =
   | { tag: 'loading' }
@@ -25,7 +24,6 @@ type PageState =
 const SECTION_TABS: { key: ResultSection; label: string }[] = [
   { key: 'concepts', label: '핵심 개념' },
   { key: 'learning-points', label: '학습 포인트' },
-  { key: 'quiz', label: '퀴즈' },
 ]
 
 export function LectureResult() {
@@ -34,7 +32,6 @@ export function LectureResult() {
 
   const [state, setState] = useState<PageState>({ tag: 'loading' })
   const [activeSection, setActiveSection] = useState<ResultSection>('concepts')
-  const [mcqIndex, setMcqIndex] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -118,18 +115,18 @@ export function LectureResult() {
   if (state.tag === 'not-found') {
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
+          ← 강의 목록
         </button>
         <div className="tml-animate" style={{ marginTop: 32 }}>
           <ErrorCard message="존재하지 않는 강의입니다. 강의 ID를 확인해 주세요." />
           <div style={{ marginTop: 20 }}>
             <Link
-              to="/"
+              to="/lectures"
               className="btn-primary"
               style={{ display: 'inline-block', textDecoration: 'none' }}
             >
-              대시보드로 돌아가기
+              강의 목록으로 돌아가기
             </Link>
           </div>
         </div>
@@ -141,8 +138,8 @@ export function LectureResult() {
   if (state.tag === 'error') {
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
+          ← 강의 목록
         </button>
         <div className="tml-animate" style={{ marginTop: 32 }}>
           <ErrorCard message={state.message} />
@@ -156,8 +153,8 @@ export function LectureResult() {
     const { lecture } = state
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
+          ← 강의 목록
         </button>
 
         <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
@@ -186,7 +183,7 @@ export function LectureResult() {
             <button className="btn-primary" onClick={handleStartProcess}>
               지금 분석하기
             </button>
-            <Link to="/" style={{
+            <Link to="/lectures" style={{
               display: 'inline-flex',
               alignItems: 'center',
               fontFamily: 'var(--font-body)',
@@ -197,7 +194,7 @@ export function LectureResult() {
               border: '1px solid var(--tml-rule)',
               borderRadius: 6,
             }}>
-              대시보드로 돌아가기
+              강의 목록으로 돌아가기
             </Link>
           </div>
         </div>
@@ -210,8 +207,8 @@ export function LectureResult() {
     const { lecture } = state
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
+          ← 강의 목록
         </button>
 
         <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
@@ -233,16 +230,11 @@ export function LectureResult() {
   const { lecture, outputs } = state
   const { concepts, learning_points, quizzes } = outputs
 
-  const mcqQuizzes   = quizzes.filter((q) => q.type === 'mcq')
-  const shortQuizzes = quizzes.filter((q) => q.type === 'short')
-  const fillQuizzes  = quizzes.filter((q) => q.type === 'fill')
-  const codeQuizzes  = quizzes.filter((q) => q.type === 'code')
-
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
       {/* 뒤로가기 */}
-      <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-        ← 대시보드
+      <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
+        ← 강의 목록
       </button>
 
       {/* 강의 헤더 */}
@@ -259,10 +251,7 @@ export function LectureResult() {
             aria-selected={activeSection === key}
             aria-controls={`tabpanel-${key}`}
             className={`tml-week-tab${activeSection === key ? ' tml-week-tab--active' : ''}`}
-            onClick={() => {
-              setActiveSection(key)
-              setMcqIndex(0)
-            }}
+            onClick={() => setActiveSection(key)}
           >
             {label}
             {key === 'concepts' && (
@@ -273,11 +262,6 @@ export function LectureResult() {
             {key === 'learning-points' && (
               <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', color: 'var(--tml-ink-muted)' }}>
                 {learning_points.length}
-              </span>
-            )}
-            {key === 'quiz' && (
-              <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', color: 'var(--tml-ink-muted)' }}>
-                {quizzes.length}
               </span>
             )}
           </button>
@@ -320,68 +304,34 @@ export function LectureResult() {
             </div>
           </div>
         )}
-
-        {/* 퀴즈 */}
-        {activeSection === 'quiz' && (
-          <div>
-            {/* 객관식 */}
-            {mcqQuizzes.length > 0 && (
-              <div style={{ marginBottom: 40 }}>
-                <p className="section-label">객관식</p>
-                <QuizCard
-                  key={`mcq-${mcqIndex}`}
-                  quiz={mcqQuizzes[mcqIndex]}
-                  quizIndex={mcqIndex}
-                  totalInType={mcqQuizzes.length}
-                  onNext={mcqIndex + 1 < mcqQuizzes.length ? () => setMcqIndex((i) => i + 1) : undefined}
-                />
-              </div>
-            )}
-
-            {/* 주관식 */}
-            {shortQuizzes.length > 0 && (
-              <div style={{ marginBottom: 40 }}>
-                <p className="section-label">주관식</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {shortQuizzes.map((q, i) => (
-                    <QuizCard key={q.quiz_id} quiz={q} quizIndex={i} totalInType={shortQuizzes.length} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 빈칸 채우기 */}
-            {fillQuizzes.length > 0 && (
-              <div style={{ marginBottom: 40 }}>
-                <p className="section-label">빈칸 채우기</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {fillQuizzes.map((q, i) => (
-                    <QuizCard key={q.quiz_id} quiz={q} quizIndex={i} totalInType={fillQuizzes.length} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 코드 실행형 */}
-            {codeQuizzes.length > 0 && (
-              <div>
-                <p className="section-label">코드 실행형</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {codeQuizzes.map((q, i) => (
-                    <QuizCard key={q.quiz_id} quiz={q} quizIndex={i} totalInType={codeQuizzes.length} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {quizzes.length === 0 && (
-              <p style={{ fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)', fontSize: '0.875rem' }}>
-                퀴즈가 없습니다.
-              </p>
-            )}
-          </div>
-        )}
       </div>
+
+      {/* 퀴즈 CTA */}
+      {quizzes.length > 0 && (
+        <div className="tml-quiz-cta tml-animate" style={{ marginTop: 32 }}>
+          <div>
+            <p style={{
+              fontFamily: 'var(--font-display)', fontSize: '1rem', fontWeight: 600,
+              color: 'var(--tml-ink)', margin: '0 0 4px',
+            }}>
+              퀴즈 풀기
+            </p>
+            <p style={{
+              fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
+              color: 'var(--tml-ink-muted)', margin: 0,
+            }}>
+              {quizzes.length}개의 퀴즈가 준비되어 있습니다
+            </p>
+          </div>
+          <Link
+            to={`/lecture/${id}/quiz`}
+            className="btn-primary"
+            style={{ textDecoration: 'none', flexShrink: 0 }}
+          >
+            퀴즈 시작 →
+          </Link>
+        </div>
+      )}
     </main>
   )
 }

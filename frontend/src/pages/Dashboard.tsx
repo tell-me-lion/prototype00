@@ -1,18 +1,8 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
-import type { WeekSummary, Lecture, ProcessingStatus } from '../types/models'
-import { fetchWeeks, triggerLectureProcess, triggerWeekProcess, ApiError } from '../services/api'
+import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import type { WeekSummary } from '../types/models'
+import { fetchWeeks, ApiError } from '../services/api'
 import { ErrorCard } from '../components/Skeleton'
-import { ProcessingStatus as ProcessingStatusUI } from '../components/ProcessingStatus'
-
-// ── 썸네일 그래디언트 헬퍼 ──
-
-function getLectureThumbnailGradient(date: string, week: number): string {
-  const hues = [210, 25, 170, 340]
-  const baseHue = hues[(week - 1) % hues.length]
-  const dayOffset = new Date(date).getDay() * 8
-  return `linear-gradient(135deg, hsl(${baseHue + dayOffset}, 60%, 35%), hsl(${baseHue + dayOffset + 30}, 50%, 25%))`
-}
 
 // ── DashboardStats ──
 
@@ -41,377 +31,139 @@ function DashboardStats({ totalLectures, completedLectures, totalQuizzes }: Dash
   )
 }
 
-// ── WeekFilter ──
+// ── RecentLectureCard ──
 
-interface WeekFilterProps {
-  weeks: number[]
-  activeWeek: number | null
-  onSelect: (week: number | null) => void
+interface RecentLectureCardProps {
+  lectureId: string
+  date: string
+  dayOfWeek: string
+  week: number
+  courseName: string
+  conceptCount: number
+  quizCount: number
 }
 
-function WeekFilter({ weeks, activeWeek, onSelect }: WeekFilterProps) {
+function RecentLectureCard({ lectureId, date, dayOfWeek, week, courseName, conceptCount, quizCount }: RecentLectureCardProps) {
   return (
-    <div className="tml-week-tabs tml-animate" role="tablist" aria-label="주차 필터" style={{ marginTop: 8 }}>
-      <button
-        role="tab"
-        aria-selected={activeWeek === null}
-        className={`tml-week-tab${activeWeek === null ? ' tml-week-tab--active' : ''}`}
-        onClick={() => onSelect(null)}
-      >
-        전체
-      </button>
-      {weeks.map((week) => (
-        <button
-          key={week}
-          role="tab"
-          aria-selected={activeWeek === week}
-          className={`tml-week-tab${activeWeek === week ? ' tml-week-tab--active' : ''}`}
-          onClick={() => onSelect(week)}
-        >
-          {week}주차
-        </button>
-      ))}
-    </div>
+    <Link
+      to={`/lecture/${lectureId}`}
+      className="tml-card"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
+        textDecoration: 'none', color: 'inherit',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-orange)'
+        ;(e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px var(--tml-shadow-hover)'
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-rule)'
+        ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+      }}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: 8,
+        background: 'var(--tml-orange)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
+      }}>
+        W{week}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600,
+          color: 'var(--tml-ink)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}>
+          {date} ({dayOfWeek}) · {courseName}
+        </p>
+        <p style={{
+          fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)', margin: 0,
+        }}>
+          개념 {conceptCount}개 · 퀴즈 {quizCount}개
+        </p>
+      </div>
+      <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--tml-orange)', flexShrink: 0 }}>
+        →
+      </span>
+    </Link>
   )
 }
 
-// ── LectureCard ──
+// ── WeekGuideStatusCard ──
 
-interface LectureCardProps {
-  lecture: Lecture
-  onProcess: (lectureId: string) => void
-  onViewResults: (lectureId: string) => void
-  onProcessComplete: (lectureId: string) => void
-  onProcessError: (lectureId: string) => void
-}
-
-function LectureCard({ lecture, onProcess, onViewResults, onProcessComplete, onProcessError }: LectureCardProps) {
-  const { lecture_id, date, day_of_week, week, course_name, status, result_summary } = lecture
-  const gradient = getLectureThumbnailGradient(date, week)
-
-  return (
-    <div className="tml-lecture-card tml-card">
-      {/* 썸네일 placeholder */}
-      <div className="tml-lecture-card__thumb" style={{ background: gradient }}>
-        <span className="tml-lecture-card__date-badge">
-          {date.slice(5)} ({day_of_week})
-        </span>
-      </div>
-
-      {/* 카드 본문 */}
-      <div className="tml-lecture-card__body">
-        <p className="tml-lecture-card__course">{course_name}</p>
-        <p className="tml-lecture-card__week-label">Week {week}</p>
-
-        <hr className="tml-lecture-card__rule" />
-
-        {status === 'idle' && (
-          <div className="tml-lecture-card__footer">
-            <button
-              className="btn-primary"
-              style={{ fontSize: '0.8125rem', padding: '6px 14px', width: '100%' }}
-              onClick={() => onProcess(lecture_id)}
-            >
-              가져오기
-            </button>
-          </div>
-        )}
-
-        {status === 'processing' && (
-          <div className="tml-lecture-card__footer">
-            <ProcessingStatusUI
-              lectureId={lecture_id}
-              onComplete={() => onProcessComplete(lecture_id)}
-              onError={() => onProcessError(lecture_id)}
-            />
-          </div>
-        )}
-
-        {status === 'completed' && result_summary && (
-          <div className="tml-lecture-card__footer">
-            <div className="tml-lecture-card__summary">
-              <span>개념 {result_summary.concept_count}개</span>
-              <span>퀴즈 {result_summary.quiz_count}개</span>
-            </div>
-            <button
-              className="tml-lecture-card__result-btn"
-              onClick={() => onViewResults(lecture_id)}
-            >
-              결과 보기 →
-            </button>
-          </div>
-        )}
-
-        {status === 'error' && (
-          <div className="tml-lecture-card__footer">
-            <p className="tml-lecture-card__error">오류가 발생했습니다</p>
-            <button
-              className="btn-primary"
-              style={{
-                fontSize: '0.8125rem',
-                padding: '6px 14px',
-                width: '100%',
-                background: 'var(--tml-wrong)',
-              }}
-              onClick={() => onProcess(lecture_id)}
-            >
-              재시도
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── LectureCardSkeleton ──
-
-function LectureCardSkeleton() {
-  return (
-    <div className="tml-lecture-card tml-card">
-      <div
-        className="tml-skeleton"
-        style={{ height: 80, borderRadius: '5px 5px 0 0', flexShrink: 0 }}
-      />
-      <div className="tml-lecture-card__body">
-        <div className="tml-skeleton" style={{ height: 13, width: '72%', borderRadius: 4, marginBottom: 8 }} />
-        <div className="tml-skeleton" style={{ height: 11, width: '40%', borderRadius: 4, marginBottom: 12 }} />
-        <div className="tml-skeleton" style={{ height: 32, borderRadius: 5 }} />
-      </div>
-    </div>
-  )
-}
-
-// ── WeekGuideCard ──
-
-interface WeekGuideCardProps {
+interface WeekGuideStatusCardProps {
   week: number
   lectureCount: number
-  status: ProcessingStatus
-  onProcess: (week: number) => void
-  onViewResults: (week: number) => void
-  onProcessComplete: (week: number) => void
-  onProcessError: (week: number) => void
+  completedCount: number
+  status: string
 }
 
-function WeekGuideCard({ week, lectureCount, status, onProcess, onViewResults, onProcessComplete, onProcessError }: WeekGuideCardProps) {
+function WeekGuideStatusCard({ week, lectureCount, completedCount, status }: WeekGuideStatusCardProps) {
+  const isCompleted = status === 'completed'
   return (
-    <div className="tml-week-guide-card tml-card">
-      <div className="tml-week-guide-card__bar" />
-      <div className="tml-week-guide-card__content">
-        <div>
-          <p className="tml-week-guide-card__title">
-            📚 {week}주차 전체 학습 가이드
-          </p>
-          <p className="tml-week-guide-card__desc">
-            {lectureCount}개 강의 통합 분석 → 주차별 핵심 요약 &amp; 학습 가이드 생성
-          </p>
-        </div>
-
-        <div style={{ flexShrink: 0 }}>
-          {status === 'completed' ? (
-            <button
-              className="tml-lecture-card__result-btn"
-              onClick={() => onViewResults(week)}
-            >
-              가이드 보기 →
-            </button>
-          ) : status === 'processing' ? (
-            <ProcessingStatusUI
-              week={week}
-              onComplete={() => onProcessComplete(week)}
-              onError={() => onProcessError(week)}
-            />
-          ) : (
-            <button
-              className="btn-primary"
-              style={{ fontSize: '0.8125rem', padding: '6px 14px' }}
-              onClick={() => onProcess(week)}
-            >
-              가이드 생성 →
-            </button>
-          )}
-        </div>
+    <Link
+      to={isCompleted ? `/weekly/${week}` : '/guides'}
+      className="tml-card"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
+        textDecoration: 'none', color: 'inherit',
+        transition: 'border-color 0.15s, box-shadow 0.15s',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-navy-mid)'
+        ;(e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px var(--tml-shadow-hover)'
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-rule)'
+        ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+      }}
+    >
+      <div style={{
+        width: 44, height: 44, borderRadius: 8,
+        background: 'var(--tml-navy)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
+      }}>
+        W{week}
       </div>
-    </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600,
+          color: 'var(--tml-ink)', margin: '0 0 2px',
+        }}>
+          {week}주차 학습 가이드
+        </p>
+        <p style={{
+          fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)', margin: 0,
+        }}>
+          {lectureCount}강의 · {completedCount}완료
+        </p>
+      </div>
+      <span style={{
+        fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
+        color: isCompleted ? 'var(--tml-correct)' : 'var(--tml-ink-muted)',
+      }}>
+        {isCompleted ? '완료' : '미생성'}
+      </span>
+    </Link>
   )
 }
 
-// ── WeekSection ──
-
-interface WeekSectionProps {
-  weekSummary: WeekSummary
-  processingLectures: Set<string>
-  processingWeeks: Set<number>
-  onProcess: (lectureId: string) => void
-  onViewResults: (lectureId: string) => void
-  onProcessComplete: (lectureId: string) => void
-  onProcessError: (lectureId: string) => void
-  onProcessWeek: (week: number) => void
-  onViewWeekResults: (week: number) => void
-  onWeekProcessComplete: (week: number) => void
-  onWeekProcessError: (week: number) => void
-}
-
-function WeekSection({
-  weekSummary,
-  processingLectures,
-  processingWeeks,
-  onProcess,
-  onViewResults,
-  onProcessComplete,
-  onProcessError,
-  onProcessWeek,
-  onViewWeekResults,
-  onWeekProcessComplete,
-  onWeekProcessError,
-}: WeekSectionProps) {
-  const { week, lecture_count, completed_count, date_range, lectures } = weekSummary
-
-  return (
-    <section className="tml-week-section tml-animate">
-      {/* 주차 헤더 */}
-      <div className="tml-week-section__header">
-        <div className="tml-week-section__title-row">
-          <h2 className="tml-week-section__title">{week}주차</h2>
-          <span className="tml-week-section__range">{date_range}</span>
-        </div>
-        <span className="tml-week-section__progress">
-          {lecture_count}강의 · {completed_count}완료
-        </span>
-      </div>
-
-      {/* 강의 카드 그리드 */}
-      <div className="tml-lecture-grid">
-        {lectures.map((lecture) => (
-          <LectureCard
-            key={lecture.lecture_id}
-            lecture={{
-              ...lecture,
-              status: processingLectures.has(lecture.lecture_id) ? 'processing' : lecture.status,
-            }}
-            onProcess={onProcess}
-            onViewResults={onViewResults}
-            onProcessComplete={onProcessComplete}
-            onProcessError={onProcessError}
-          />
-        ))}
-      </div>
-
-      {/* Mode B — 주차별 가이드 */}
-      <WeekGuideCard
-        week={week}
-        lectureCount={lecture_count}
-        status={processingWeeks.has(week) ? 'processing' : weekSummary.status}
-        onProcess={onProcessWeek}
-        onViewResults={onViewWeekResults}
-        onProcessComplete={onWeekProcessComplete}
-        onProcessError={onWeekProcessError}
-      />
-    </section>
-  )
-}
-
-// ── Dashboard (메인 export) ──
+// ── Dashboard ──
 
 export function Dashboard() {
   const [weeks, setWeeks] = useState<WeekSummary[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [processingLectures, setProcessingLectures] = useState<Set<string>>(new Set())
-  const [processingWeeks, setProcessingWeeks] = useState<Set<number>>(new Set())
-  const [searchParams, setSearchParams] = useSearchParams()
-  const navigate = useNavigate()
-
-  const activeWeek = searchParams.get('week') ? Number(searchParams.get('week')) : null
 
   useEffect(() => {
     fetchWeeks()
       .then(setWeeks)
       .catch((err) => {
-        setError(err instanceof ApiError ? err.detail : '강의 목록을 불러오지 못했습니다.')
+        setError(err instanceof ApiError ? err.detail : '데이터를 불러오지 못했습니다.')
       })
       .finally(() => setLoading(false))
   }, [])
 
-  const handleWeekSelect = useCallback(
-    (week: number | null) => {
-      if (week === null) {
-        setSearchParams({})
-      } else {
-        setSearchParams({ week: String(week) })
-      }
-    },
-    [setSearchParams],
-  )
-
-  const handleProcess = useCallback(async (lectureId: string) => {
-    setProcessingLectures((prev) => new Set(prev).add(lectureId))
-    try {
-      await triggerLectureProcess(lectureId)
-    } catch {
-      setProcessingLectures((prev) => {
-        const next = new Set(prev)
-        next.delete(lectureId)
-        return next
-      })
-    }
-  }, [])
-
-  const handleProcessComplete = useCallback(
-    (lectureId: string) => {
-      setProcessingLectures((prev) => {
-        const next = new Set(prev)
-        next.delete(lectureId)
-        return next
-      })
-      navigate(`/lecture/${lectureId}`)
-    },
-    [navigate],
-  )
-
-  const handleProcessError = useCallback((lectureId: string) => {
-    setProcessingLectures((prev) => {
-      const next = new Set(prev)
-      next.delete(lectureId)
-      return next
-    })
-  }, [])
-
-  const handleProcessWeek = useCallback(async (week: number) => {
-    setProcessingWeeks((prev) => new Set(prev).add(week))
-    try {
-      await triggerWeekProcess(week)
-    } catch {
-      setProcessingWeeks((prev) => {
-        const next = new Set(prev)
-        next.delete(week)
-        return next
-      })
-    }
-  }, [])
-
-  const handleWeekProcessComplete = useCallback(
-    (week: number) => {
-      setProcessingWeeks((prev) => {
-        const next = new Set(prev)
-        next.delete(week)
-        return next
-      })
-      navigate(`/weekly/${week}`)
-    },
-    [navigate],
-  )
-
-  const handleWeekProcessError = useCallback((week: number) => {
-    setProcessingWeeks((prev) => {
-      const next = new Set(prev)
-      next.delete(week)
-      return next
-    })
-  }, [])
-
-  // 전체 통계 계산
   const totalLectures = weeks.reduce((sum, w) => sum + w.lecture_count, 0)
   const completedLectures = weeks.reduce((sum, w) => sum + w.completed_count, 0)
   const totalQuizzes = weeks.reduce(
@@ -420,9 +172,11 @@ export function Dashboard() {
     0,
   )
 
-  const weekNumbers = weeks.map((w) => w.week)
-  const filteredWeeks =
-    activeWeek !== null ? weeks.filter((w) => w.week === activeWeek) : weeks
+  // 최근 완료 강의 (최대 3개)
+  const recentCompleted = weeks
+    .flatMap((w) => w.lectures)
+    .filter((l) => l.status === 'completed' && l.result_summary)
+    .slice(0, 3)
 
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 40px 80px' }}>
@@ -448,85 +202,111 @@ export function Dashboard() {
           color: 'var(--tml-ink)',
           margin: '0 0 28px',
         }}>
-          강의 목록
+          대시보드
         </h1>
       </div>
 
-      {/* 로딩 상태 */}
+      {/* 로딩 */}
       {loading && (
-        <div>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="tml-skeleton"
-                style={{ height: 80, flex: 1, borderRadius: 6 }}
-              />
-            ))}
-          </div>
-          <div className="tml-lecture-grid">
-            {[...Array(5)].map((_, i) => (
-              <LectureCardSkeleton key={i} />
-            ))}
-          </div>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="tml-skeleton" style={{ height: 80, flex: 1, borderRadius: 6 }} />
+          ))}
         </div>
       )}
 
-      {/* 에러 상태 */}
+      {/* 에러 */}
       {!loading && error && (
-        <ErrorCard message={error} title="강의 목록 로드 실패" />
+        <ErrorCard message={error} title="데이터 로드 실패" />
       )}
 
-      {/* 통계 + 필터 + 주차 목록 */}
+      {/* 콘텐츠 */}
       {!loading && !error && (
         <>
+          {/* 통계 */}
           <DashboardStats
             totalLectures={totalLectures}
             completedLectures={completedLectures}
             totalQuizzes={totalQuizzes}
           />
 
-          {weeks.length === 0 ? (
-            <div
-              className="tml-empty"
-              style={{ padding: '48px 24px', textAlign: 'center' }}
-            >
-              <p style={{
-                fontFamily: 'var(--font-body)',
-                color: 'var(--tml-ink-muted)',
-                margin: 0,
-              }}>
-                등록된 강의가 없습니다.
-              </p>
-            </div>
-          ) : (
-            <>
-              <WeekFilter
-                weeks={weekNumbers}
-                activeWeek={activeWeek}
-                onSelect={handleWeekSelect}
-              />
-
-              <div className="tml-week-content" style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
-                {filteredWeeks.map((weekSummary) => (
-                  <WeekSection
-                    key={weekSummary.week}
-                    weekSummary={weekSummary}
-                    processingLectures={processingLectures}
-                    processingWeeks={processingWeeks}
-                    onProcess={handleProcess}
-                    onViewResults={(id) => navigate(`/lecture/${id}`)}
-                    onProcessComplete={handleProcessComplete}
-                    onProcessError={handleProcessError}
-                    onProcessWeek={handleProcessWeek}
-                    onViewWeekResults={(w) => navigate(`/weekly/${w}`)}
-                    onWeekProcessComplete={handleWeekProcessComplete}
-                    onWeekProcessError={handleWeekProcessError}
-                  />
-                ))}
+          {/* 2컬럼 레이아웃 */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 5fr) minmax(0, 3fr)',
+            gap: 32,
+            marginTop: 36,
+          }}>
+            {/* 왼쪽: 최근 완료 강의 */}
+            <div className="tml-animate">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <p className="section-label" style={{ margin: 0 }}>최근 분석 완료</p>
+                <Link to="/lectures" style={{
+                  fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
+                  color: 'var(--tml-orange)', textDecoration: 'none', fontWeight: 600,
+                }}>
+                  전체 보기 →
+                </Link>
               </div>
-            </>
-          )}
+              {recentCompleted.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {recentCompleted.map((l) => (
+                    <RecentLectureCard
+                      key={l.lecture_id}
+                      lectureId={l.lecture_id}
+                      date={l.date}
+                      dayOfWeek={l.day_of_week}
+                      week={l.week}
+                      courseName={l.course_name}
+                      conceptCount={l.result_summary!.concept_count}
+                      quizCount={l.result_summary!.quiz_count}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="tml-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)', margin: '0 0 16px', fontSize: '0.875rem' }}>
+                    아직 분석된 강의가 없습니다.
+                  </p>
+                  <Link to="/lectures" className="btn-primary" style={{ textDecoration: 'none' }}>
+                    강의 가져오기 →
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* 오른쪽: 학습 가이드 상태 */}
+            <div className="tml-animate">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <p className="section-label" style={{ margin: 0 }}>학습 가이드</p>
+                <Link to="/guides" style={{
+                  fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
+                  color: 'var(--tml-navy-mid)', textDecoration: 'none', fontWeight: 600,
+                }}>
+                  전체 보기 →
+                </Link>
+              </div>
+              {weeks.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {weeks.map((ws) => (
+                    <WeekGuideStatusCard
+                      key={ws.week}
+                      week={ws.week}
+                      lectureCount={ws.lecture_count}
+                      completedCount={ws.completed_count}
+                      status={ws.status}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="tml-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)', margin: 0, fontSize: '0.875rem' }}>
+                    등록된 주차가 없습니다.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </>
       )}
     </main>

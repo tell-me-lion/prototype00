@@ -4,37 +4,11 @@
 
 ## 1. Design Thinking
 
-### Purpose
-강의 녹화본에서 핵심 개념·퀴즈·학습 가이드를 자동 생성해 수강생에게 제공하는 서비스.
-사용자는 멋쟁이사자처럼 수강생 — 실용적인 개발자 지망생.
-
-### 핵심 UX 원칙 — "유저가 편할 수 있도록"
-
-유저는 파일을 업로드하지 않는다. 대시보드에 강의 목록이 떠 있고, 원하는 강의를 선택하면 끝.
-
-| 기존 (❌) | 변경 후 (✅) |
-|-----------|-------------|
-| 유저가 `.txt` 파일 직접 업로드 | 대시보드에서 강의 선택 → "가져오기" 클릭 |
-| 드래그 앤 드롭 업로드 영역 | 강의 카드 목록 + 선택 UI |
-| 업로드 → 대기 → 결과 | 선택 → 처리 중 상태 → 결과 자동 표시 |
-
-### Tone — "Knowledge Dashboard"
-
-데이터가 정제되어 시각적으로 펼쳐지는 인텔리전스 플랫폼.
-Notion처럼 조용하지 않고, Pitch처럼 색이 살아있다.
-그러나 과하지 않다 — 오렌지와 네이비가 구조를 잡고, 여백이 숨을 쉬게 한다.
-
-### Constraints
-- React + TypeScript + Tailwind CSS
-- 한국어 텍스트 비중 높음 → 한글 폰트 가독성 필수
-- 라이트 테마 기본, 다크 테마 선택
-- `prefers-reduced-motion`, `prefers-color-scheme` 대응
-
-### Differentiation — 하나만 기억한다면?
-
 > **"멋쟁이사자처럼 오렌지가 네이비 위에 정확하게 찍힌다 — 공부 앱이 아니라 대시보드 같다"**
 
-한국 에듀테크에서 이 조합을 쓰는 곳은 없다.
+- 파일 업로드 없음. 대시보드에서 강의 선택 → 서버가 처리 → 결과 자동 표시.
+- React + TypeScript + Tailwind CSS / 라이트 테마 기본, 다크 테마 선택
+- `prefers-reduced-motion`, `prefers-color-scheme` 대응
 
 ---
 
@@ -283,70 +257,3 @@ Notion처럼 조용하지 않고, Pitch처럼 색이 살아있다.
 | 분석 완료 | 체크마크 + 결과 요약 |
 | 오류 | 빨간 좌측 세로선 + 오류 메시지 |
 
----
-
-## 6. 배경 & 시각 디테일
-
-### 서브틀 노이즈 그레인 (종이 질감, 강도 낮음)
-
-```css
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9999;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-  opacity: 0.5;
-}
-```
-
-### 오렌지 액센트 글로우 (히어로 섹션 한정)
-
-```css
-.tml-hero-glow::before {
-  content: '';
-  position: absolute;
-  top: -60px; right: 10%;
-  width: 300px; height: 120px;
-  background: radial-gradient(ellipse, rgba(255, 107, 0, 0.08), transparent 70%);
-  pointer-events: none;
-}
-```
-
----
-
-## 7. 모션
-
-### 페이지 진입 — staggered rise
-
-```css
-@keyframes tml-rise {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.tml-animate {
-  animation: tml-rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.tml-animate:nth-child(1) { animation-delay: 0ms; }
-.tml-animate:nth-child(2) { animation-delay: 60ms; }
-.tml-animate:nth-child(3) { animation-delay: 120ms; }
-.tml-animate:nth-child(4) { animation-delay: 180ms; }
-.tml-animate:nth-child(5) { animation-delay: 240ms; }
-
-@media (prefers-reduced-motion: reduce) {
-  .tml-animate { animation: none; }
-}
-```
-
-### 상태 전환
-
-| 상태 | 처리 |
-|------|------|
-| 로딩 | 펄스 스켈레톤 (오렌지 shimmer) |
-| 에러 | 좌측 빨간 세로선 카드 |
-| 호버 | `background` + `border-color` 강화, `box-shadow` |
-| 탭 전환 | `opacity: 0 → 1` 0.2s |
-| 처리 진행 | 프로그레스 바 단계별 채움 |

@@ -96,18 +96,18 @@ export function WeeklyResult() {
   if (state.tag === 'not-found') {
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
+          ← 학습 가이드
         </button>
         <div className="tml-animate" style={{ marginTop: 32 }}>
-          <ErrorCard message="존재하지 않는 주차입니다. 대시보드에서 주차를 선택해 주세요." />
+          <ErrorCard message="존재하지 않는 주차입니다. 학습 가이드에서 주차를 선택해 주세요." />
           <div style={{ marginTop: 20 }}>
             <Link
-              to="/"
+              to="/guides"
               className="btn-primary"
               style={{ display: 'inline-block', textDecoration: 'none' }}
             >
-              대시보드로 돌아가기
+              학습 가이드로 돌아가기
             </Link>
           </div>
         </div>
@@ -119,8 +119,8 @@ export function WeeklyResult() {
   if (state.tag === 'error') {
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
+          ← 학습 가이드
         </button>
         <div className="tml-animate" style={{ marginTop: 32 }}>
           <ErrorCard message={state.message} />
@@ -138,8 +138,8 @@ export function WeeklyResult() {
 
     return (
       <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-          ← 대시보드
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
+          ← 학습 가이드
         </button>
 
         <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
@@ -197,8 +197,8 @@ export function WeeklyResult() {
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
       {/* 뒤로가기 */}
-      <button className="tml-back-btn tml-animate" onClick={() => navigate('/')}>
-        ← 대시보드
+      <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
+        ← 학습 가이드
       </button>
 
       {/* 주차 헤더 */}
