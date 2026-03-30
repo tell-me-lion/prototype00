@@ -7,6 +7,7 @@ on:
       - 'app/**'
       - 'pipeline/**'
       - 'config/**'
+      - 'data/dummy/**'
       - 'requirements.txt'
       - 'scripts/**'
 
@@ -21,7 +22,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd ~/tell-me-lion
+            cd ~/wonder-girls
             git pull origin main
             source venv/bin/activate
             pip install -r requirements.txt --quiet
