@@ -1,32 +1,56 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import type { WeekSummary } from '../types/models'
 import { fetchWeeks, ApiError } from '../services/api'
 import { ErrorCard } from '../components/Skeleton'
+import { ProgressRing } from '../components/ProgressRing'
+import { ActivityHeatmap } from '../components/ActivityHeatmap'
+import { ConceptCloud } from '../components/ConceptCloud'
 
-// ── DashboardStats ──
+// ── useCountUp 훅 ──
 
-interface DashboardStatsProps {
-  totalLectures: number
-  completedLectures: number
-  totalQuizzes: number
+function useCountUp(target: number, duration = 600) {
+  const [value, setValue] = useState(0)
+  const rafRef = useRef(0)
+
+  useEffect(() => {
+    if (target === 0) { setValue(0); return }
+    const start = performance.now()
+    const animate = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration])
+
+  return value
 }
 
-function DashboardStats({ totalLectures, completedLectures, totalQuizzes }: DashboardStatsProps) {
-  const stats = [
-    { label: '전체 강의', value: totalLectures },
-    { label: '분석 완료', value: completedLectures },
-    { label: '생성 퀴즈', value: totalQuizzes },
-  ]
+// ── StatCard ──
 
+interface StatCardProps {
+  label: string
+  value: number
+  icon: string
+  delay: number
+}
+
+function StatCard({ label, value, icon, delay }: StatCardProps) {
+  const display = useCountUp(value)
   return (
-    <div className="tml-dashboard-stats tml-animate">
-      {stats.map(({ label, value }) => (
-        <div key={label} className="tml-stat-card tml-card">
-          <span className="tml-stat-card__value">{value}</span>
-          <span className="tml-stat-card__label">{label}</span>
-        </div>
-      ))}
+    <div
+      className="tml-stat-card tml-card tml-dashboard-stagger"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className="tml-stat-card__header">
+        <span className="tml-stat-card__icon">{icon}</span>
+        <span className="tml-stat-card__label">{label}</span>
+      </div>
+      <span className="tml-stat-card__value">{display}</span>
     </div>
   )
 }
@@ -47,103 +71,20 @@ function RecentLectureCard({ lectureId, date, dayOfWeek, week, courseName, conce
   return (
     <Link
       to={`/lecture/${lectureId}`}
-      className="tml-card"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
-        textDecoration: 'none', color: 'inherit',
-        transition: 'border-color 0.15s, box-shadow 0.15s',
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-orange)'
-        ;(e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px var(--tml-shadow-hover)'
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-rule)'
-        ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
-      }}
+      className="tml-card tml-recent-card"
     >
-      <div style={{
-        width: 44, height: 44, borderRadius: 8,
-        background: 'var(--tml-orange)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#fff', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
-      }}>
+      <div className="tml-recent-card__badge">
         W{week}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600,
-          color: 'var(--tml-ink)', margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        }}>
+      <div className="tml-recent-card__body">
+        <p className="tml-recent-card__title">
           {date} ({dayOfWeek}) · {courseName}
         </p>
-        <p style={{
-          fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)', margin: 0,
-        }}>
+        <p className="tml-recent-card__meta">
           개념 {conceptCount}개 · 퀴즈 {quizCount}개
         </p>
       </div>
-      <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--tml-orange)', flexShrink: 0 }}>
-        →
-      </span>
-    </Link>
-  )
-}
-
-// ── WeekGuideStatusCard ──
-
-interface WeekGuideStatusCardProps {
-  week: number
-  lectureCount: number
-  completedCount: number
-  status: string
-}
-
-function WeekGuideStatusCard({ week, lectureCount, completedCount, status }: WeekGuideStatusCardProps) {
-  const isCompleted = status === 'completed'
-  return (
-    <Link
-      to={isCompleted ? `/weekly/${week}` : '/guides'}
-      className="tml-card"
-      style={{
-        display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px',
-        textDecoration: 'none', color: 'inherit',
-        transition: 'border-color 0.15s, box-shadow 0.15s',
-      }}
-      onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-navy-mid)'
-        ;(e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px var(--tml-shadow-hover)'
-      }}
-      onMouseLeave={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = 'var(--tml-rule)'
-        ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
-      }}
-    >
-      <div style={{
-        width: 44, height: 44, borderRadius: 8,
-        background: 'var(--tml-navy)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#fff', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
-      }}>
-        W{week}
-      </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600,
-          color: 'var(--tml-ink)', margin: '0 0 2px',
-        }}>
-          {week}주차 학습 가이드
-        </p>
-        <p style={{
-          fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)', margin: 0,
-        }}>
-          {lectureCount}강의 · {completedCount}완료
-        </p>
-      </div>
-      <span style={{
-        fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 600, flexShrink: 0,
-        color: isCompleted ? 'var(--tml-correct)' : 'var(--tml-ink-muted)',
-      }}>
-        {isCompleted ? '완료' : '미생성'}
-      </span>
+      <span className="tml-recent-card__arrow">→</span>
     </Link>
   )
 }
@@ -171,12 +112,22 @@ export function Dashboard() {
       sum + w.lectures.reduce((s, l) => s + (l.result_summary?.quiz_count ?? 0), 0),
     0,
   )
+  const totalConcepts = weeks.reduce(
+    (sum, w) =>
+      sum + w.lectures.reduce((s, l) => s + (l.result_summary?.concept_count ?? 0), 0),
+    0,
+  )
+
+  const allLectures = weeks.flatMap((w) => w.lectures)
+  const remainingCount = totalLectures - completedLectures
 
   // 최근 완료 강의 (최대 3개)
-  const recentCompleted = weeks
-    .flatMap((w) => w.lectures)
+  const recentCompleted = allLectures
     .filter((l) => l.status === 'completed' && l.result_summary)
     .slice(0, 3)
+
+  // 다음 분석할 강의
+  const nextLecture = allLectures.find((l) => l.status === 'idle')
 
   return (
     <main style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 40px 80px' }}>
@@ -209,7 +160,7 @@ export function Dashboard() {
       {/* 로딩 */}
       {loading && (
         <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="tml-skeleton" style={{ height: 80, flex: 1, borderRadius: 6 }} />
           ))}
         </div>
@@ -223,24 +174,50 @@ export function Dashboard() {
       {/* 콘텐츠 */}
       {!loading && !error && (
         <>
-          {/* 통계 */}
-          <DashboardStats
-            totalLectures={totalLectures}
-            completedLectures={completedLectures}
-            totalQuizzes={totalQuizzes}
-          />
+          {/* ── 히어로: 프로그레스 링 + 환영 메시지 ── */}
+          <div className="tml-dashboard-hero tml-animate">
+            <ProgressRing completed={completedLectures} total={totalLectures} />
+            <div className="tml-dashboard-hero__text">
+              <h2 className="tml-dashboard-hero__greeting">
+                학습 진행률
+              </h2>
+              <p className="tml-dashboard-hero__summary">
+                {totalLectures > 0 ? (
+                  <>
+                    전체 <strong>{totalLectures}개</strong> 강의 중{' '}
+                    <strong>{completedLectures}개</strong> 분석 완료
+                    {remainingCount > 0 && <>, <strong>{remainingCount}개</strong> 남음</>}
+                  </>
+                ) : (
+                  '등록된 강의가 없습니다.'
+                )}
+              </p>
+              {nextLecture && (
+                <Link
+                  to="/lectures"
+                  className="btn-primary"
+                  style={{ textDecoration: 'none', display: 'inline-block', marginTop: 12 }}
+                >
+                  다음 강의 분석하기 →
+                </Link>
+              )}
+            </div>
+          </div>
 
-          {/* 2컬럼 레이아웃 */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 5fr) minmax(0, 3fr)',
-            gap: 32,
-            marginTop: 36,
-          }}>
+          {/* ── 통계 카드 4개 ── */}
+          <div className="tml-dashboard-stats tml-animate">
+            <StatCard label="전체 강의" value={totalLectures} icon="📚" delay={0} />
+            <StatCard label="분석 완료" value={completedLectures} icon="✅" delay={100} />
+            <StatCard label="생성 퀴즈" value={totalQuizzes} icon="❓" delay={200} />
+            <StatCard label="핵심 개념" value={totalConcepts} icon="💡" delay={300} />
+          </div>
+
+          {/* ── 2컬럼: 최근 완료 + 히트맵 ── */}
+          <div className="tml-dashboard-grid tml-animate">
             {/* 왼쪽: 최근 완료 강의 */}
-            <div className="tml-animate">
+            <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <p className="section-label" style={{ margin: 0 }}>최근 분석 완료</p>
+                <p className="section-label" style={{ margin: 0, paddingTop: 0, borderTop: 'none' }}>최근 분석 완료</p>
                 <Link to="/lectures" style={{
                   fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
                   color: 'var(--tml-orange)', textDecoration: 'none', fontWeight: 600,
@@ -275,38 +252,24 @@ export function Dashboard() {
               )}
             </div>
 
-            {/* 오른쪽: 학습 가이드 상태 */}
-            <div className="tml-animate">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <p className="section-label" style={{ margin: 0 }}>학습 가이드</p>
-                <Link to="/guides" style={{
-                  fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
-                  color: 'var(--tml-navy-mid)', textDecoration: 'none', fontWeight: 600,
-                }}>
-                  전체 보기 →
-                </Link>
+            {/* 오른쪽: 활동 히트맵 */}
+            <div>
+              <p className="section-label" style={{ margin: '0 0 16px', paddingTop: 0, borderTop: 'none' }}>주간 활동</p>
+              <div className="tml-card" style={{ padding: '20px' }}>
+                <ActivityHeatmap lectures={allLectures} />
               </div>
-              {weeks.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {weeks.map((ws) => (
-                    <WeekGuideStatusCard
-                      key={ws.week}
-                      week={ws.week}
-                      lectureCount={ws.lecture_count}
-                      completedCount={ws.completed_count}
-                      status={ws.status}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="tml-card" style={{ padding: '32px 24px', textAlign: 'center' }}>
-                  <p style={{ fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)', margin: 0, fontSize: '0.875rem' }}>
-                    등록된 주차가 없습니다.
-                  </p>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* ── 개념 클라우드 ── */}
+          {allLectures.some((l) => l.status === 'completed') && (
+            <div className="tml-animate" style={{ marginTop: 36 }}>
+              <p className="section-label" style={{ margin: '0 0 16px' }}>최근 학습 키워드</p>
+              <div className="tml-card" style={{ padding: '24px' }}>
+                <ConceptCloud lectures={allLectures} />
+              </div>
+            </div>
+          )}
         </>
       )}
     </main>

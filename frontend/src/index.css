@@ -1034,29 +1034,154 @@ body::after {
 
 /* === 대시보드 === */
 
-/* 통계 패널 */
-.tml-dashboard-stats {
+/* 스태거 애니메이션 */
+@keyframes tml-stagger-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tml-dashboard-stagger {
+  animation: tml-stagger-rise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tml-dashboard-stagger { animation: none; }
+}
+
+/* ── 히어로: 프로그레스 링 + 환영 ── */
+.tml-dashboard-hero {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 40px;
+  padding: 32px 36px;
+  background: var(--tml-bg-raised);
+  border: 1px solid var(--tml-rule);
+  border-radius: 10px;
   margin-bottom: 28px;
-  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.tml-dashboard-hero::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -20px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.06), transparent 70%);
+  pointer-events: none;
+}
+
+.tml-dashboard-hero__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tml-dashboard-hero__greeting {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--tml-ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.tml-dashboard-hero__summary {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: var(--tml-ink-secondary);
+  margin: 0;
+  line-height: 1.7;
+}
+
+.tml-dashboard-hero__summary strong {
+  color: var(--tml-ink);
+  font-weight: 600;
+}
+
+/* ── 프로그레스 링 ── */
+.tml-progress-ring {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.tml-progress-ring__svg {
+  display: block;
+}
+
+@keyframes tml-ring-draw {
+  from { stroke-dashoffset: var(--ring-circumference, 471); }
+}
+
+.tml-progress-ring__circle {
+  transition: stroke-dashoffset 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+}
+
+.tml-progress-ring__label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.tml-progress-ring__percent {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--tml-ink);
+  line-height: 1;
+}
+
+.tml-progress-ring__unit {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--tml-ink-muted);
+  margin-top: 4px;
+}
+
+/* ── 통계 카드 (4개) ── */
+.tml-dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .tml-dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .tml-stat-card {
-  flex: 1;
-  min-width: 120px;
-  padding: 16px 20px;
+  padding: 18px 20px;
   border-top: 2px solid var(--tml-orange);
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
-.tml-stat-card__value {
-  font-family: var(--font-mono);
-  font-size: 1.625rem;
-  font-weight: 500;
-  color: var(--tml-ink);
+.tml-stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(15, 31, 61, 0.08);
+}
+
+.tml-stat-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tml-stat-card__icon {
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -1066,6 +1191,235 @@ body::after {
   color: var(--tml-ink-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
+}
+
+.tml-stat-card__value {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--tml-ink);
+  line-height: 1;
+}
+
+/* ── 2컬럼 그리드 ── */
+.tml-dashboard-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 3fr);
+  gap: 32px;
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .tml-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 최근 완료 카드 ── */
+.tml-recent-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.tml-recent-card:hover {
+  border-color: var(--tml-orange);
+  box-shadow: 0 2px 8px var(--tml-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.tml-recent-card__badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--tml-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tml-recent-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tml-recent-card__title {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--tml-ink);
+  margin: 0 0 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tml-recent-card__meta {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  margin: 0;
+}
+
+.tml-recent-card__arrow {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-orange);
+  flex-shrink: 0;
+}
+
+/* ── 활동 히트맵 ── */
+.tml-heatmap__grid {
+  display: flex;
+  gap: 4px;
+}
+
+.tml-heatmap__labels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-right: 6px;
+}
+
+.tml-heatmap__day-label {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  color: var(--tml-ink-muted);
+  height: 14px;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.tml-heatmap__weeks {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+
+.tml-heatmap__week-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+@keyframes tml-heatmap-pop {
+  from { opacity: 0; transform: scale(0.5); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.tml-heatmap__cell {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  animation: tml-heatmap-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  cursor: pointer;
+  transition: outline 0.1s ease;
+}
+
+.tml-heatmap__cell:hover {
+  outline: 2px solid var(--tml-ink-muted);
+  outline-offset: -1px;
+}
+
+.tml-heatmap__cell--no-anim {
+  animation: none;
+  cursor: default;
+}
+
+.tml-heatmap__cell--no-anim:hover {
+  outline: none;
+}
+
+.tml-heatmap__cell--empty {
+  visibility: hidden;
+  animation: none;
+}
+
+.tml-heatmap__cell--level-0 { background: var(--tml-bg-overlay); }
+.tml-heatmap__cell--level-1 { background: var(--tml-orange-light); }
+.tml-heatmap__cell--level-2 { background: color-mix(in srgb, var(--tml-orange) 50%, transparent); }
+.tml-heatmap__cell--level-3 { background: var(--tml-orange); }
+
+/* 다크 테마에서 level-1 더 밝게 */
+[data-theme="dark"] .tml-heatmap__cell--level-1 { background: rgba(255, 107, 0, 0.2); }
+[data-theme="dark"] .tml-heatmap__cell--level-2 { background: rgba(255, 107, 0, 0.45); }
+
+.tml-heatmap__tooltip {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  background: var(--tml-navy);
+  color: var(--tml-white);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  padding: 5px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.tml-heatmap__legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  justify-content: flex-end;
+}
+
+.tml-heatmap__legend-label {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  color: var(--tml-ink-muted);
+  padding: 0 2px;
+}
+
+/* ── 개념 클라우드 ── */
+@keyframes tml-tag-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tml-concept-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.tml-concept-cloud__tag {
+  background: var(--tml-bg-overlay);
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--tml-ink-secondary);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+  animation: tml-tag-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.tml-concept-cloud__tag:hover {
+  background: var(--tml-orange-light);
+  border-color: var(--tml-orange);
+  color: var(--tml-orange-dark);
+  transform: translateY(-2px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tml-heatmap__cell { animation: none; }
+  .tml-concept-cloud__tag { animation: none; }
+  .tml-progress-ring__circle { transition: none; }
 }
 
 /* 주차 섹션 */
@@ -1614,6 +1968,7 @@ body::after {
 .tml-header__nav {
   display: flex;
   align-items: center;
+  margin-left: 32px;
 }
 
 .tml-header__nav-item {
