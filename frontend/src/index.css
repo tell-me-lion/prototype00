@@ -1252,126 +1252,282 @@ body::after {
   .tml-dashboard-stagger { animation: none; }
 }
 
-/* ── 히어로 (다크 네이비) ── */
-.tml-hero {
-  position: relative;
-  background: linear-gradient(135deg, var(--tml-navy) 0%, #1A3558 60%, #0D2240 100%);
-  border-radius: 16px;
-  padding: 44px 40px 20px;
-  margin-bottom: 24px;
-  overflow: hidden;
+/* ── 히어로 (3D tilt + aurora mesh) ── */
+
+@keyframes tml-mesh-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
+@keyframes tml-orb-float-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -20px) scale(1.1); }
+  66%      { transform: translate(-15px, 15px) scale(0.95); }
+}
+
+@keyframes tml-orb-float-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40%      { transform: translate(-25px, 25px) scale(1.15); }
+  70%      { transform: translate(20px, -10px) scale(0.9); }
+}
+
+@keyframes tml-scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(400%); }
+}
+
+@keyframes tml-pulse-ring {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes tml-bar-shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+@keyframes tml-border-glow-move {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+.tml-hero {
+  position: relative;
+  background: #0B0E17;
+  border-radius: 20px;
+  padding: 48px 44px 24px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 107, 0, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 0, 0.04),
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 16px 56px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  will-change: transform;
+}
+
+/* 메쉬 그라디언트 (애니메이션) */
+.tml-hero__mesh {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 90%, rgba(255, 85, 0, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 90% 20%, rgba(255, 140, 0, 0.12) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180, 60, 0, 0.08) 0%, transparent 50%),
+    linear-gradient(135deg, #0B0E17 0%, #111422 30%, #0D1018 60%, #0F0A12 100%);
+  background-size: 200% 200%;
+  animation: tml-mesh-shift 12s ease-in-out infinite;
+}
+
+/* 노이즈 텍스처 */
+.tml-hero__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  pointer-events: none;
+}
+
+/* 플로팅 오브 */
 .tml-hero__decor {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.tml-hero__ring {
+.tml-hero__orb {
   position: absolute;
   border-radius: 50%;
-  border: 1px solid rgba(255, 107, 0, 0.12);
+  filter: blur(60px);
 }
 
-.tml-hero__ring--1 {
-  width: 340px;
-  height: 340px;
-  top: -120px;
-  right: -60px;
-}
-
-.tml-hero__ring--2 {
+.tml-hero__orb--1 {
   width: 220px;
   height: 220px;
   top: -60px;
-  right: 0;
+  right: -30px;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.3), rgba(255, 60, 0, 0.05) 70%);
+  animation: tml-orb-float-1 8s ease-in-out infinite;
 }
 
-.tml-hero__ring--3 {
-  width: 120px;
-  height: 120px;
+.tml-hero__orb--2 {
+  width: 160px;
+  height: 160px;
   bottom: -40px;
-  left: -30px;
-  border-color: rgba(255, 255, 255, 0.04);
+  left: 10%;
+  background: radial-gradient(circle, rgba(255, 160, 40, 0.2), transparent 70%);
+  animation: tml-orb-float-2 10s ease-in-out infinite;
 }
 
-.tml-hero__glow {
+.tml-hero__orb--3 {
+  width: 100px;
+  height: 100px;
+  top: 20%;
+  right: 30%;
+  background: radial-gradient(circle, rgba(255, 80, 0, 0.15), transparent 70%);
+  animation: tml-orb-float-1 14s ease-in-out infinite reverse;
+}
+
+.tml-hero__orb--4 {
+  width: 80px;
+  height: 80px;
+  bottom: 10%;
+  right: 15%;
+  background: radial-gradient(circle, rgba(255, 200, 100, 0.12), transparent 70%);
+  animation: tml-orb-float-2 7s ease-in-out infinite reverse;
+}
+
+/* 마우스 글레어 */
+.tml-hero__glare {
   position: absolute;
-  width: 480px;
-  height: 480px;
-  top: -50%;
-  right: -5%;
-  background: radial-gradient(circle, rgba(255, 107, 0, 0.1), transparent 65%);
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
+/* 스캔라인 */
+.tml-hero__scanline {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.tml-hero__scanline::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 107, 0, 0.03) 30%,
+    rgba(255, 107, 0, 0.06) 50%,
+    rgba(255, 107, 0, 0.03) 70%,
+    transparent
+  );
+  animation: tml-scanline 6s linear infinite;
+}
+
+/* 하단 빛 보더 */
+.tml-hero__border-glow {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 107, 0, 0.6) 20%,
+    rgba(255, 180, 50, 0.8) 50%,
+    rgba(255, 107, 0, 0.6) 80%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: tml-border-glow-move 4s linear infinite;
+}
+
+/* 콘텐츠 */
 .tml-hero__content {
   position: relative;
   display: flex;
   align-items: center;
   gap: 40px;
-  z-index: 1;
+  z-index: 3;
 }
 
 .tml-hero__info {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .tml-hero__eyebrow {
-  font-family: var(--font-body);
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--tml-orange);
-  letter-spacing: 0.1em;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: rgba(255, 160, 60, 0.8);
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   margin: 0;
-  opacity: 0.9;
 }
 
 .tml-hero__title {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 1.5rem;
+  font-weight: 800;
+  font-size: 1.75rem;
   color: #fff;
   margin: 0;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+}
+
+.tml-hero__title-gradient {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFD4A8 40%, #FF8C00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .tml-hero__desc {
   font-family: var(--font-body);
   font-size: 0.9375rem;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
   margin: 0;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .tml-hero__desc strong {
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(255, 220, 180, 0.95);
   font-weight: 600;
 }
 
+/* CTA 버튼 — 글로우 */
 .tml-hero__cta {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-top: 10px;
-  padding: 9px 22px;
-  background: var(--tml-orange);
+  margin-top: 12px;
+  padding: 10px 26px;
+  background: linear-gradient(135deg, #FF6B00, #FF8C00);
   color: #fff;
   font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   text-decoration: none;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   width: fit-content;
+  box-shadow:
+    0 0 20px rgba(255, 107, 0, 0.3),
+    0 4px 12px rgba(255, 107, 0, 0.2);
+  overflow: hidden;
 }
 
 .tml-hero__cta:hover {
-  background: var(--tml-orange-dark);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 30px rgba(255, 107, 0, 0.5),
+    0 8px 24px rgba(255, 107, 0, 0.3);
+}
+
+.tml-hero__cta-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  animation: tml-pulse-ring 2s ease-out infinite;
+  pointer-events: none;
 }
 
 .tml-hero__cta-arrow {
@@ -1379,40 +1535,88 @@ body::after {
 }
 
 .tml-hero__cta:hover .tml-hero__cta-arrow {
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
+/* 프로그레스 바 — 글로우 */
 .tml-hero__bar {
   position: relative;
   margin-top: 28px;
-  height: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
-  z-index: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: visible;
+  z-index: 3;
 }
 
 .tml-hero__bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--tml-orange), #FF9F4A);
-  border-radius: 2px;
+  background: linear-gradient(90deg, #FF4500, #FF6B00, #FFB347);
+  border-radius: 4px;
   transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.tml-hero__bar-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: tml-bar-shimmer 2s ease-in-out infinite;
+}
+
+.tml-hero__bar-glow {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: #FF8C00;
+  box-shadow: 0 0 12px rgba(255, 140, 0, 0.8), 0 0 24px rgba(255, 107, 0, 0.4);
+  transition: left 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s;
 }
 
 /* 히어로 안 프로그레스 링 색상 오버라이드 */
 .tml-hero .tml-progress-ring__percent { color: #fff; }
-.tml-hero .tml-progress-ring__unit { color: rgba(255, 255, 255, 0.45); }
-.tml-hero .tml-progress-ring__svg circle:first-of-type { stroke: rgba(255, 255, 255, 0.1); }
+.tml-hero .tml-progress-ring__unit { color: rgba(255, 200, 150, 0.5); }
+.tml-hero .tml-progress-ring__svg circle:first-of-type { stroke: rgba(255, 107, 0, 0.1); }
 
 [data-theme="dark"] .tml-hero {
-  background: linear-gradient(135deg, #0D1B2E 0%, #152942 60%, #0A1628 100%);
-  border: 1px solid rgba(255, 107, 0, 0.06);
+  background: #060810;
+  border-color: rgba(255, 107, 0, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 0, 0.06),
+    0 4px 32px rgba(0, 0, 0, 0.6),
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .tml-hero__mesh {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 90%, rgba(255, 85, 0, 0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 90% 20%, rgba(255, 140, 0, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180, 60, 0, 0.06) 0%, transparent 50%),
+    linear-gradient(135deg, #060810 0%, #0A0D18 30%, #08060E 60%, #0A0710 100%);
+  background-size: 200% 200%;
+  animation: tml-mesh-shift 12s ease-in-out infinite;
 }
 
 @media (max-width: 768px) {
-  .tml-hero { padding: 32px 24px 16px; }
+  .tml-hero { padding: 32px 24px 16px; border-radius: 16px; }
   .tml-hero__content { flex-direction: column; gap: 24px; text-align: center; align-items: center; }
   .tml-hero__info { align-items: center; }
+  .tml-hero__title { font-size: 1.375rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tml-hero__mesh { animation: none; }
+  .tml-hero__orb { animation: none; }
+  .tml-hero__scanline::after { animation: none; }
+  .tml-hero__border-glow { animation: none; }
+  .tml-hero__bar-fill::after { animation: none; }
+  .tml-hero__cta-pulse { animation: none; display: none; }
 }
 
 /* ── 프로그레스 링 ── */

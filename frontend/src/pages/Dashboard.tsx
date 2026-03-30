@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import type { WeekSummary } from '../types/models'
 import { fetchWeeks, ApiError } from '../services/api'
@@ -92,6 +92,117 @@ function RecentLectureCard({
   )
 }
 
+/* ── HeroCard (3D tilt + aurora) ── */
+
+interface HeroCardProps {
+  completedLectures: number
+  totalLectures: number
+  remainingCount: number
+  percent: number
+  hasNext: boolean
+}
+
+function HeroCard({ completedLectures, totalLectures, remainingCount, percent, hasNext }: HeroCardProps) {
+  const cardRef = useRef<HTMLElement>(null)
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 })
+  const [isHovering, setIsHovering] = useState(false)
+  const rafId = useRef(0)
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = (e.clientX - rect.left) / rect.width
+    const y = (e.clientY - rect.top) / rect.height
+    cancelAnimationFrame(rafId.current)
+    rafId.current = requestAnimationFrame(() => setMousePos({ x, y }))
+  }, [])
+
+  const tiltX = isHovering ? (mousePos.y - 0.5) * -8 : 0
+  const tiltY = isHovering ? (mousePos.x - 0.5) * 8 : 0
+  const glareX = mousePos.x * 100
+  const glareY = mousePos.y * 100
+
+  return (
+    <section
+      ref={cardRef}
+      className="tml-hero tml-animate"
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => { setIsHovering(false); setMousePos({ x: 0.5, y: 0.5 }) }}
+      style={{
+        transform: `perspective(800px) rotateX(${tiltX}deg) rotateY(${tiltY}deg)`,
+        transition: isHovering ? 'transform 0.1s ease-out' : 'transform 0.4s ease-out',
+      }}
+    >
+      {/* 레이어 1: 메쉬 그라디언트 (애니메이션) */}
+      <div className="tml-hero__mesh" aria-hidden="true" />
+
+      {/* 레이어 2: 노이즈 텍스처 */}
+      <div className="tml-hero__noise" aria-hidden="true" />
+
+      {/* 레이어 3: 플로팅 오브 */}
+      <div className="tml-hero__decor" aria-hidden="true">
+        <div className="tml-hero__orb tml-hero__orb--1" />
+        <div className="tml-hero__orb tml-hero__orb--2" />
+        <div className="tml-hero__orb tml-hero__orb--3" />
+        <div className="tml-hero__orb tml-hero__orb--4" />
+      </div>
+
+      {/* 레이어 4: 마우스 따라가는 글레어 */}
+      {isHovering && (
+        <div
+          className="tml-hero__glare"
+          style={{
+            background: `radial-gradient(circle at ${glareX}% ${glareY}%, rgba(255,140,0,0.15) 0%, transparent 60%)`,
+          }}
+        />
+      )}
+
+      {/* 레이어 5: 스캔라인 */}
+      <div className="tml-hero__scanline" aria-hidden="true" />
+
+      {/* 콘텐츠 */}
+      <div className="tml-hero__content">
+        <ProgressRing completed={completedLectures} total={totalLectures} />
+        <div className="tml-hero__info">
+          <p className="tml-hero__eyebrow">Learning Progress</p>
+          <h1 className="tml-hero__title">
+            <span className="tml-hero__title-gradient">학습 진행률</span>
+          </h1>
+          <p className="tml-hero__desc">
+            {totalLectures > 0 ? (
+              <>
+                전체 <strong>{totalLectures}개</strong> 강의 중{' '}
+                <strong>{completedLectures}개</strong> 분석 완료
+                {remainingCount > 0 && (
+                  <>, <strong>{remainingCount}개</strong> 남음</>
+                )}
+              </>
+            ) : (
+              '등록된 강의가 없습니다.'
+            )}
+          </p>
+          {hasNext && (
+            <Link to="/lectures" className="tml-hero__cta">
+              <span className="tml-hero__cta-pulse" />
+              다음 강의 분석하기
+              <span className="tml-hero__cta-arrow">→</span>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* 프로그레스 바 */}
+      <div className="tml-hero__bar">
+        <div className="tml-hero__bar-fill" style={{ width: `${percent}%` }} />
+        <div className="tml-hero__bar-glow" style={{ left: `${percent}%` }} />
+      </div>
+
+      {/* 하단 빛 보더 */}
+      <div className="tml-hero__border-glow" aria-hidden="true" />
+    </section>
+  )
+}
+
 /* ── Dashboard ── */
 
 export function Dashboard() {
@@ -152,45 +263,13 @@ export function Dashboard() {
       {!loading && !error && (
         <>
           {/* ── 히어로 ── */}
-          <section className="tml-hero tml-animate">
-            <div className="tml-hero__decor" aria-hidden="true">
-              <div className="tml-hero__ring tml-hero__ring--1" />
-              <div className="tml-hero__ring tml-hero__ring--2" />
-              <div className="tml-hero__ring tml-hero__ring--3" />
-              <div className="tml-hero__glow" />
-            </div>
-
-            <div className="tml-hero__content">
-              <ProgressRing completed={completedLectures} total={totalLectures} />
-              <div className="tml-hero__info">
-                <p className="tml-hero__eyebrow">Learning Progress</p>
-                <h1 className="tml-hero__title">학습 진행률</h1>
-                <p className="tml-hero__desc">
-                  {totalLectures > 0 ? (
-                    <>
-                      전체 <strong>{totalLectures}개</strong> 강의 중{' '}
-                      <strong>{completedLectures}개</strong> 분석 완료
-                      {remainingCount > 0 && (
-                        <>, <strong>{remainingCount}개</strong> 남음</>
-                      )}
-                    </>
-                  ) : (
-                    '등록된 강의가 없습니다.'
-                  )}
-                </p>
-                {nextLecture && (
-                  <Link to="/lectures" className="tml-hero__cta">
-                    다음 강의 분석하기
-                    <span className="tml-hero__cta-arrow">→</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            <div className="tml-hero__bar">
-              <div className="tml-hero__bar-fill" style={{ width: `${percent}%` }} />
-            </div>
-          </section>
+          <HeroCard
+            completedLectures={completedLectures}
+            totalLectures={totalLectures}
+            remainingCount={remainingCount}
+            percent={percent}
+            hasNext={!!nextLecture}
+          />
 
           {/* ── 벤토 그리드 ── */}
           <div className="tml-bento tml-animate">
