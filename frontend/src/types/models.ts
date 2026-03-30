@@ -75,6 +75,11 @@ export interface LearningPoint {
   meta: Record<string, unknown>
 }
 
+export interface QuizTestCase {
+  input?: string
+  expected_output: string
+}
+
 export interface Quiz {
   quiz_id: string
   status: 'pass' | 'fail'
@@ -84,6 +89,10 @@ export interface Quiz {
   answer: string | string[] | null
   explanation: string | null
   code?: string
+  language?: string
+  starter_code?: string
+  expected_output?: string
+  test_cases?: QuizTestCase[]
   validation_log: Record<string, unknown>
   meta: Record<string, unknown>
 }

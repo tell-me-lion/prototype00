@@ -678,6 +678,210 @@ body::after {
   margin-bottom: 16px;
 }
 
+/* === 인터랙티브 코드 에디터 === */
+
+.code-editor {
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.code-editor__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--tml-bg-overlay);
+  border-bottom: 1px solid var(--tml-rule);
+}
+
+.code-editor__lang-badge {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--tml-quiz-code);
+  background: var(--tml-quiz-code-bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.06em;
+}
+
+.code-editor__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.code-editor__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.code-editor__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.code-editor__btn--reset {
+  background: var(--tml-bg-raised);
+  color: var(--tml-ink-muted);
+  border: 1px solid var(--tml-rule);
+}
+
+.code-editor__btn--reset:hover:not(:disabled) {
+  background: var(--tml-bg-overlay);
+}
+
+.code-editor__btn--run {
+  background: var(--tml-quiz-code);
+  color: var(--tml-white);
+}
+
+.code-editor__btn--run:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.code-editor__spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: var(--tml-white);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.code-editor__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 220px;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--tml-ink-muted);
+  background: var(--tml-bg-raised);
+}
+
+/* === 실행 결과 패널 === */
+
+.output-panel {
+  border: 1px solid var(--tml-rule);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.output-panel__header {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tml-ink-muted);
+  padding: 8px 12px;
+  background: var(--tml-bg-overlay);
+  border-bottom: 1px solid var(--tml-rule);
+}
+
+.output-panel__stdout {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--tml-ink);
+  padding: 12px;
+  margin: 0;
+  background: var(--tml-bg-raised);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.output-panel__error {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--tml-wrong, #E53E3E);
+  padding: 12px;
+  margin: 0;
+  background: var(--tml-bg-raised);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.output-panel__tests {
+  border-top: 1px solid var(--tml-rule);
+}
+
+.output-panel__tests-header {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 8px 12px;
+  background: var(--tml-bg-overlay);
+}
+
+.output-panel__tests-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.output-panel__test {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border-top: 1px solid var(--tml-rule);
+}
+
+.output-panel__test--pass .output-panel__test-icon {
+  color: var(--tml-correct, #38A169);
+}
+
+.output-panel__test--fail .output-panel__test-icon {
+  color: var(--tml-wrong, #E53E3E);
+}
+
+.output-panel__test-icon {
+  flex-shrink: 0;
+  font-size: 0.875rem;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.output-panel__test-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.output-panel__test-label {
+  color: var(--tml-ink-secondary);
+}
+
+.output-panel__test-label code {
+  color: var(--tml-ink);
+  background: var(--tml-bg-overlay);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.output-panel__test-label--actual code {
+  color: var(--tml-wrong, #E53E3E);
+}
+
 /* 다시 보기 / 정답 보기 공통 버튼 */
 .quiz-reset-btn {
   background: none;
