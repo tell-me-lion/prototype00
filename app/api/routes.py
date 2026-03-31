@@ -16,8 +16,7 @@ from pydantic import ValidationError
 
 from app.loaders.catalog import load_lectures, load_weeks, invalidate_catalog_cache
 from app.loaders.results import load_lecture_results, load_week_results
-from app.loaders.dummy import load_concepts, load_learning_points, load_quizzes, load_learning_guides
-from pipeline.paths import DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED, DATA_LEARNING_GUIDES
+from pipeline.paths import DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED, DATA_LEARNING_GUIDES
 
 logger = logging.getLogger(__name__)
 from app.schemas import (
@@ -62,33 +61,6 @@ def _write_jsonl(path, data: list[dict]) -> None:
         os.unlink(tmp_path)
         raise
 
-
-def _create_lecture_dummy_results(lecture_id: str) -> None:
-    """시뮬레이션 완료 후 더미 결과 파일 생성 (ep_concepts, ep_learning_points, quizzes_validated)."""
-    concepts = [c for c in load_concepts() if c.get("lecture_id") == lecture_id]
-    if not concepts:
-        concepts = load_concepts()
-    _write_jsonl(DATA_EP_CONCEPTS / f"{lecture_id}.jsonl", concepts)
-
-    lps = [lp for lp in load_learning_points() if lp.get("lecture_id") == lecture_id]
-    if not lps:
-        lps = load_learning_points()
-    _write_jsonl(DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl", lps)
-
-    quizzes = [q for q in load_quizzes() if q.get("meta", {}).get("lecture_id") == lecture_id]
-    if not quizzes:
-        quizzes = load_quizzes()[:5]
-    _write_jsonl(DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl", quizzes)
-    logger.info("더미 결과 파일 생성 완료: lecture=%s", lecture_id)
-
-
-def _create_week_dummy_results(week: int) -> None:
-    """시뮬레이션 완료 후 더미 학습 가이드 파일 생성."""
-    guides = [g for g in load_learning_guides() if g.get("week") == week]
-    if not guides:
-        guides = [{"week": week, "summary": f"{week}주차 학습 가이드입니다.", "key_concepts": [], "meta": {"source": "simulation"}}]
-    _write_jsonl(DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl", guides)
-    logger.info("더미 학습 가이드 파일 생성 완료: week=%d", week)
 
 
 # 입력 검증 패턴
@@ -151,53 +123,139 @@ def get_week(week: int):
 
 # --- 처리 트리거 & 상태 관리 ---
 
-_STEPS_TEMPLATE = [
-    {"name": "영상 분석", "status": "pending"},
-    {"name": "텍스트 추출", "status": "pending"},
-    {"name": "AI 분석", "status": "pending"},
+_LECTURE_STEPS_TEMPLATE = [
+    {"name": "전처리", "status": "pending"},
+    {"name": "개념 추출", "status": "pending"},
+    {"name": "문제 설계", "status": "pending"},
+    {"name": "퀴즈 생성", "status": "pending"},
+]
+
+_WEEK_STEPS_TEMPLATE = [
+    {"name": "학습 가이드 생성", "status": "pending"},
 ]
 
 
-async def _simulate_lecture(lecture_id: str) -> None:
-    """MVP: 강의 처리 시뮬레이션 (2초 × 3단계)."""
+async def _run_lecture_pipeline(lecture_id: str) -> None:
+    """Mode A: 강의 파이프라인 실행 (전처리 → EP → Blueprint → Quiz)."""
     job = await get_lecture_job(lecture_id)
     if not job:
         return
     try:
-        for i in range(len(job.steps)):
-            job.steps[i]["status"] = "running"
-            await asyncio.sleep(2)
-            job.steps[i]["status"] = "done"
-        _create_lecture_dummy_results(lecture_id)
+        # Step 0: 전처리 (Phase 1~5)
+        job.steps[0]["status"] = "running"
+        await asyncio.to_thread(_exec_preprocess, lecture_id)
+        job.steps[0]["status"] = "done"
+
+        # Step 1: 개념 추출 (EP)
+        job.steps[1]["status"] = "running"
+        await asyncio.to_thread(_exec_ep, lecture_id)
+        job.steps[1]["status"] = "done"
+
+        # Step 2: 문제 설계 (Blueprint)
+        job.steps[2]["status"] = "running"
+        await asyncio.to_thread(_exec_blueprint, lecture_id)
+        job.steps[2]["status"] = "done"
+
+        # Step 3: 퀴즈 생성
+        job.steps[3]["status"] = "running"
+        await asyncio.to_thread(_exec_quiz_generation, lecture_id)
+        job.steps[3]["status"] = "done"
+
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
         invalidate_catalog_cache()
     except Exception as e:
-        logger.error("강의 처리 실패: lecture=%s, error=%s", lecture_id, e)
+        logger.error("강의 처리 실패: lecture=%s, error=%s", lecture_id, e, exc_info=True)
         job.status = ProcessingStatus.error
         job.error_message = str(e)
         job.completed_at = datetime.now(tz=timezone.utc)
 
 
-async def _simulate_week(week: int) -> None:
-    """MVP: 주차 처리 시뮬레이션 (2초 × 3단계)."""
+async def _run_week_pipeline(week: int) -> None:
+    """Mode B: 주차 파이프라인 실행 (Guides 생성)."""
     job = await get_week_job(week)
     if not job:
         return
     try:
-        for i in range(len(job.steps)):
-            job.steps[i]["status"] = "running"
-            await asyncio.sleep(2)
-            job.steps[i]["status"] = "done"
-        _create_week_dummy_results(week)
+        job.steps[0]["status"] = "running"
+        await asyncio.to_thread(_exec_guides, week)
+        job.steps[0]["status"] = "done"
+
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
         invalidate_catalog_cache()
     except Exception as e:
-        logger.error("주차 처리 실패: week=%d, error=%s", week, e)
+        logger.error("주차 처리 실패: week=%d, error=%s", week, e, exc_info=True)
         job.status = ProcessingStatus.error
         job.error_message = str(e)
         job.completed_at = datetime.now(tz=timezone.utc)
+
+
+# --- 파이프라인 실행 함수 (동기, asyncio.to_thread에서 호출) ---
+
+
+def _exec_preprocess(lecture_id: str) -> None:
+    """Phase 1~5 전처리 실행."""
+    from pipeline.preprocessor.wrapper import run_preprocess
+
+    run_preprocess(lecture_id, use_gemini_embed=True)
+
+
+def _exec_ep(lecture_id: str) -> None:
+    """EP 실행 (개념 + 학습 포인트 추출)."""
+    from pipeline.ep.runner import run_ep
+    from pipeline.preprocessor.wrapper import _find_output_file
+
+    # Phase 5 출력 중 해당 강의 파일만 처리
+    phase5_file = _find_output_file(DATA_EP_CONCEPTS.parent / "phase5_facts", lecture_id)
+    if phase5_file:
+        run_ep(
+            in_dir=phase5_file.parent,
+            out_dir=DATA_EP_CONCEPTS,
+        )
+    else:
+        run_ep()
+
+
+def _exec_blueprint(lecture_id: str) -> None:
+    """Blueprint 실행."""
+    from pipeline.blueprint.runner import run_blueprint
+
+    ep_file = DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"
+    if ep_file.exists():
+        run_blueprint(input_file=ep_file)
+    else:
+        run_blueprint()
+
+
+def _exec_quiz_generation(lecture_id: str) -> None:
+    """퀴즈 생성 실행."""
+    from pipeline.quiz_generation.runner import run_quiz_generation
+    from pipeline.paths import DATA_BLUEPRINTS, DATA_QUIZZES_RAW
+
+    bp_file = DATA_BLUEPRINTS / f"{lecture_id}.jsonl"
+    if bp_file.exists():
+        run_quiz_generation(
+            input_file=bp_file,
+            output_file=DATA_QUIZZES_RAW / f"{lecture_id}.jsonl",
+        )
+    else:
+        run_quiz_generation()
+
+    # quizzes_raw → quizzes_validated 복사 (QA 별도 단계 불필요)
+    raw_file = DATA_QUIZZES_RAW / f"{lecture_id}.jsonl"
+    if raw_file.exists():
+        validated_file = DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl"
+        DATA_QUIZZES_VALIDATED.mkdir(parents=True, exist_ok=True)
+        import shutil
+        shutil.copy2(raw_file, validated_file)
+
+
+def _exec_guides(week: int) -> None:
+    """Guides 실행."""
+    from pipeline.guides.runner import run_guides
+
+    run_guides(week=week)
 
 
 @router.post(
@@ -218,7 +276,7 @@ async def process_lecture(
 
     new_job = JobState(
         status=ProcessingStatus.processing,
-        steps=[dict(s) for s in _STEPS_TEMPLATE],
+        steps=[dict(s) for s in _LECTURE_STEPS_TEMPLATE],
         started_at=datetime.now(tz=timezone.utc),
     )
     started, existing = await start_lecture_job_if_idle(lecture_id, new_job, force=force)
@@ -231,7 +289,7 @@ async def process_lecture(
             detail="이미 처리 완료된 강의입니다. 재처리하려면 ?force=true 를 사용하세요.",
         )
 
-    background_tasks.add_task(_simulate_lecture, lecture_id)
+    background_tasks.add_task(_run_lecture_pipeline, lecture_id)
 
     return ProcessTriggerResponse(
         lecture_id=lecture_id,
@@ -317,7 +375,7 @@ async def process_week(week: int, background_tasks: BackgroundTasks, force: bool
 
     new_job = JobState(
         status=ProcessingStatus.processing,
-        steps=[dict(s) for s in _STEPS_TEMPLATE],
+        steps=[dict(s) for s in _WEEK_STEPS_TEMPLATE],
         started_at=datetime.now(tz=timezone.utc),
     )
     started, existing = await start_week_job_if_idle(week, new_job, force=force)
@@ -330,7 +388,7 @@ async def process_week(week: int, background_tasks: BackgroundTasks, force: bool
             detail="이미 처리 완료된 주차입니다. 재처리하려면 ?force=true 를 사용하세요.",
         )
 
-    background_tasks.add_task(_simulate_week, week)
+    background_tasks.add_task(_run_week_pipeline, week)
 
     return ProcessTriggerResponse(
         week=week,

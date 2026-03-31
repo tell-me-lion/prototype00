@@ -55,46 +55,57 @@ export interface ProcessingStatusResponse {
   error_message: string | null
 }
 
-// ===== 산출물 =====
+// ===== 산출물 (파이프라인 출력 스키마 기준) =====
 
 export interface Concept {
-  week: number | null
-  lecture_id: string
+  concept_id: string
   concept: string
+  definition: string
+  related_concepts: string[]
+  source_chunk_ids: string[]
+  week: number
+  lecture_id: string
   importance: number
-  evidence_facts: string[]
-  meta: Record<string, unknown>
 }
 
 export interface LearningPoint {
-  week: number | null
-  lecture_id: string
+  concept_id: string
   concept: string
+  definition: string
+  related_concepts: string[]
+  source_chunk_ids: string[]
+  week: number
+  lecture_id: string
   importance: number
-  evidence_facts: string[]
-  meta: Record<string, unknown>
 }
 
-export interface QuizTestCase {
-  input?: string
-  expected_output: string
+export interface Choice {
+  id: number
+  text: string
+  is_answer: boolean
+}
+
+export interface QuizMeta {
+  attempt_count: number
+  llm_model: string
+  used_fact_ids: string[]
 }
 
 export interface Quiz {
   quiz_id: string
-  status: 'pass' | 'fail'
-  type: 'mcq' | 'short' | 'fill' | 'code'
+  blueprint_id: string
+  lecture_id: string
+  week: number
+  question_type: 'mcq_definition' | 'mcq_misconception' | 'fill_blank' | 'ox_quiz' | 'code_execution'
+  question_format: string
+  difficulty: '상' | '중' | '하'
   question: string
-  options: string[] | null
-  answer: string | string[] | null
-  explanation: string | null
-  code?: string
-  language?: string
-  starter_code?: string
-  expected_output?: string
-  test_cases?: QuizTestCase[]
-  validation_log: Record<string, unknown>
-  meta: Record<string, unknown>
+  choices: Choice[] | null
+  answers: string | null
+  code_template: string | null
+  source_text: string
+  explanation: string
+  meta: QuizMeta
 }
 
 export interface LearningGuide {

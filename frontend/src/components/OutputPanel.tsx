@@ -1,4 +1,7 @@
-import type { QuizTestCase } from '../types/models'
+interface QuizTestCase {
+  input?: string
+  expected_output: string
+}
 
 export interface TestResult {
   input?: string

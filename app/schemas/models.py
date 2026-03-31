@@ -1,6 +1,6 @@
 """
-ep_concepts, quizzes_validated, learning_guides 스키마에 맞는 Pydantic 모델.
-ARCHITECTURE.md §2.3, §2.3.1 기준.
+파이프라인 출력 스키마에 맞는 Pydantic 모델.
+pipeline/ep/schema.py, pipeline/quiz_generation/schema.py 기준.
 """
 
 from datetime import date, datetime
@@ -10,44 +10,71 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 
-# --- ep_concepts 형식 (핵심 개념·학습 포인트 공통) ---
+# --- ep_concepts 형식 (파이프라인 ConceptDocument 기준) ---
 
 
-class _ConceptBase(BaseModel):
-    """핵심 개념·학습 포인트 공통 필드."""
+class Concept(BaseModel):
+    """핵심 개념 (ep_concepts). pipeline/ep/schema.py ConceptDocument 기준."""
 
-    week: int | None = None
-    lecture_id: str
+    concept_id: str
     concept: str
+    definition: str = ""
+    related_concepts: list[str] = Field(default_factory=list)
+    source_chunk_ids: list[str] = Field(default_factory=list)
+    week: int
+    lecture_id: str
     importance: float
-    evidence_facts: list[str] = Field(default_factory=list)
-    meta: dict[str, Any] = Field(default_factory=dict)
 
 
-class Concept(_ConceptBase):
-    """핵심 개념 (ep_concepts)."""
+class LearningPoint(BaseModel):
+    """학습 포인트 (ep_learning_points). Concept과 동일 구조."""
+
+    concept_id: str
+    concept: str
+    definition: str = ""
+    related_concepts: list[str] = Field(default_factory=list)
+    source_chunk_ids: list[str] = Field(default_factory=list)
+    week: int
+    lecture_id: str
+    importance: float
 
 
-class LearningPoint(_ConceptBase):
-    """학습 포인트 (ep_concepts 동일 형식)."""
+# --- quizzes 형식 (파이프라인 QuizDocument 기준) ---
 
 
-# --- quizzes_validated 형식 ---
+class Choice(BaseModel):
+    """객관식 선지."""
+
+    id: int
+    text: str
+    is_answer: bool
+
+
+class QuizMeta(BaseModel):
+    """퀴즈 생성 메타데이터."""
+
+    attempt_count: int = 0
+    llm_model: str = ""
+    used_fact_ids: list[str] = Field(default_factory=list)
 
 
 class Quiz(BaseModel):
-    """퀴즈 (quizzes_validated)."""
+    """퀴즈. pipeline/quiz_generation/schema.py QuizDocument 기준."""
 
     quiz_id: str
-    status: Literal["pass", "fail"] = "pass"
-    type: Literal["mcq", "short", "fill", "code"]
+    blueprint_id: str = ""
+    lecture_id: str = ""
+    week: int = 0
+    question_type: str  # "mcq_definition"|"mcq_misconception"|"fill_blank"|"ox_quiz"|"code_execution"
+    question_format: str = ""
+    difficulty: str = "중"  # "상"|"중"|"하"
     question: str
-    options: list[str] | None = None
-    answer: str | list[str] | None = None  # short/fill은 str, mcq는 보통 str
-    explanation: str | None = None
-    code: str | None = None
-    validation_log: dict[str, Any] = Field(default_factory=dict)
-    meta: dict[str, Any] = Field(default_factory=dict)
+    choices: list[Choice] | None = None
+    answers: str | None = None
+    code_template: str | None = None
+    source_text: str = ""
+    explanation: str = ""
+    meta: QuizMeta = Field(default_factory=QuizMeta)
 
 
 # --- learning_guides 형식 ---
