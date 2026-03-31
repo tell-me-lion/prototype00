@@ -75,9 +75,12 @@ export async function triggerLectureProcess(
   force?: boolean,
 ): Promise<ProcessTriggerResponse> {
   const query = force ? '?force=true' : ''
-  return request(`/api/lectures/${lectureId}/process${query}`, {
+  console.log(`[API] 강의 처리 트리거: ${lectureId}${query}`)
+  const result = await request<ProcessTriggerResponse>(`/api/lectures/${lectureId}/process${query}`, {
     method: 'POST',
   })
+  console.log(`[API] 트리거 응답:`, result)
+  return result
 }
 
 export async function triggerWeekProcess(
