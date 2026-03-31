@@ -83,9 +83,17 @@ export function WeeklyResult() {
         setState({ tag: 'processing', week: state.week, availableWeeks: state.availableWeeks })
       }
     } catch (err) {
-      // 409: 이미 처리 완료된 경우 → 결과 리로드
       if (err instanceof ApiError && err.status === 409) {
-        setReloadKey((k) => k + 1)
+        // 409: 이미 처리 중이거나 완료 → force=true로 재시도
+        try {
+          await triggerWeekProcess(week, true)
+          if (state.tag === 'not-processed') {
+            setState({ tag: 'processing', week: state.week, availableWeeks: state.availableWeeks })
+          }
+        } catch {
+          // force도 실패 시 결과 리로드
+          setReloadKey((k) => k + 1)
+        }
         return
       }
       setState({

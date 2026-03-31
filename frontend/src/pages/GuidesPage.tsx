@@ -148,14 +148,24 @@ export function GuidesPage() {
     setProcessingWeeks((prev) => new Set(prev).add(week))
     try {
       await triggerWeekProcess(week)
-    } catch {
+    } catch (err) {
+      // 409: 이미 처리 중이거나 완료 → 결과 페이지로 이동
+      if (err instanceof ApiError && err.status === 409) {
+        setProcessingWeeks((prev) => {
+          const next = new Set(prev)
+          next.delete(week)
+          return next
+        })
+        navigate(`/weekly/${week}`)
+        return
+      }
       setProcessingWeeks((prev) => {
         const next = new Set(prev)
         next.delete(week)
         return next
       })
     }
-  }, [])
+  }, [navigate])
 
   const handleProcessComplete = useCallback(
     (week: number) => {
