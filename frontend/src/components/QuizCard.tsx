@@ -63,7 +63,7 @@ function McqCard({ quiz, quizIndex, totalInType, onNext }: QuizCardProps) {
               }}
             >
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: submitted ? textColor : 'var(--tml-ink-muted)', flexShrink: 0 }}>
-                {CIRCLE_NUMS[i]}
+                {CIRCLE_NUMS[i] ?? `(${i + 1})`}
               </span>
               <span style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', color: textColor, fontWeight: submitted && isAnswer ? 600 : 400, flex: 1 }}>
                 {opt}

@@ -6,6 +6,7 @@ data/raw/*.txt 를 스캔해 강의 목록과 주차 요약을 반환한다.
 import logging
 import os
 import re
+import threading
 import time
 from datetime import date
 from pathlib import Path
@@ -74,24 +75,28 @@ def _get_result_summary(lecture_id: str, status: ProcessingStatus) -> LectureRes
 
 
 _cache: dict[str, tuple[float, object]] = {}
+_cache_lock = threading.Lock()
 _CACHE_TTL = int(os.getenv("CATALOG_CACHE_TTL", "30"))
 
 
 def _get_cached(key: str) -> object | None:
     """TTL 기반 캐시 조회. 만료 시 None 반환."""
-    entry = _cache.get(key)
-    if entry and (time.monotonic() - entry[0]) < _CACHE_TTL:
-        return entry[1]
-    return None
+    with _cache_lock:
+        entry = _cache.get(key)
+        if entry and (time.monotonic() - entry[0]) < _CACHE_TTL:
+            return entry[1]
+        return None
 
 
 def _set_cached(key: str, value: object) -> None:
-    _cache[key] = (time.monotonic(), value)
+    with _cache_lock:
+        _cache[key] = (time.monotonic(), value)
 
 
 def invalidate_catalog_cache() -> None:
     """캐시 무효화 (처리 완료 시 호출)."""
-    _cache.clear()
+    with _cache_lock:
+        _cache.clear()
 
 
 def load_lectures() -> list[LectureCatalog]:

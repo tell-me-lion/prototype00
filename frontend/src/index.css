@@ -2,6 +2,7 @@
 
 /* 1. 폰트 임포트 */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 /* 2. Tailwind */
 @tailwind base;
@@ -14,6 +15,7 @@
   --tml-orange:          #FF6B00;
   --tml-orange-light:    #FFF0E6;
   --tml-orange-dark:     #CC5500;
+  --tml-orange-mid:      #FF9F4A;
 
   --tml-navy:            #0F1F3D;
   --tml-navy-mid:        #1E3A5F;
@@ -48,7 +50,7 @@
   /* === 폰트 === */
   --font-display: 'Pretendard Variable', 'Pretendard', sans-serif;
   --font-body:    'Pretendard Variable', 'Pretendard', sans-serif;
-  --font-mono:    'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-mono:    'IBM Plex Mono', 'JetBrains Mono', monospace;
 }
 
 /* 4. 다크 테마 오버라이드 */
@@ -137,6 +139,35 @@ body::after {
   transform: translateY(0);
 }
 
+/* 페이지 컨테이너 */
+.tml-page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 20px 40px 80px;
+}
+.tml-page-container--hero {
+  padding-top: 40px;
+}
+
+/* 페이지 헤더 eyebrow & 타이틀 */
+.tml-page-eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tml-orange);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 8px;
+}
+.tml-page-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.75rem;
+  letter-spacing: -0.02em;
+  color: var(--tml-ink);
+  margin: 0 0 28px;
+}
+
 /* 8. 베이스 컴포넌트 */
 
 /* 기본 카드 */
@@ -149,7 +180,7 @@ body::after {
 .tml-card:hover {
   background: var(--tml-bg-overlay);
   border-color: var(--tml-rule-strong);
-  box-shadow: 0 2px 8px rgba(15, 31, 61, 0.06);
+  box-shadow: 0 2px 8px var(--tml-shadow-hover);
 }
 
 /* 뱃지 */

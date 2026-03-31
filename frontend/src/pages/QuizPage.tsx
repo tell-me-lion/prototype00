@@ -55,7 +55,7 @@ export function QuizPage() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main className="tml-page-container" style={{ paddingTop: 56 }}>
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -64,7 +64,7 @@ export function QuizPage() {
   // ── 404 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate">
           <ErrorCard message="존재하지 않는 강의입니다." />
         </div>
@@ -75,7 +75,7 @@ export function QuizPage() {
   // ── 미처리 ──
   if (state.tag === 'not-ready') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate tml-card" style={{ padding: 32, textAlign: 'center' }}>
           <p style={{
             fontFamily: 'var(--font-display)', fontSize: '1.125rem',
@@ -100,7 +100,7 @@ export function QuizPage() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate">
           <ErrorCard message={state.message} />
         </div>
@@ -125,16 +125,10 @@ export function QuizPage() {
   ].filter((t) => t.count > 0)
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+    <main className="tml-page-container">
       {/* 퀴즈 헤더 */}
       <div className="tml-animate" style={{ marginBottom: 32 }}>
-        <p style={{
-          fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 600,
-          color: 'var(--tml-orange)', letterSpacing: '0.1em', textTransform: 'uppercase',
-          margin: '0 0 12px',
-        }}>
-          퀴즈 풀기 · Mode A
-        </p>
+        <p className="tml-page-eyebrow" style={{ marginBottom: 12 }}>퀴즈 풀기 · Mode A</p>
 
         <div className="tml-card" style={{ padding: '20px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>

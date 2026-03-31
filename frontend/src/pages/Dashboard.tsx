@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import type { WeekSummary } from '../types/models'
-import { fetchWeeks, ApiError } from '../services/api'
 import { ErrorCard } from '../components/Skeleton'
 import { ProgressRing } from '../components/ProgressRing'
 import { ActivityHeatmap } from '../components/ActivityHeatmap'
+import { useCountUp } from '../hooks/useCountUp'
+import { useWeeks } from '../hooks/useWeeks'
 
 /* ── useScrollReveal ── */
 function useScrollReveal<T extends HTMLElement>() {
@@ -30,29 +30,6 @@ function useScrollReveal<T extends HTMLElement>() {
     return () => observer.disconnect()
   }, [])
   return ref
-}
-
-/* ── useCountUp ── */
-
-function useCountUp(target: number, duration = 600) {
-  const [value, setValue] = useState(0)
-  const rafRef = useRef(0)
-
-  useEffect(() => {
-    if (target === 0) { setValue(0); return }
-    const start = performance.now()
-    const animate = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(Math.round(eased * target))
-      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [target, duration])
-
-  return value
 }
 
 /* ── StatChip (compact inline) ── */
@@ -246,18 +223,7 @@ function HeroCard({ completedLectures, totalLectures, remainingCount, percent, h
 /* ── Dashboard ── */
 
 export function Dashboard() {
-  const [weeks, setWeeks] = useState<WeekSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    fetchWeeks()
-      .then(setWeeks)
-      .catch((err) => {
-        setError(err instanceof ApiError ? err.detail : '데이터를 불러오지 못했습니다.')
-      })
-      .finally(() => setLoading(false))
-  }, [])
+  const { weeks, loading, error } = useWeeks()
 
   const totalLectures = weeks.reduce((sum, w) => sum + w.lecture_count, 0)
   const completedLectures = weeks.reduce((sum, w) => sum + w.completed_count, 0)
@@ -290,7 +256,7 @@ export function Dashboard() {
 
   return (
     <div className="tml-dashboard-bg">
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+      <main className="tml-page-container tml-page-container--hero">
         {/* 로딩 */}
         {loading && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

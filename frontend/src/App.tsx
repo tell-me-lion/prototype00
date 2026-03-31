@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
-import './index.css'
 import { Dashboard } from './pages/Dashboard'
 import { LecturesPage } from './pages/LecturesPage'
 import { LectureResult } from './pages/LectureResult'
