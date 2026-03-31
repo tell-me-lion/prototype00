@@ -1,32 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { WeekSummary, ProcessingStatus } from '../types/models'
-import { fetchWeeks, triggerWeekProcess, ApiError } from '../services/api'
+import { triggerWeekProcess, ApiError } from '../services/api'
 import { ErrorCard } from '../components/Skeleton'
 import { ProcessingStatus as ProcessingStatusUI } from '../components/ProcessingStatus'
-
-// ── useCountUp (Dashboard 패턴 재사용) ──
-
-function useCountUp(target: number, duration = 600) {
-  const [value, setValue] = useState(0)
-  const rafRef = useRef(0)
-
-  useEffect(() => {
-    if (target === 0) { setValue(0); return }
-    const start = performance.now()
-    const animate = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(Math.round(eased * target))
-      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [target, duration])
-
-  return value
-}
+import { useCountUp } from '../hooks/useCountUp'
+import { useWeeks } from '../hooks/useWeeks'
 
 // ── 그래디언트 헬퍼 ──
 
@@ -129,20 +108,9 @@ function GuideCard({ weekSummary, status, index, onProcess, onViewResults, onPro
 // ── GuidesPage ──
 
 export function GuidesPage() {
-  const [weeks, setWeeks] = useState<WeekSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { weeks, loading, error } = useWeeks('주차 목록을 불러오지 못했습니다.')
   const [processingWeeks, setProcessingWeeks] = useState<Set<number>>(new Set())
   const navigate = useNavigate()
-
-  useEffect(() => {
-    fetchWeeks()
-      .then(setWeeks)
-      .catch((err) => {
-        setError(err instanceof ApiError ? err.detail : '주차 목록을 불러오지 못했습니다.')
-      })
-      .finally(() => setLoading(false))
-  }, [])
 
   const handleProcess = useCallback(async (week: number) => {
     setProcessingWeeks((prev) => new Set(prev).add(week))
@@ -199,30 +167,11 @@ export function GuidesPage() {
   const totalAnalyzed = weeks.reduce((sum, w) => sum + w.completed_count, 0)
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+    <main className="tml-page-container tml-page-container--hero">
       {/* 페이지 헤더 */}
       <div className="tml-animate">
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          color: 'var(--tml-orange)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          margin: '0 0 8px',
-        }}>
-          Learning Guides · Mode B
-        </p>
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          fontSize: '1.75rem',
-          letterSpacing: '-0.02em',
-          color: 'var(--tml-ink)',
-          margin: '0 0 28px',
-        }}>
-          학습 가이드
-        </h1>
+        <p className="tml-page-eyebrow">Learning Guides · Mode B</p>
+        <h1 className="tml-page-title">학습 가이드</h1>
       </div>
 
       {/* 로딩 */}

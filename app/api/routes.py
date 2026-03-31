@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import JSONResponse
@@ -34,17 +34,33 @@ from app.schemas import (
     ProcessTriggerResponse,
     ProcessingStatus,
 )
-from app.state import JobState, get_lecture_job, set_lecture_job, get_week_job, set_week_job
+from app.state import (
+    JobState,
+    get_lecture_job,
+    set_lecture_job,
+    get_week_job,
+    set_week_job,
+    start_lecture_job_if_idle,
+    start_week_job_if_idle,
+)
 
 router = APIRouter(prefix="/api", tags=["산출물"])
 
 
 def _write_jsonl(path, data: list[dict]) -> None:
-    """JSONL 파일 쓰기. 디렉터리가 없으면 생성."""
+    """JSONL 파일 atomic write. 임시 파일에 쓴 후 os.replace()로 교체."""
+    import os
+    import tempfile
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        for item in data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    fd, tmp_path = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            for item in data:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        os.replace(tmp_path, path)
+    except BaseException:
+        os.unlink(tmp_path)
+        raise
 
 
 def _create_lecture_dummy_results(lecture_id: str) -> None:
@@ -76,7 +92,7 @@ def _create_week_dummy_results(week: int) -> None:
 
 
 # 입력 검증 패턴
-_LECTURE_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_.+$")
+_LECTURE_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_[a-zA-Z0-9_-]+$")
 
 
 def _validate_lecture_id(lecture_id: str) -> str:
@@ -90,9 +106,9 @@ def _validate_lecture_id(lecture_id: str) -> str:
 
 
 def _validate_week(week: int) -> int:
-    """week 범위 검증 (1 이상)."""
-    if week < 1:
-        raise HTTPException(status_code=400, detail="주차는 1 이상이어야 합니다.")
+    """week 범위 검증 (1~52)."""
+    if week < 1 or week > 52:
+        raise HTTPException(status_code=400, detail="주차는 1~52 범위여야 합니다.")
     return week
 
 
@@ -147,14 +163,20 @@ async def _simulate_lecture(lecture_id: str) -> None:
     job = await get_lecture_job(lecture_id)
     if not job:
         return
-    for i in range(len(job.steps)):
-        job.steps[i]["status"] = "running"
-        await asyncio.sleep(2)
-        job.steps[i]["status"] = "done"
-    _create_lecture_dummy_results(lecture_id)
-    job.status = ProcessingStatus.completed
-    job.completed_at = datetime.now()
-    invalidate_catalog_cache()
+    try:
+        for i in range(len(job.steps)):
+            job.steps[i]["status"] = "running"
+            await asyncio.sleep(2)
+            job.steps[i]["status"] = "done"
+        _create_lecture_dummy_results(lecture_id)
+        job.status = ProcessingStatus.completed
+        job.completed_at = datetime.now(tz=timezone.utc)
+        invalidate_catalog_cache()
+    except Exception as e:
+        logger.error("강의 처리 실패: lecture=%s, error=%s", lecture_id, e)
+        job.status = ProcessingStatus.error
+        job.error_message = str(e)
+        job.completed_at = datetime.now(tz=timezone.utc)
 
 
 async def _simulate_week(week: int) -> None:
@@ -162,14 +184,20 @@ async def _simulate_week(week: int) -> None:
     job = await get_week_job(week)
     if not job:
         return
-    for i in range(len(job.steps)):
-        job.steps[i]["status"] = "running"
-        await asyncio.sleep(2)
-        job.steps[i]["status"] = "done"
-    _create_week_dummy_results(week)
-    job.status = ProcessingStatus.completed
-    job.completed_at = datetime.now()
-    invalidate_catalog_cache()
+    try:
+        for i in range(len(job.steps)):
+            job.steps[i]["status"] = "running"
+            await asyncio.sleep(2)
+            job.steps[i]["status"] = "done"
+        _create_week_dummy_results(week)
+        job.status = ProcessingStatus.completed
+        job.completed_at = datetime.now(tz=timezone.utc)
+        invalidate_catalog_cache()
+    except Exception as e:
+        logger.error("주차 처리 실패: week=%d, error=%s", week, e)
+        job.status = ProcessingStatus.error
+        job.error_message = str(e)
+        job.completed_at = datetime.now(tz=timezone.utc)
 
 
 @router.post(
@@ -188,29 +216,27 @@ async def process_lecture(
     if not any(lec.lecture_id == lecture_id for lec in lectures):
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
-    job = await get_lecture_job(lecture_id)
+    new_job = JobState(
+        status=ProcessingStatus.processing,
+        steps=[dict(s) for s in _STEPS_TEMPLATE],
+        started_at=datetime.now(tz=timezone.utc),
+    )
+    started, existing = await start_lecture_job_if_idle(lecture_id, new_job, force=force)
 
-    if job and job.status == ProcessingStatus.processing:
-        raise HTTPException(status_code=409, detail="이미 처리 중인 강의입니다.")
-
-    if job and job.status == ProcessingStatus.completed and not force:
+    if not started and existing:
+        if existing.status == ProcessingStatus.processing:
+            raise HTTPException(status_code=409, detail="이미 처리 중인 강의입니다.")
         raise HTTPException(
             status_code=409,
             detail="이미 처리 완료된 강의입니다. 재처리하려면 ?force=true 를 사용하세요.",
         )
 
-    job = JobState(
-        status=ProcessingStatus.processing,
-        steps=[dict(s) for s in _STEPS_TEMPLATE],
-        started_at=datetime.now(),
-    )
-    await set_lecture_job(lecture_id, job)
     background_tasks.add_task(_simulate_lecture, lecture_id)
 
     return ProcessTriggerResponse(
         lecture_id=lecture_id,
         status=ProcessingStatus.processing,
-        started_at=job.started_at,
+        started_at=new_job.started_at,
     )
 
 
@@ -257,7 +283,7 @@ async def get_lecture_results(lecture_id: str):
     if not is_completed:
         return JSONResponse(status_code=202, content={"status": "processing"})
 
-    concepts_raw, lp_raw, quizzes_raw = load_lecture_results(lecture_id)
+    concepts_raw, lp_raw, quizzes_raw = await asyncio.to_thread(load_lecture_results, lecture_id)
 
     try:
         concepts = [Concept.model_validate(d) for d in concepts_raw]
@@ -289,29 +315,27 @@ async def process_week(week: int, background_tasks: BackgroundTasks, force: bool
     if not any(w.week == week for w in weeks):
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
-    job = await get_week_job(week)
+    new_job = JobState(
+        status=ProcessingStatus.processing,
+        steps=[dict(s) for s in _STEPS_TEMPLATE],
+        started_at=datetime.now(tz=timezone.utc),
+    )
+    started, existing = await start_week_job_if_idle(week, new_job, force=force)
 
-    if job and job.status == ProcessingStatus.processing:
-        raise HTTPException(status_code=409, detail="이미 처리 중인 주차입니다.")
-
-    if job and job.status == ProcessingStatus.completed and not force:
+    if not started and existing:
+        if existing.status == ProcessingStatus.processing:
+            raise HTTPException(status_code=409, detail="이미 처리 중인 주차입니다.")
         raise HTTPException(
             status_code=409,
             detail="이미 처리 완료된 주차입니다. 재처리하려면 ?force=true 를 사용하세요.",
         )
 
-    job = JobState(
-        status=ProcessingStatus.processing,
-        steps=[dict(s) for s in _STEPS_TEMPLATE],
-        started_at=datetime.now(),
-    )
-    await set_week_job(week, job)
     background_tasks.add_task(_simulate_week, week)
 
     return ProcessTriggerResponse(
         week=week,
         status=ProcessingStatus.processing,
-        started_at=job.started_at,
+        started_at=new_job.started_at,
     )
 
 
@@ -355,6 +379,6 @@ async def get_week_results(week: int):
     if not is_completed:
         return JSONResponse(status_code=202, content={"status": "processing"})
 
-    guides_raw = load_week_results(week)
+    guides_raw = await asyncio.to_thread(load_week_results, week)
     return WeeklyOutputs(guides=[LearningGuide.model_validate(d) for d in guides_raw])
 

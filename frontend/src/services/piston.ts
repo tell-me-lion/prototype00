@@ -1,5 +1,9 @@
 const PISTON_URL = 'https://emkc.org/api/v2/piston/execute'
 const TIMEOUT_MS = 10_000
+const MAX_CODE_LENGTH = 10_000
+const RATE_LIMIT_MS = 2_000
+
+let lastExecutionTime = 0
 
 export interface PistonRunResult {
   stdout: string
@@ -30,6 +34,16 @@ export async function executeCode(
   code: string,
   stdin?: string,
 ): Promise<PistonResponse> {
+  if (code.length > MAX_CODE_LENGTH) {
+    throw new Error(`코드가 너무 깁니다 (최대 ${MAX_CODE_LENGTH.toLocaleString()}자)`)
+  }
+
+  const now = Date.now()
+  if (now - lastExecutionTime < RATE_LIMIT_MS) {
+    throw new Error('너무 빠르게 실행하고 있습니다. 잠시 후 다시 시도해주세요.')
+  }
+  lastExecutionTime = now
+
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
 

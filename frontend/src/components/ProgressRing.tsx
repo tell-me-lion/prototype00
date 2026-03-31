@@ -1,33 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useId } from 'react'
+import { useCountUp } from '../hooks/useCountUp'
 
 interface ProgressRingProps {
   completed: number
   total: number
 }
 
-function useCountUp(target: number, duration = 1000) {
-  const [value, setValue] = useState(0)
-  const rafRef = useRef(0)
-
-  useEffect(() => {
-    if (target === 0) { setValue(0); return }
-    const start = performance.now()
-    const animate = (now: number) => {
-      const elapsed = now - start
-      const progress = Math.min(elapsed / duration, 1)
-      // ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setValue(Math.round(eased * target))
-      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
-    }
-    rafRef.current = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(rafRef.current)
-  }, [target, duration])
-
-  return value
-}
-
 export function ProgressRing({ completed, total }: ProgressRingProps) {
+  const gradientId = useId()
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0
   const displayPercent = useCountUp(percent, 1000)
 
@@ -46,9 +26,9 @@ export function ProgressRing({ completed, total }: ProgressRingProps) {
         className="tml-progress-ring__svg"
       >
         <defs>
-          <linearGradient id="ring-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="var(--tml-orange)" />
-            <stop offset="100%" stopColor="#FF9F4A" />
+            <stop offset="100%" stopColor="var(--tml-orange-mid)" />
           </linearGradient>
         </defs>
         {/* 배경 트랙 */}
@@ -66,7 +46,7 @@ export function ProgressRing({ completed, total }: ProgressRingProps) {
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="url(#ring-gradient)"
+          stroke={`url(#${gradientId})`}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={circumference}

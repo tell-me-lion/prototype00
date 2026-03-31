@@ -83,7 +83,8 @@ export function LectureResult() {
     if (!id) return
     try {
       await triggerLectureProcess(id)
-      const lecture = (state as { lecture: Lecture }).lecture
+      if (state.tag !== 'not-processed' && state.tag !== 'results') return
+      const { lecture } = state
       setState({ tag: 'processing', lecture })
     } catch (err) {
       setState({
@@ -112,7 +113,7 @@ export function LectureResult() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -121,7 +122,7 @@ export function LectureResult() {
   // ── 존재하지 않는 강의 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate">
           <ErrorCard message="존재하지 않는 강의입니다. 강의 ID를 확인해 주세요." />
           <div style={{ marginTop: 20 }}>
@@ -141,7 +142,7 @@ export function LectureResult() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate">
           <ErrorCard message={state.message} />
         </div>
@@ -153,7 +154,7 @@ export function LectureResult() {
   if (state.tag === 'not-processed') {
     const { lecture } = state
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate" style={{ marginBottom: 32 }}>
           <LectureHeader lecture={lecture} />
         </div>
@@ -203,7 +204,7 @@ export function LectureResult() {
   if (state.tag === 'processing') {
     const { lecture } = state
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate" style={{ marginBottom: 32 }}>
           <LectureHeader lecture={lecture} />
         </div>
@@ -224,7 +225,7 @@ export function LectureResult() {
   const { concepts, learning_points, quizzes } = outputs
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+    <main className="tml-page-container">
       {/* 강의 헤더 */}
       <div className="tml-animate" style={{ marginBottom: 32 }}>
         <LectureHeader lecture={lecture} outputs={outputs} />
@@ -383,9 +384,9 @@ function LectureHeader({ lecture, outputs }: LectureHeaderProps) {
 
           {outputs && (
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              <StatChip label="개념" value={outputs.concepts.length} />
-              <StatChip label="학습포인트" value={outputs.learning_points.length} />
-              <StatChip label="퀴즈" value={outputs.quizzes.length} />
+              <ResultStat label="개념" value={outputs.concepts.length} />
+              <ResultStat label="학습포인트" value={outputs.learning_points.length} />
+              <ResultStat label="퀴즈" value={outputs.quizzes.length} />
             </div>
           )}
         </div>
@@ -394,12 +395,12 @@ function LectureHeader({ lecture, outputs }: LectureHeaderProps) {
   )
 }
 
-interface StatChipProps {
+interface ResultStatProps {
   label: string
   value: number
 }
 
-function StatChip({ label, value }: StatChipProps) {
+function ResultStat({ label, value }: ResultStatProps) {
   return (
     <div style={{ textAlign: 'center' }}>
       <div style={{

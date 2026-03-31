@@ -61,4 +61,6 @@ def root():
 @app.get("/health")
 def health():
     """헬스 체크 (연동·배포 확인용)."""
-    return {"status": "ok"}
+    from pipeline.paths import DATA_RAW
+    data_ok = DATA_RAW.is_dir()
+    return {"status": "ok" if data_ok else "degraded", "data_dir": data_ok}

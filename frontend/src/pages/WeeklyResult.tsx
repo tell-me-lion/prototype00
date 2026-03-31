@@ -113,7 +113,7 @@ export function WeeklyResult() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -122,7 +122,7 @@ export function WeeklyResult() {
   // ── 404 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate">
           <ErrorCard message="존재하지 않는 주차입니다. 학습 가이드에서 주차를 선택해 주세요." />
           <div style={{ marginTop: 20 }}>
@@ -142,7 +142,7 @@ export function WeeklyResult() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate">
           <ErrorCard message={state.message} />
         </div>
@@ -158,7 +158,7 @@ export function WeeklyResult() {
     const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate" style={{ marginBottom: 32 }}>
           <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
         </div>
@@ -201,7 +201,7 @@ export function WeeklyResult() {
     const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+      <main className="tml-page-container">
         <div className="tml-animate" style={{ marginBottom: 32 }}>
           <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
         </div>
@@ -255,7 +255,7 @@ export function WeeklyResult() {
   const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+    <main className="tml-page-container">
       {/* 주차 헤더 */}
       <div className="tml-animate" style={{ marginBottom: 32 }}>
         <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />

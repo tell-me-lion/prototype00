@@ -13,26 +13,23 @@ from pydantic import BaseModel, Field
 # --- ep_concepts 형식 (핵심 개념·학습 포인트 공통) ---
 
 
-class Concept(BaseModel):
+class _ConceptBase(BaseModel):
+    """핵심 개념·학습 포인트 공통 필드."""
+
+    week: int | None = None
+    lecture_id: str
+    concept: str
+    importance: float
+    evidence_facts: list[str] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class Concept(_ConceptBase):
     """핵심 개념 (ep_concepts)."""
 
-    week: int | None = None
-    lecture_id: str
-    concept: str
-    importance: float
-    evidence_facts: list[str] = Field(default_factory=list)
-    meta: dict[str, Any] = Field(default_factory=dict)
 
-
-class LearningPoint(BaseModel):
+class LearningPoint(_ConceptBase):
     """학습 포인트 (ep_concepts 동일 형식)."""
-
-    week: int | None = None
-    lecture_id: str
-    concept: str
-    importance: float
-    evidence_facts: list[str] = Field(default_factory=list)
-    meta: dict[str, Any] = Field(default_factory=dict)
 
 
 # --- quizzes_validated 형식 ---

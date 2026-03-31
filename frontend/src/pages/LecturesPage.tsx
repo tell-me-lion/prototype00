@@ -1,9 +1,11 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import type { WeekSummary, Lecture, ProcessingStatus } from '../types/models'
-import { fetchWeeks, triggerLectureProcess, triggerWeekProcess, ApiError } from '../services/api'
+import { triggerLectureProcess, triggerWeekProcess } from '../services/api'
 import { ErrorCard } from '../components/Skeleton'
 import { ProcessingStatus as ProcessingStatusUI } from '../components/ProcessingStatus'
+import { getEffectiveLectureStatus, getEffectiveWeekStatus } from '../utils/status'
+import { useWeeks } from '../hooks/useWeeks'
 
 // ── 썸네일 그래디언트 헬퍼 ──
 
@@ -271,7 +273,7 @@ function WeekSection({
 
       <div className="tml-lecture-grid">
         {lectures.map((lecture) => {
-          const effectiveStatus: ProcessingStatus = processingLectures.has(lecture.lecture_id) ? 'processing' : lecture.status
+          const effectiveStatus = getEffectiveLectureStatus(lecture.lecture_id, lecture.status, processingLectures)
           return (
             <LectureCard
               key={lecture.lecture_id}
@@ -413,11 +415,7 @@ function RightPanel({
         ) : (
           <ul className="tml-right-panel__list">
             {weeks.map((w) => {
-              const effectiveStatus: ProcessingStatus = processingWeeks.has(w.week)
-                ? 'processing'
-                : w.status === 'processing' && !processingWeeks.has(w.week)
-                  ? 'idle'
-                  : w.status
+              const effectiveStatus = getEffectiveWeekStatus(w.week, w.status, processingWeeks)
               return (
                 <li key={w.week} className="tml-right-panel__item">
                   <span className="tml-right-panel__item-label">{w.week}주차</span>
@@ -452,25 +450,15 @@ function RightPanel({
 // ── LecturesPage (메인 export) ──
 
 export function LecturesPage() {
-  const [weeks, setWeeks] = useState<WeekSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { weeks, loading, error } = useWeeks('강의 목록을 불러오지 못했습니다.')
   const [processingLectures, setProcessingLectures] = useState<Set<string>>(new Set())
   const [processingWeeks, setProcessingWeeks] = useState<Set<number>>(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [failedLectures, setFailedLectures] = useState<Set<string>>(new Set())
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const activeWeek = searchParams.get('week') ? Number(searchParams.get('week')) : null
-
-  useEffect(() => {
-    fetchWeeks()
-      .then(setWeeks)
-      .catch((err) => {
-        setError(err instanceof ApiError ? err.detail : '강의 목록을 불러오지 못했습니다.')
-      })
-      .finally(() => setLoading(false))
-  }, [])
 
   const handleWeekSelect = useCallback(
     (week: number | null) => {
@@ -500,12 +488,15 @@ export function LecturesPage() {
   const handleStartSelected = useCallback(async () => {
     const ids = [...selectedIds]
     setSelectedIds(new Set())
+    setFailedLectures(new Set())
+    const failed: string[] = []
     await Promise.all(
       ids.map(async (id) => {
         setProcessingLectures((prev) => new Set(prev).add(id))
         try {
           await triggerLectureProcess(id, true)
         } catch {
+          failed.push(id)
           setProcessingLectures((prev) => {
             const next = new Set(prev)
             next.delete(id)
@@ -514,6 +505,9 @@ export function LecturesPage() {
         }
       }),
     )
+    if (failed.length > 0) {
+      setFailedLectures(new Set(failed))
+    }
   }, [selectedIds])
 
   const handleRetry = useCallback(async (lectureId: string) => {
@@ -587,31 +581,12 @@ export function LecturesPage() {
     activeWeek !== null ? weeks.filter((w) => w.week === activeWeek) : weeks
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+    <main className="tml-page-container tml-page-container--hero">
 
       {/* 페이지 헤더 */}
       <div className="tml-animate">
-        <p style={{
-          fontFamily: 'var(--font-body)',
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          color: 'var(--tml-orange)',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          margin: '0 0 8px',
-        }}>
-          Lecture List
-        </p>
-        <h1 style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          fontSize: '1.75rem',
-          letterSpacing: '-0.02em',
-          color: 'var(--tml-ink)',
-          margin: '0 0 28px',
-        }}>
-          강의 목록
-        </h1>
+        <p className="tml-page-eyebrow">Lecture List</p>
+        <h1 className="tml-page-title">강의 목록</h1>
       </div>
 
       {/* 로딩 상태 */}
@@ -626,6 +601,42 @@ export function LecturesPage() {
       {/* 에러 상태 */}
       {!loading && error && (
         <ErrorCard message={error} title="강의 목록 로드 실패" />
+      )}
+
+      {/* 처리 실패 알림 */}
+      {failedLectures.size > 0 && (
+        <div
+          role="alert"
+          style={{
+            padding: '12px 16px',
+            marginBottom: 16,
+            borderRadius: 8,
+            background: 'var(--tml-wrong-bg)',
+            color: 'var(--tml-ink)',
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.875rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+          }}
+        >
+          <span>{failedLectures.size}개 강의 처리 시작에 실패했습니다.</span>
+          <button
+            onClick={() => setFailedLectures(new Set())}
+            style={{
+              marginLeft: 'auto',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--tml-ink-muted)',
+              fontSize: '1rem',
+              padding: '0 4px',
+            }}
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </div>
       )}
 
       {/* 분할 패널 레이아웃 */}
