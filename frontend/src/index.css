@@ -2034,8 +2034,10 @@ body::after {
 .tml-glass-card__btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   margin-top: auto;
+  align-self: center;
   padding: 10px 22px;
   background: linear-gradient(135deg, #FF6B00, #FF8C00);
   color: #fff;
@@ -2061,6 +2063,8 @@ body::after {
   font-size: 0.8125rem;
   color: var(--tml-ink-muted);
   text-decoration: none;
+  text-align: center;
+  align-self: center;
   transition: color 0.15s ease;
 }
 .tml-glass-card__link:hover {
