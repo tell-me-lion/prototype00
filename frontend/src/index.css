@@ -1853,12 +1853,12 @@ body::after {
   margin-top: 4px;
 }
 
-/* ── 대시보드 다크 배경 ── */
+/* ── 대시보드 배경 ── */
 .tml-dashboard-bg {
   background:
-    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(255, 85, 0, 0.04) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(15, 31, 61, 0.08) 0%, transparent 50%),
-    linear-gradient(180deg, #0C1220 0%, #0F1828 40%, #0A1018 100%);
+    radial-gradient(ellipse 80% 50% at 20% 80%, rgba(255, 85, 0, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 80% 20%, rgba(15, 31, 61, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #F0F2F6 0%, #F6F8FB 40%, #FFFFFF 100%);
   min-height: 100vh;
 }
 
