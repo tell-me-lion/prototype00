@@ -146,6 +146,7 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
         marker = DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl"
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.touch()
+        invalidate_catalog_cache()  # 캐시 즉시 만료 → 다음 /api/weeks 요청에서 processing 반환
 
         # Step 0: 전처리 (Phase 1~5)
         job.steps[0]["status"] = "running"

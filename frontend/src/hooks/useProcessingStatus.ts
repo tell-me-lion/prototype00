@@ -23,7 +23,7 @@ export function useProcessingStatus({
   lectureId,
   week,
   enabled,
-  interval = 2000,
+  interval = 10000,
   onComplete,
   onError,
 }: UseProcessingStatusOptions): UseProcessingStatusReturn {
