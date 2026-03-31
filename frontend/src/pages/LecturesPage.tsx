@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import type { WeekSummary, Lecture, ProcessingStatus } from '../types/models'
 import { triggerLectureProcess, triggerWeekProcess } from '../services/api'
@@ -460,6 +460,21 @@ export function LecturesPage() {
   const [failedLectures, setFailedLectures] = useState<Set<string>>(new Set())
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+
+  // 서버에서 processing 상태인 강의를 로컬 상태에 동기화 (새로고침 후 상태바 복원)
+  useEffect(() => {
+    const ids = weeks
+      .flatMap((w) => w.lectures)
+      .filter((l) => l.status === 'processing')
+      .map((l) => l.lecture_id)
+    if (ids.length > 0) {
+      setProcessingLectures((prev) => {
+        const next = new Set(prev)
+        ids.forEach((id) => next.add(id))
+        return next
+      })
+    }
+  }, [weeks])
 
   const activeWeek = searchParams.get('week') ? Number(searchParams.get('week')) : null
 

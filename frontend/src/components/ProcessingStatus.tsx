@@ -30,7 +30,7 @@ export function ProcessingStatus({
     onError,
   })
 
-  const steps = status?.steps ?? DEFAULT_STEPS
+  const steps = (status?.steps && status.steps.length > 0) ? status.steps : DEFAULT_STEPS
 
   if (error) {
     return (
