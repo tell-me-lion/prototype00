@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { SkeletonGroup, ErrorCard } from '../components/Skeleton'
+import { ProcessingStatus } from '../components/ProcessingStatus'
 import {
   fetchWeek,
   fetchWeekResults,
@@ -14,6 +15,7 @@ type PageState =
   | { tag: 'loading' }
   | { tag: 'not-found' }
   | { tag: 'not-processed'; week: WeekSummary; availableWeeks: number[] }
+  | { tag: 'processing'; week: WeekSummary; availableWeeks: number[] }
   | { tag: 'error'; message: string }
   | { tag: 'results'; week: WeekSummary; outputs: WeeklyOutputs; availableWeeks: number[] }
 
@@ -51,6 +53,8 @@ export function WeeklyResult() {
           const outputs = await fetchWeekResults(week)
           if (cancelled) return
           setState({ tag: 'results', week: weekData, outputs, availableWeeks })
+        } else if (weekData.status === 'processing') {
+          setState({ tag: 'processing', week: weekData, availableWeeks })
         } else {
           setState({ tag: 'not-processed', week: weekData, availableWeeks })
         }
@@ -74,8 +78,16 @@ export function WeeklyResult() {
   const handleTrigger = async () => {
     try {
       await triggerWeekProcess(week)
-      setReloadKey((k) => k + 1)
+      // processing 상태로 전환 (reload 대신)
+      if (state.tag === 'not-processed') {
+        setState({ tag: 'processing', week: state.week, availableWeeks: state.availableWeeks })
+      }
     } catch (err) {
+      // 409: 이미 처리 완료된 경우 → 결과 리로드
+      if (err instanceof ApiError && err.status === 409) {
+        setReloadKey((k) => k + 1)
+        return
+      }
       setState({
         tag: 'error',
         message: err instanceof Error ? err.message : '처리 시작에 실패했습니다.',
@@ -83,10 +95,18 @@ export function WeeklyResult() {
     }
   }
 
+  const handleProcessComplete = () => {
+    setReloadKey((k) => k + 1)
+  }
+
+  const handleProcessError = (message: string) => {
+    setState({ tag: 'error', message })
+  }
+
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -95,7 +115,7 @@ export function WeeklyResult() {
   // ── 404 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
           ← 학습 가이드
         </button>
@@ -118,12 +138,59 @@ export function WeeklyResult() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
           ← 학습 가이드
         </button>
         <div className="tml-animate" style={{ marginTop: 32 }}>
           <ErrorCard message={state.message} />
+        </div>
+      </main>
+    )
+  }
+
+  // ── 처리 중 ──
+  if (state.tag === 'processing') {
+    const { week: weekData, availableWeeks } = state
+    const currentIndex = availableWeeks.indexOf(week)
+    const prevWeek = currentIndex > 0 ? availableWeeks[currentIndex - 1] : null
+    const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
+
+    return (
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
+        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
+          ← 학습 가이드
+        </button>
+
+        <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+          <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
+        </div>
+
+        <div className="tml-animate tml-card" style={{ padding: '32px' }}>
+          <p style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.125rem',
+            fontWeight: 600,
+            color: 'var(--tml-ink)',
+            margin: '0 0 8px',
+            textAlign: 'center',
+          }}>
+            학습 가이드를 생성하고 있습니다…
+          </p>
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.875rem',
+            color: 'var(--tml-ink-muted)',
+            margin: '0 0 24px',
+            textAlign: 'center',
+          }}>
+            {weekData.lecture_count}개 강의를 분석 중입니다. 잠시만 기다려 주세요.
+          </p>
+          <ProcessingStatus
+            week={week}
+            onComplete={handleProcessComplete}
+            onError={handleProcessError}
+          />
         </div>
       </main>
     )
@@ -137,7 +204,7 @@ export function WeeklyResult() {
     const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
           ← 학습 가이드
         </button>
@@ -195,7 +262,7 @@ export function WeeklyResult() {
   const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
       {/* 뒤로가기 */}
       <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
         ← 학습 가이드
@@ -328,9 +395,9 @@ function WeekHeader({ weekData, prevWeek, nextWeek }: WeekHeaderProps) {
     <div>
       <p style={{
         fontFamily: 'var(--font-body)',
-        fontSize: '0.6875rem',
+        fontSize: '0.75rem',
         fontWeight: 600,
-        color: 'var(--tml-navy-mid)',
+        color: 'var(--tml-orange)',
         letterSpacing: '0.1em',
         textTransform: 'uppercase',
         margin: '0 0 12px',

@@ -124,7 +124,7 @@ function ShortCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
       ) : (
         <>
           <div style={{ marginBottom: 20 }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', color: 'var(--tml-ink-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               정답
             </p>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.5rem', fontWeight: 700, color: 'var(--tml-orange)', margin: 0, letterSpacing: '-0.02em' }}>

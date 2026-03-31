@@ -6,6 +6,32 @@ import { ErrorCard } from '../components/Skeleton'
 import { ProgressRing } from '../components/ProgressRing'
 import { ActivityHeatmap } from '../components/ActivityHeatmap'
 
+/* ── useScrollReveal ── */
+function useScrollReveal<T extends HTMLElement>() {
+  const ref = useRef<T>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (prefersReduced) {
+      el.classList.add('tml-revealed')
+      return
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('tml-revealed')
+          observer.unobserve(el)
+        }
+      },
+      { threshold: 0.15 },
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
 /* ── useCountUp ── */
 
 function useCountUp(target: number, duration = 600) {
@@ -35,14 +61,18 @@ interface StatCardProps {
   label: string
   value: number
   accent: string
+  icon: string
   delay: number
 }
 
-function StatCard({ label, value, accent, delay }: StatCardProps) {
+function StatCard({ label, value, accent, icon, delay }: StatCardProps) {
   const display = useCountUp(value)
   return (
-    <div className="tml-stat tml-dashboard-stagger" style={{ animationDelay: `${delay}ms` }}>
-      <div className="tml-stat__dot" style={{ background: accent }} />
+    <div
+      className="tml-stat tml-dashboard-stagger"
+      style={{ animationDelay: `${delay}ms`, '--stat-accent': accent } as React.CSSProperties}
+    >
+      <div className="tml-stat__icon" style={{ background: accent }}>{icon}</div>
       <span className="tml-stat__label">{label}</span>
       <span className="tml-stat__value">{display}</span>
     </div>
@@ -82,10 +112,22 @@ function RecentLectureCard({
         <span className="tml-lecture-tile__stat">
           <span className="tml-lecture-tile__stat-dot" style={{ background: 'var(--tml-quiz-code)' }} />
           개념 {conceptCount}
+          <span className="tml-lecture-tile__mini-bar">
+            <span
+              className="tml-lecture-tile__mini-bar-fill"
+              style={{ width: `${Math.min(conceptCount * 10, 100)}%`, background: 'var(--tml-quiz-code)' }}
+            />
+          </span>
         </span>
         <span className="tml-lecture-tile__stat">
           <span className="tml-lecture-tile__stat-dot" style={{ background: 'var(--tml-quiz-fill)' }} />
           퀴즈 {quizCount}
+          <span className="tml-lecture-tile__mini-bar">
+            <span
+              className="tml-lecture-tile__mini-bar-fill"
+              style={{ width: `${Math.min(quizCount * 10, 100)}%`, background: 'var(--tml-quiz-fill)' }}
+            />
+          </span>
         </span>
       </div>
     </Link>
@@ -243,7 +285,7 @@ export function Dashboard() {
   const nextLecture = allLectures.find((l) => l.status === 'idle')
 
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 40px 80px' }}>
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
       {/* 로딩 */}
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -273,21 +315,24 @@ export function Dashboard() {
 
           {/* ── 벤토 그리드 ── */}
           <div className="tml-bento tml-animate">
-            <StatCard label="전체 강의" value={totalLectures} accent="var(--tml-orange)" delay={0} />
-            <StatCard label="분석 완료" value={completedLectures} accent="var(--tml-navy-mid)" delay={80} />
-            <StatCard label="생성 퀴즈" value={totalQuizzes} accent="var(--tml-quiz-fill)" delay={160} />
-            <StatCard label="핵심 개념" value={totalConcepts} accent="var(--tml-quiz-code)" delay={240} />
+            <StatCard label="전체 강의" value={totalLectures} accent="var(--tml-orange)" icon="📚" delay={0} />
+            <StatCard label="분석 완료" value={completedLectures} accent="var(--tml-navy-mid)" icon="✅" delay={80} />
+            <StatCard label="생성 퀴즈" value={totalQuizzes} accent="var(--tml-quiz-fill)" icon="❓" delay={160} />
+            <StatCard label="핵심 개념" value={totalConcepts} accent="var(--tml-quiz-code)" icon="💡" delay={240} />
             <div
               className="tml-bento__map tml-card tml-dashboard-stagger"
               style={{ animationDelay: '120ms' }}
             >
-              <p className="tml-bento__map-label">주간 활동</p>
+              <p className="tml-bento__map-label">
+                <span className="tml-bento__map-pulse" />
+                ACTIVITY
+              </p>
               <ActivityHeatmap lectures={allLectures} />
             </div>
           </div>
 
           {/* ── 최근 완료 강의 ── */}
-          <div className="tml-animate">
+          <ScrollRevealSection>
             <div style={{
               display: 'flex', justifyContent: 'space-between',
               alignItems: 'center', marginBottom: 16,
@@ -334,9 +379,20 @@ export function Dashboard() {
                 </Link>
               </div>
             )}
-          </div>
+          </ScrollRevealSection>
         </>
       )}
     </main>
+  )
+}
+
+/* ── ScrollRevealSection ── */
+
+function ScrollRevealSection({ children }: { children: React.ReactNode }) {
+  const ref = useScrollReveal<HTMLDivElement>()
+  return (
+    <div ref={ref} className="tml-scroll-reveal">
+      {children}
+    </div>
   )
 }

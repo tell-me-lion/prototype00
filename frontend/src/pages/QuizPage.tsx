@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { QuizCard } from '../components/QuizCard'
 import { SkeletonGroup, ErrorCard } from '../components/Skeleton'
 import { fetchLecture, fetchLectureResults, ApiError } from '../services/api'
@@ -14,8 +14,6 @@ type PageState =
 
 export function QuizPage() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-
   const [state, setState] = useState<PageState>({ tag: 'loading' })
   const [mcqIndex, setMcqIndex] = useState(0)
 
@@ -57,7 +55,7 @@ export function QuizPage() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -66,11 +64,8 @@ export function QuizPage() {
   // ── 404 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
-          ← 강의 목록
-        </button>
-        <div className="tml-animate" style={{ marginTop: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+        <div className="tml-animate">
           <ErrorCard message="존재하지 않는 강의입니다." />
         </div>
       </main>
@@ -80,11 +75,8 @@ export function QuizPage() {
   // ── 미처리 ──
   if (state.tag === 'not-ready') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate(`/lecture/${id}`)}>
-          ← 강의 결과
-        </button>
-        <div className="tml-animate tml-card" style={{ marginTop: 32, padding: 32, textAlign: 'center' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+        <div className="tml-animate tml-card" style={{ padding: 32, textAlign: 'center' }}>
           <p style={{
             fontFamily: 'var(--font-display)', fontSize: '1.125rem',
             fontWeight: 600, color: 'var(--tml-ink)', margin: '0 0 8px',
@@ -108,11 +100,8 @@ export function QuizPage() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate(`/lecture/${id}`)}>
-          ← 강의 결과
-        </button>
-        <div className="tml-animate" style={{ marginTop: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+        <div className="tml-animate">
           <ErrorCard message={state.message} />
         </div>
       </main>
@@ -136,16 +125,11 @@ export function QuizPage() {
   ].filter((t) => t.count > 0)
 
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
-      {/* 뒤로가기 */}
-      <button className="tml-back-btn tml-animate" onClick={() => navigate(`/lecture/${id}`)}>
-        ← 강의 결과
-      </button>
-
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
       {/* 퀴즈 헤더 */}
-      <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <div className="tml-animate" style={{ marginBottom: 32 }}>
         <p style={{
-          fontFamily: 'var(--font-body)', fontSize: '0.6875rem', fontWeight: 600,
+          fontFamily: 'var(--font-body)', fontSize: '0.75rem', fontWeight: 600,
           color: 'var(--tml-orange)', letterSpacing: '0.1em', textTransform: 'uppercase',
           margin: '0 0 12px',
         }}>
@@ -186,7 +170,7 @@ export function QuizPage() {
                     {count}
                   </div>
                   <div style={{
-                    fontFamily: 'var(--font-body)', fontSize: '0.6875rem',
+                    fontFamily: 'var(--font-body)', fontSize: '0.75rem',
                     color: 'var(--tml-ink-muted)', marginTop: 2,
                   }}>
                     {label}
