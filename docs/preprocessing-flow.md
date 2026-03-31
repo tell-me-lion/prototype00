@@ -75,8 +75,9 @@ graph TD
 - **입력:** `data/phase2_sentences/*.jsonl`
 - **출력:** `data/phase3_chunks/*.jsonl`
 - **핵심 작업:**
-  - **의미 기반 청킹:** `KR-SBERT` 임베딩으로 인접 문장 간의 코사인 유사도를 계산하고, 유사도가 떨어지는 문맥 전환 지점에서 청크를 분할한다.
+  - **의미 기반 청킹:** `KR-SBERT` 임베딩 (또는 Gemini Embedding API)으로 인접 문장 간의 코사인 유사도를 계산하고, 유사도가 떨어지는 문맥 전환 지점에서 청크를 분할한다.
   - **핵심어 추출(TF-IDF):** 청크 안에서 전체 문서 대비 중요도가 높은 단어들을 식별하고, TF-IDF 점수를 메타데이터에 기록한다.
+  - **선택적 GPU 의존성 제거:** 배포 환경의 용량(PyTorch 5GB)과 GPU 유무를 고려하여, `--use_gemini_embed` 플래그로 무거운 로컬 모델 대신 Google Gemini API를 사용하여 임베딩 처리가 가능하다.
 - **데이터 형태:**
   ```json
   {
@@ -170,6 +171,20 @@ python scripts/run_pipeline.py --mode a --from-phase 1 --to-phase 3
 
 # 전처리 블록만 실행
 python scripts/run_pipeline.py --mode a --from-block preproc --to-block preproc
+```
+
+### Phase 3 임베딩 엔진 선택 (Zero-GPU 모드)
+
+초기 배포 환경의 용량(PyTorch) 및 GPU 인프라 제약을 회피하기 위해 `sentence-transformers` 설치를 생략하고 Gemini API에 전적으로 위임할 수 있다. 
+- 요구사항: `.env` 內 `GOOGLE_API_KEY` 설정 필수.
+- `requirements.txt` 에서 `sentence-transformers`를 주석 처리한 상태로 동작 가능.
+
+```bash
+# 기본: 로컬 SRoBERTa 모델 (PyTorch 설치 필요)
+python scripts/run_pipeline.py --mode a --from-phase 3 --to-phase 3
+
+# 경량 서버: Google Gemini Embedding API 사용
+python scripts/run_pipeline.py --mode a --from-phase 3 --to-phase 3 --use-gemini-embed
 ```
 
 ### Phase 4 LLM 엔진 선택

@@ -1,13 +1,21 @@
+"""
+Phase 5: 포매팅 (Formatter)
+추출된 지식 명제(Phase 4)와 청크 원문/키워드(Phase 3)를 결합하여 RAG에 최적화된
+구조화 JSON (ChunkDocument, ConceptDocument)으로 조립합니다.
+"""
 import os
 import re
 import json
 import argparse
 from pathlib import Path
 from collections import defaultdict
+from typing import Any
 from tqdm import tqdm
 
+from pipeline import paths
+
 class Formatter:
-    def __init__(self):
+    def __init__(self) -> None:
         pass
         
     def resolve_session_label(self, time_str: str) -> str:
@@ -20,36 +28,40 @@ class Formatter:
         except (ValueError, IndexError):
             return "Unknown"
 
-    def format_documents(self, chunks_path: Path, props_path: Path, output_dir: Path):
+    def format_documents(self, chunks_path: Path, props_path: Path, output_dir: Path) -> tuple[int, int]:
         # 1. 청크 데이터 로드 (Phase 3 결과물)
-        chunks = {}
+        chunks: dict[str, dict[str, Any]] = {}
         if chunks_path.exists():
             with open(chunks_path, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
-                        c = json.loads(line)
-                        chunks[c["chunk_id"]] = c
+                        try:
+                            c = json.loads(line)
+                            chunks[c["chunk_id"]] = c
+                        except json.JSONDecodeError:
+                            continue
                         
         # 2. 명제 데이터 로드 및 해당 청크별 매핑 (Phase 4 결과물)
-        chunk_facts = defaultdict(list)
-        all_props = []
+        chunk_facts: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        all_props: list[dict[str, Any]] = []
         if props_path.exists():
             with open(props_path, "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
-                        p = json.loads(line)
-                        chunk_facts[p["chunk_id"]].append(p)
-                        all_props.append(p)
+                        try:
+                            p = json.loads(line)
+                            chunk_facts[p["chunk_id"]].append(p)
+                            all_props.append(p)
+                        except json.JSONDecodeError:
+                            continue
 
         # 3. Chunk 문서(API 전송용/저장용) 구축
-        formatted_chunks = []
+        formatted_chunks: list[dict[str, Any]] = []
         for cid, c in chunks.items():
-            # Phase 3 chunk에 보존된 시간/세션 메타데이터 활용
             start_time = c.get("time", "")
             session_label = self.resolve_session_label(start_time)
             session_seq = c.get("session_id", 1)
             
-            # 이 청크에 소속된 팩트 문장들
             facts_list = [p["text"] for p in chunk_facts.get(cid, [])]
             
             formatted_chunks.append({
@@ -63,26 +75,21 @@ class Formatter:
             })
             
         # 4. 요청하신 Concept DB 문서 구축 (주제별 그룹화)
-        concepts_db = defaultdict(lambda: {
+        concepts_db: dict[str, dict[str, Any]] = defaultdict(lambda: {
             "definition": set(),
             "related_concepts": set(),
             "source_chunk_ids": set()
         })
         
-        # 추출된 지식 명제를 바탕으로 개념(Concept) 지도 구축
         for p in all_props:
-            cid = p["chunk_id"]
+            cid = p.get("chunk_id", "")
             candidates = p.get("concept_candidates", [])
             if not candidates:
                 continue
                 
-            # 가장 신뢰도 높은 첫번째를 메인 개념으로 선정
             main_concept = candidates[0]
+            concepts_db[main_concept]["definition"].add(p.get("text", ""))
             
-            # 정의(definition) 누적
-            concepts_db[main_concept]["definition"].add(p["text"])
-            
-            # 관련 개념(동반 출현한 개념 및 TF-IDF 키워드) 추가
             for cand in candidates[1:]:
                 concepts_db[main_concept]["related_concepts"].add(cand)
             if cid in chunks:
@@ -90,36 +97,29 @@ class Formatter:
                     if kw != main_concept:
                         concepts_db[main_concept]["related_concepts"].add(kw)
                         
-            # 근거가 등장한 출처 청크 ID 수집
             concepts_db[main_concept]["source_chunk_ids"].add(cid)
             
-        formatted_concepts = []
+        formatted_concepts: list[dict[str, Any]] = []
         for concept_name, data in concepts_db.items():
-            # 병합된 여러 정의문들을 슬래시(/)나 줄바꿈으로 병합
             defn = " / ".join(list(data["definition"]))
-            # 고유 식별자 생성
             concept_id = f"concept_{concept_name.lower().replace(' ', '_')}"
             
             formatted_concepts.append({
                 "concept_id": concept_id,
                 "concept": concept_name,
                 "definition": defn,
-                # 연관성이 떨어지는 것을 방지하기 위해 상위 7개 정도만 기록
                 "related_concepts": list(data["related_concepts"])[:7], 
                 "source_chunk_ids": list(data["source_chunk_ids"])
             })
 
-        # --- 파일 저장 단계 ---
         output_dir.mkdir(parents=True, exist_ok=True)
         day = chunks_path.stem
         
-        # 4-1. Chunk 기반 결과물 저장
         chunks_out = output_dir / f"{day}_chunks_formatted.jsonl"
         with open(chunks_out, "w", encoding="utf-8") as f:
             for item in formatted_chunks:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
                 
-        # 4-2. Concept 기반 결과물 저장
         concepts_out = output_dir / f"{day}_concepts_formatted.jsonl"
         with open(concepts_out, "w", encoding="utf-8") as f:
             for item in formatted_concepts:
@@ -127,20 +127,16 @@ class Formatter:
                 
         return len(formatted_chunks), len(formatted_concepts)
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Step 05: Formatter (Chunk & Concept JSON Formatter)")
-    parser.add_argument("--input_type", type=str, choices=["base_cleaned", "gemini_cleaned"], default="base_cleaned")
     args = parser.parse_args()
 
-    base_dir = Path(__file__).resolve().parent.parent.parent
-    
-    # 3단계(Chunks)와 4단계(Propositions)의 결과를 불러옵니다.
-    chunks_dir = base_dir / "data" / "phase3_chunks" / args.input_type
-    props_dir  = base_dir / "data" / "phase4_propositions" / args.input_type
-    output_dir = base_dir / "data" / "phase5_formatted" / args.input_type
+    chunks_dir = paths.DATA_PHASE3_CHUNKS
+    props_dir  = paths.DATA_PHASE4_PROPOSITIONS
+    output_dir = paths.DATA_PHASE5_FACTS
     
     if not chunks_dir.exists() or not props_dir.exists():
-        print(f"[ERROR] Required input directories not found for {args.input_type}.")
+        print(f"[ERROR] Required input directories not found.")
         print("Please ensure Phase 3 and Phase 4 have been executed.")
         return
 
@@ -170,7 +166,7 @@ def main():
         print(f"  [OK] {chunk_file.name} -> Chunk Docs: {c_count}, Concept Docs: {p_count}")
 
     print(f"\n{'='*60}")
-    print(f"[Phase 5 전체 출력 통계 ({args.input_type})]")
+    print(f"[Phase 5 전체 출력 통계]")
     print(f"  병합 처리된 파일: {files_proc}개")
     print(f"  생성된 Chunk DB:   {total_chunks}건")
     print(f"  생성된 Concept DB: {total_concepts}건")
