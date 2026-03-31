@@ -42,11 +42,22 @@ def run_preprocess(
     mod1 = importlib.import_module("pipeline.preprocessor.01_cleaner")
     Cleaner = mod1.Cleaner
 
+    import shutil
+    date_part = lecture_id.split("_")[0]
+
     cleaner = Cleaner(use_gemini=use_gemini_clean)
     cleaner.process_file(raw_file, paths.DATA_PHASE1_SESSIONS)
     logger.info("[Phase 1] Cleaner 완료")
 
-    # Phase 1 출력 파일 찾기 (날짜 기반 파일명)
+    # Phase 1 출력 파일을 lecture_id 기반 파일명으로 정규화
+    # (Cleaner가 {date}.jsonl 로 저장하므로 {lecture_id}.jsonl 로 이동)
+    phase1_src = paths.DATA_PHASE1_SESSIONS / f"{date_part}.jsonl"
+    phase1_dst = paths.DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl"
+    if phase1_src.exists() and phase1_src != phase1_dst:
+        shutil.move(str(phase1_src), phase1_dst)
+        logger.info("[Phase 1] 파일명 정규화: %s → %s", phase1_src.name, phase1_dst.name)
+
+    # Phase 1 출력 파일 찾기
     phase1_file = _find_output_file(paths.DATA_PHASE1_SESSIONS, lecture_id)
     if not phase1_file:
         raise FileNotFoundError(f"Phase 1 출력 없음: {lecture_id}")
@@ -104,8 +115,6 @@ def run_preprocess(
 
     # Phase 5 출력 파일을 lecture_id 기반 파일명으로 정규화
     # (Formatter가 {date}_chunks_formatted.jsonl 로 저장하므로 {lecture_id}.jsonl 로 복사)
-    import shutil
-    date_part = lecture_id.split("_")[0]
     chunks_src = paths.DATA_PHASE5_FACTS / f"{date_part}_chunks_formatted.jsonl"
     chunks_dst = paths.DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
     if chunks_src.exists() and chunks_src != chunks_dst:
