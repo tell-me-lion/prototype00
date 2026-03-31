@@ -2037,12 +2037,13 @@ body::after {
   justify-content: center;
   gap: 6px;
   margin-top: auto;
+  margin-bottom: auto;
   align-self: center;
-  padding: 10px 22px;
+  padding: 10px 36px;
   background: linear-gradient(135deg, #FF6B00, #FF8C00);
   color: #fff;
   font-family: var(--font-body);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   border-radius: 10px;
   text-decoration: none;
