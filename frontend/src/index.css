@@ -1968,7 +1968,6 @@ body::after {
   flex-direction: column;
   gap: 12px;
   flex: 1;
-  justify-content: center;
 }
 
 .tml-glass-card__row {
@@ -2036,6 +2035,7 @@ body::after {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  margin-top: auto;
   padding: 10px 22px;
   background: linear-gradient(135deg, #FF6B00, #FF8C00);
   color: #fff;
