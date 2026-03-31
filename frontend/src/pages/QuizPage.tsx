@@ -112,14 +112,14 @@ export function QuizPage() {
   const { lecture, outputs } = state
   const { quizzes } = outputs
 
-  const mcqQuizzes   = quizzes.filter((q) => q.type === 'mcq')
-  const shortQuizzes = quizzes.filter((q) => q.type === 'short')
-  const fillQuizzes  = quizzes.filter((q) => q.type === 'fill')
-  const codeQuizzes  = quizzes.filter((q) => q.type === 'code')
+  const mcqQuizzes  = quizzes.filter((q) => q.question_type === 'mcq_definition' || q.question_type === 'mcq_misconception')
+  const oxQuizzes   = quizzes.filter((q) => q.question_type === 'ox_quiz')
+  const fillQuizzes = quizzes.filter((q) => q.question_type === 'fill_blank')
+  const codeQuizzes = quizzes.filter((q) => q.question_type === 'code_execution')
 
   const typeCounts = [
     { label: '객관식', count: mcqQuizzes.length },
-    { label: '주관식', count: shortQuizzes.length },
+    { label: 'O/X', count: oxQuizzes.length },
     { label: '빈칸', count: fillQuizzes.length },
     { label: '코드', count: codeQuizzes.length },
   ].filter((t) => t.count > 0)
@@ -197,13 +197,13 @@ export function QuizPage() {
             </div>
           )}
 
-          {/* 주관식 */}
-          {shortQuizzes.length > 0 && (
+          {/* O/X */}
+          {oxQuizzes.length > 0 && (
             <div style={{ marginBottom: 40 }} className="tml-animate">
-              <p className="section-label">주관식</p>
+              <p className="section-label">O/X 퀴즈</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {shortQuizzes.map((q, i) => (
-                  <QuizCard key={q.quiz_id} quiz={q} quizIndex={i} totalInType={shortQuizzes.length} />
+                {oxQuizzes.map((q, i) => (
+                  <QuizCard key={q.quiz_id} quiz={q} quizIndex={i} totalInType={oxQuizzes.length} />
                 ))}
               </div>
             </div>

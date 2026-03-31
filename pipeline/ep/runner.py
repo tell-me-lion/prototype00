@@ -7,20 +7,25 @@ from pathlib import Path
 from pipeline import paths
 
 from .concept_extractor import extract_concepts
+from .learning_point_extractor import extract_learning_points
 
 
 def run_ep(
     in_dir: Path | None = None,
     out_dir: Path | None = None,
 ) -> None:
-    """phase5_facts에서 핵심 개념을 추출해 ConceptDocument 생성.
+    """phase5_facts에서 핵심 개념 + 학습 포인트를 추출.
 
     입력: data/phase5_facts/*.jsonl
-    출력: data/ep_concepts/*.jsonl
+    출력:
+      - data/ep_concepts/*.jsonl (핵심 개념)
+      - data/ep_learning_points/*.jsonl (학습 포인트)
     """
     src = in_dir or paths.DATA_PHASE5_FACTS
-    dst = out_dir or paths.DATA_EP_CONCEPTS
-    dst.mkdir(parents=True, exist_ok=True)
+    dst_concepts = out_dir or paths.DATA_EP_CONCEPTS
+    dst_lp = paths.DATA_EP_LEARNING_POINTS
+    dst_concepts.mkdir(parents=True, exist_ok=True)
+    dst_lp.mkdir(parents=True, exist_ok=True)
 
     # 입력 파일 목록
     jsonl_files = sorted(src.glob("*.jsonl"))
@@ -46,14 +51,24 @@ def run_ep(
         concepts = extract_concepts(chunks, lecture_id, week)
 
         # 결과 저장 (JSONL 형식)
-        out_file = dst / jsonl_file.name
+        out_file = dst_concepts / jsonl_file.name
         with out_file.open("w", encoding="utf-8") as f:
             for concept in concepts:
                 json_str = concept.model_dump_json(ensure_ascii=False)
                 f.write(json_str + "\n")
 
-        # 로그
         print(f"[OK] {jsonl_file.name} | {len(concepts)} concepts")
+
+        # 학습 포인트 추출
+        learning_points = extract_learning_points(chunks, lecture_id, week, concepts)
+
+        out_file_lp = dst_lp / jsonl_file.name
+        with out_file_lp.open("w", encoding="utf-8") as f:
+            for lp in learning_points:
+                json_str = lp.model_dump_json(ensure_ascii=False)
+                f.write(json_str + "\n")
+
+        print(f"[OK] {jsonl_file.name} | {len(learning_points)} learning_points")
 
 
 def _parse_filename(stem: str) -> tuple[str, int]:

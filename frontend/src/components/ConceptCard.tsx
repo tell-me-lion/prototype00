@@ -19,6 +19,17 @@ export function ConceptCard({ concept }: ConceptCardProps) {
           <span className="concept-name">{concept.concept}</span>
           <span className="concept-score">×{concept.importance.toFixed(2)}</span>
         </div>
+        {concept.definition && (
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.8125rem',
+            color: 'var(--tml-ink-secondary)',
+            margin: '0 0 10px',
+            lineHeight: 1.5,
+          }}>
+            {concept.definition}
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{
             fontFamily: 'var(--font-mono)',
@@ -27,9 +38,6 @@ export function ConceptCard({ concept }: ConceptCardProps) {
           }}>
             {concept.lecture_id}
           </span>
-          {concept.meta.topic != null && (
-            <span className="badge-orange">{String(concept.meta.topic)}</span>
-          )}
           <span className="badge-navy">개념</span>
         </div>
       </div>
