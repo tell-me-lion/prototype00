@@ -102,6 +102,16 @@ def run_preprocess(
     formatter.format_documents(phase3_file, phase4_file, paths.DATA_PHASE5_FACTS)
     logger.info("[Phase 5] Formatter 완료")
 
+    # Phase 5 출력 파일을 lecture_id 기반 파일명으로 정규화
+    # (Formatter가 {date}_chunks_formatted.jsonl 로 저장하므로 {lecture_id}.jsonl 로 복사)
+    import shutil
+    date_part = lecture_id.split("_")[0]
+    chunks_src = paths.DATA_PHASE5_FACTS / f"{date_part}_chunks_formatted.jsonl"
+    chunks_dst = paths.DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
+    if chunks_src.exists() and chunks_src != chunks_dst:
+        shutil.copy2(chunks_src, chunks_dst)
+        logger.info("[Phase 5] 파일명 정규화: %s → %s", chunks_src.name, chunks_dst.name)
+
 
 def _find_output_file(directory: Path, lecture_id: str) -> Path | None:
     """출력 디렉터리에서 lecture_id와 매칭되는 JSONL 파일을 찾는다.

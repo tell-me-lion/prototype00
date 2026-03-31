@@ -13,6 +13,7 @@ from .learning_point_extractor import extract_learning_points
 def run_ep(
     in_dir: Path | None = None,
     out_dir: Path | None = None,
+    input_file: Path | None = None,
 ) -> None:
     """phase5_facts에서 핵심 개념 + 학습 포인트를 추출.
 
@@ -21,14 +22,17 @@ def run_ep(
       - data/ep_concepts/*.jsonl (핵심 개념)
       - data/ep_learning_points/*.jsonl (학습 포인트)
     """
-    src = in_dir or paths.DATA_PHASE5_FACTS
     dst_concepts = out_dir or paths.DATA_EP_CONCEPTS
     dst_lp = paths.DATA_EP_LEARNING_POINTS
     dst_concepts.mkdir(parents=True, exist_ok=True)
     dst_lp.mkdir(parents=True, exist_ok=True)
 
     # 입력 파일 목록
-    jsonl_files = sorted(src.glob("*.jsonl"))
+    if input_file is not None:
+        jsonl_files = [input_file]
+    else:
+        src = in_dir or paths.DATA_PHASE5_FACTS
+        jsonl_files = sorted(src.glob("*.jsonl"))
 
     for jsonl_file in jsonl_files:
         # 파일명 파싱

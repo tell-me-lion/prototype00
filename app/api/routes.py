@@ -204,15 +204,12 @@ def _exec_preprocess(lecture_id: str) -> None:
 def _exec_ep(lecture_id: str) -> None:
     """EP 실행 (개념 + 학습 포인트 추출)."""
     from pipeline.ep.runner import run_ep
-    from pipeline.preprocessor.wrapper import _find_output_file
+    from pipeline.paths import DATA_PHASE5_FACTS
 
-    # Phase 5 출력 중 해당 강의 파일만 처리
-    phase5_file = _find_output_file(DATA_EP_CONCEPTS.parent / "phase5_facts", lecture_id)
-    if phase5_file:
-        run_ep(
-            in_dir=phase5_file.parent,
-            out_dir=DATA_EP_CONCEPTS,
-        )
+    # wrapper.py에서 정규화된 {lecture_id}.jsonl 파일 사용
+    phase5_file = DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
+    if phase5_file.exists():
+        run_ep(input_file=phase5_file, out_dir=DATA_EP_CONCEPTS)
     else:
         run_ep()
 
