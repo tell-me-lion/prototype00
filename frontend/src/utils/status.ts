@@ -8,8 +8,11 @@ export function getEffectiveLectureStatus(
   lectureId: string,
   serverStatus: ProcessingStatus,
   processingSet: Set<string>,
+  erroredSet?: Set<string>,
 ): ProcessingStatus {
-  return processingSet.has(lectureId) ? 'processing' : serverStatus
+  if (processingSet.has(lectureId)) return 'processing'
+  if (erroredSet?.has(lectureId)) return 'error'
+  return serverStatus
 }
 
 /**

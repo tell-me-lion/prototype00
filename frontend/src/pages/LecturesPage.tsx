@@ -223,6 +223,7 @@ function WeekGuideCard({ week, lectureCount, status, onProcess, onViewResults, o
 interface WeekSectionProps {
   weekSummary: WeekSummary
   processingLectures: Set<string>
+  erroredLectures: Set<string>
   processingWeeks: Set<number>
   selectedIds: Set<string>
   onToggleSelect: (lectureId: string) => void
@@ -239,6 +240,7 @@ interface WeekSectionProps {
 function WeekSection({
   weekSummary,
   processingLectures,
+  erroredLectures,
   processingWeeks,
   selectedIds,
   onToggleSelect,
@@ -273,7 +275,7 @@ function WeekSection({
 
       <div className="tml-lecture-grid">
         {lectures.map((lecture) => {
-          const effectiveStatus = getEffectiveLectureStatus(lecture.lecture_id, lecture.status, processingLectures)
+          const effectiveStatus = getEffectiveLectureStatus(lecture.lecture_id, lecture.status, processingLectures, erroredLectures)
           return (
             <LectureCard
               key={lecture.lecture_id}
@@ -452,6 +454,7 @@ function RightPanel({
 export function LecturesPage() {
   const { weeks, loading, error } = useWeeks('강의 목록을 불러오지 못했습니다.')
   const [processingLectures, setProcessingLectures] = useState<Set<string>>(new Set())
+  const [erroredLectures, setErroredLectures] = useState<Set<string>>(new Set())
   const [processingWeeks, setProcessingWeeks] = useState<Set<number>>(new Set())
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [failedLectures, setFailedLectures] = useState<Set<string>>(new Set())
@@ -511,6 +514,11 @@ export function LecturesPage() {
   }, [selectedIds])
 
   const handleRetry = useCallback(async (lectureId: string) => {
+    setErroredLectures((prev) => {
+      const next = new Set(prev)
+      next.delete(lectureId)
+      return next
+    })
     setProcessingLectures((prev) => new Set(prev).add(lectureId))
     try {
       await triggerLectureProcess(lectureId)
@@ -541,6 +549,7 @@ export function LecturesPage() {
       next.delete(lectureId)
       return next
     })
+    setErroredLectures((prev) => new Set(prev).add(lectureId))
   }, [])
 
   const handleProcessWeek = useCallback(async (week: number) => {
@@ -660,6 +669,7 @@ export function LecturesPage() {
                       key={weekSummary.week}
                       weekSummary={weekSummary}
                       processingLectures={processingLectures}
+                      erroredLectures={erroredLectures}
                       processingWeeks={processingWeeks}
                       selectedIds={selectedIds}
                       onToggleSelect={handleToggleSelect}
