@@ -1475,17 +1475,16 @@ body::after {
 
 .tml-hero {
   position: relative;
-  background: #0B0E17;
+  background: #F4F0EC;
   border-radius: 20px;
   padding: 48px 44px 24px;
   margin-bottom: 24px;
   overflow: hidden;
-  border: 1px solid rgba(255, 107, 0, 0.08);
+  border: 1px solid rgba(255, 107, 0, 0.12);
   box-shadow:
     0 0 0 1px rgba(255, 107, 0, 0.04),
-    0 4px 24px rgba(0, 0, 0, 0.4),
-    0 16px 56px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 16px 56px rgba(0, 0, 0, 0.04);
   will-change: transform;
 }
 
@@ -1494,10 +1493,10 @@ body::after {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 60% at 10% 90%, rgba(255, 85, 0, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 80% at 90% 20%, rgba(255, 140, 0, 0.12) 0%, transparent 55%),
-    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180, 60, 0, 0.08) 0%, transparent 50%),
-    linear-gradient(135deg, #0B0E17 0%, #111422 30%, #0D1018 60%, #0F0A12 100%);
+    radial-gradient(ellipse 80% 60% at 10% 90%, rgba(255, 85, 0, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 90% 20%, rgba(255, 140, 0, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180, 60, 0, 0.04) 0%, transparent 50%),
+    linear-gradient(135deg, #F4F0EC 0%, #F8F4F0 30%, #F2EDE8 60%, #F6F0EA 100%);
   background-size: 200% 200%;
   animation: tml-mesh-shift 12s ease-in-out infinite;
 }
@@ -1633,7 +1632,7 @@ body::after {
   font-family: var(--font-mono);
   font-size: 0.625rem;
   font-weight: 500;
-  color: rgba(255, 160, 60, 0.8);
+  color: var(--tml-orange);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   margin: 0;
@@ -1643,13 +1642,13 @@ body::after {
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.75rem;
-  color: #fff;
+  color: var(--tml-ink);
   margin: 0;
   letter-spacing: -0.03em;
 }
 
 .tml-hero__title-gradient {
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFD4A8 40%, #FF8C00 100%);
+  background: linear-gradient(135deg, var(--tml-navy) 0%, #CC5500 40%, #FF8C00 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1658,7 +1657,7 @@ body::after {
 .tml-hero__subtitle {
   font-family: var(--font-body);
   font-size: 0.8125rem;
-  color: rgba(255, 200, 150, 0.6);
+  color: var(--tml-ink-muted);
   margin: 0;
   letter-spacing: 0.01em;
 }
@@ -1666,13 +1665,13 @@ body::after {
 .tml-hero__desc {
   font-family: var(--font-body);
   font-size: 0.9375rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--tml-ink-secondary);
   margin: 0;
   line-height: 1.7;
 }
 
 .tml-hero__desc strong {
-  color: rgba(255, 220, 180, 0.95);
+  color: var(--tml-orange-dark);
   font-weight: 600;
 }
 
@@ -1732,7 +1731,7 @@ body::after {
   position: relative;
   margin-top: 28px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.06);
   border-radius: 4px;
   overflow: visible;
   z-index: 3;
@@ -1768,9 +1767,9 @@ body::after {
 }
 
 /* 히어로 안 프로그레스 링 색상 오버라이드 */
-.tml-hero .tml-progress-ring__percent { color: #fff; }
-.tml-hero .tml-progress-ring__unit { color: rgba(255, 200, 150, 0.5); }
-.tml-hero .tml-progress-ring__svg circle:first-of-type { stroke: rgba(255, 107, 0, 0.1); }
+.tml-hero .tml-progress-ring__percent { color: var(--tml-ink); }
+.tml-hero .tml-progress-ring__unit { color: var(--tml-orange); }
+.tml-hero .tml-progress-ring__svg circle:first-of-type { stroke: rgba(255, 107, 0, 0.15); }
 
 [data-theme="dark"] .tml-hero {
   background: #060810;
@@ -1791,6 +1790,21 @@ body::after {
   background-size: 200% 200%;
   animation: tml-mesh-shift 12s ease-in-out infinite;
 }
+
+[data-theme="dark"] .tml-hero__title-gradient {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFD4A8 40%, #FF8C00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="dark"] .tml-hero__bar {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .tml-hero .tml-progress-ring__percent { color: #fff; }
+[data-theme="dark"] .tml-hero .tml-progress-ring__unit { color: rgba(255, 200, 150, 0.5); }
+[data-theme="dark"] .tml-hero .tml-progress-ring__svg circle:first-of-type { stroke: rgba(255, 107, 0, 0.1); }
 
 @media (max-width: 768px) {
   .tml-hero { padding: 32px 24px 16px; border-radius: 16px; }
@@ -1883,17 +1897,17 @@ body::after {
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(0, 0, 0, 0.03);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 10px;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .tml-stat-chip:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
@@ -1907,7 +1921,7 @@ body::after {
 .tml-stat-chip__label {
   font-family: var(--font-body);
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--tml-ink-muted);
   font-weight: 500;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -1917,7 +1931,7 @@ body::after {
   font-family: var(--font-mono);
   font-size: 0.9375rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--tml-ink);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   min-width: 1.5ch;
@@ -1936,13 +1950,22 @@ body::after {
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
+[data-theme="dark"] .tml-stat-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .tml-stat-chip:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 /* ── 글래스 카드 ── */
 .tml-glass-card {
   position: relative;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: 16px;
   padding: 24px;
   overflow: hidden;
@@ -1950,16 +1973,16 @@ body::after {
 }
 
 .tml-glass-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
 }
 
 .tml-glass-card__label {
   font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--tml-ink-muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 0 0 20px;
@@ -1991,14 +2014,14 @@ body::after {
 .tml-glass-card__key {
   font-family: var(--font-body);
   font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--tml-ink-muted);
 }
 
 .tml-glass-card__val {
   font-family: var(--font-mono);
   font-size: 0.875rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--tml-ink);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2009,7 +2032,7 @@ body::after {
 .tml-glass-card__bar {
   height: 4px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.06);
   overflow: hidden;
 }
 
@@ -2037,7 +2060,7 @@ body::after {
 .tml-glass-card__desc {
   font-family: var(--font-body);
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.45);
+  color: var(--tml-ink-secondary);
   line-height: 1.6;
   margin: 0;
   text-wrap: pretty;
@@ -2070,19 +2093,32 @@ body::after {
 .tml-glass-card__link {
   font-family: var(--font-body);
   font-size: 0.8125rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--tml-ink-muted);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 .tml-glass-card__link:hover {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--tml-ink-secondary);
 }
 
 .tml-glass-card__empty {
   font-family: var(--font-body);
   font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--tml-ink-muted);
   margin: 0;
+}
+
+[data-theme="dark"] .tml-glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .tml-glass-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+[data-theme="dark"] .tml-glass-card__bar {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── 대시보드 2컬럼 그리드 ── */
@@ -2104,7 +2140,7 @@ body::after {
   font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--tml-ink-muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 0;
@@ -2135,10 +2171,10 @@ body::after {
   color: inherit;
   border-top: none;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.2s ease, border-color 0.2s ease;
 }
@@ -2161,11 +2197,11 @@ body::after {
 
 .tml-lecture-tile:hover {
   transform: translateY(-4px) scale(1.01);
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.3),
-    0 0 20px rgba(255, 107, 0, 0.06);
+    0 12px 32px rgba(0, 0, 0, 0.06),
+    0 0 20px rgba(255, 107, 0, 0.04);
 }
 
 .tml-lecture-tile__header {
@@ -2180,13 +2216,13 @@ body::after {
   font-size: 0.75rem;
   font-weight: 700;
   color: #fff;
-  background: rgba(15, 31, 61, 0.75);
+  background: var(--tml-navy);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 3px 10px;
   border-radius: 6px;
   letter-spacing: 0.04em;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .tml-lecture-tile__arrow {
@@ -2205,7 +2241,7 @@ body::after {
 .tml-lecture-tile__date {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.35);
+  color: var(--tml-ink-muted);
   margin: 0 0 4px;
 }
 
@@ -2213,7 +2249,7 @@ body::after {
   font-family: var(--font-body);
   font-size: 0.9375rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--tml-ink);
   margin: 0 0 16px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2232,7 +2268,7 @@ body::after {
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--tml-ink-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2246,7 +2282,7 @@ body::after {
 .tml-lecture-tile__mini-bar {
   height: 3px;
   border-radius: 2px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.06);
   overflow: hidden;
   flex: 1;
   max-width: 40px;
@@ -2256,6 +2292,25 @@ body::after {
   height: 100%;
   border-radius: 2px;
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="dark"] .tml-lecture-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+[data-theme="dark"] .tml-lecture-tile:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.3),
+    0 0 20px rgba(255, 107, 0, 0.06);
+}
+[data-theme="dark"] .tml-lecture-tile__week {
+  background: rgba(15, 31, 61, 0.75);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+[data-theme="dark"] .tml-lecture-tile__mini-bar {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ── 활동 히트맵 ── */

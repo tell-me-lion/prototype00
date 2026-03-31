@@ -420,7 +420,7 @@ export function Dashboard() {
               ) : (
                 <div className="tml-glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
                   <p style={{
-                    fontFamily: 'var(--font-body)', color: 'rgba(255,255,255,0.4)',
+                    fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)',
                     margin: '0 0 16px', fontSize: '0.875rem',
                   }}>
                     아직 분석된 강의가 없습니다.
