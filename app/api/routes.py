@@ -5,6 +5,8 @@
 """
 
 import asyncio
+import json
+import logging
 import re
 from datetime import datetime
 
@@ -14,6 +16,10 @@ from pydantic import ValidationError
 
 from app.loaders.catalog import load_lectures, load_weeks, invalidate_catalog_cache
 from app.loaders.results import load_lecture_results, load_week_results
+from app.loaders.dummy import load_concepts, load_learning_points, load_quizzes, load_learning_guides
+from pipeline.paths import DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED, DATA_LEARNING_GUIDES
+
+logger = logging.getLogger(__name__)
 from app.schemas import (
     Concept,
     LearningGuide,
@@ -31,6 +37,43 @@ from app.schemas import (
 from app.state import JobState, get_lecture_job, set_lecture_job, get_week_job, set_week_job
 
 router = APIRouter(prefix="/api", tags=["산출물"])
+
+
+def _write_jsonl(path, data: list[dict]) -> None:
+    """JSONL 파일 쓰기. 디렉터리가 없으면 생성."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        for item in data:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+
+def _create_lecture_dummy_results(lecture_id: str) -> None:
+    """시뮬레이션 완료 후 더미 결과 파일 생성 (ep_concepts, ep_learning_points, quizzes_validated)."""
+    concepts = [c for c in load_concepts() if c.get("lecture_id") == lecture_id]
+    if not concepts:
+        concepts = load_concepts()
+    _write_jsonl(DATA_EP_CONCEPTS / f"{lecture_id}.jsonl", concepts)
+
+    lps = [lp for lp in load_learning_points() if lp.get("lecture_id") == lecture_id]
+    if not lps:
+        lps = load_learning_points()
+    _write_jsonl(DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl", lps)
+
+    quizzes = [q for q in load_quizzes() if q.get("meta", {}).get("lecture_id") == lecture_id]
+    if not quizzes:
+        quizzes = load_quizzes()[:5]
+    _write_jsonl(DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl", quizzes)
+    logger.info("더미 결과 파일 생성 완료: lecture=%s", lecture_id)
+
+
+def _create_week_dummy_results(week: int) -> None:
+    """시뮬레이션 완료 후 더미 학습 가이드 파일 생성."""
+    guides = [g for g in load_learning_guides() if g.get("week") == week]
+    if not guides:
+        guides = [{"week": week, "summary": f"{week}주차 학습 가이드입니다.", "key_concepts": [], "meta": {"source": "simulation"}}]
+    _write_jsonl(DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl", guides)
+    logger.info("더미 학습 가이드 파일 생성 완료: week=%d", week)
+
 
 # 입력 검증 패턴
 _LECTURE_ID_RE = re.compile(r"^\d{4}-\d{2}-\d{2}_.+$")
@@ -108,6 +151,7 @@ async def _simulate_lecture(lecture_id: str) -> None:
         job.steps[i]["status"] = "running"
         await asyncio.sleep(2)
         job.steps[i]["status"] = "done"
+    _create_lecture_dummy_results(lecture_id)
     job.status = ProcessingStatus.completed
     job.completed_at = datetime.now()
     invalidate_catalog_cache()
@@ -122,6 +166,7 @@ async def _simulate_week(week: int) -> None:
         job.steps[i]["status"] = "running"
         await asyncio.sleep(2)
         job.steps[i]["status"] = "done"
+    _create_week_dummy_results(week)
     job.status = ProcessingStatus.completed
     job.completed_at = datetime.now()
     invalidate_catalog_cache()

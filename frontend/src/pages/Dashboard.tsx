@@ -55,26 +55,25 @@ function useCountUp(target: number, duration = 600) {
   return value
 }
 
-/* ── StatCard ── */
+/* ── StatChip (compact inline) ── */
 
-interface StatCardProps {
+interface StatChipProps {
   label: string
   value: number
   accent: string
-  icon: string
   delay: number
 }
 
-function StatCard({ label, value, accent, icon, delay }: StatCardProps) {
+function StatChip({ label, value, accent, delay }: StatChipProps) {
   const display = useCountUp(value)
   return (
     <div
-      className="tml-stat tml-dashboard-stagger"
-      style={{ animationDelay: `${delay}ms`, '--stat-accent': accent } as React.CSSProperties}
+      className="tml-stat-chip tml-dashboard-stagger"
+      style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="tml-stat__icon" style={{ background: accent }}>{icon}</div>
-      <span className="tml-stat__label">{label}</span>
-      <span className="tml-stat__value">{display}</span>
+      <span className="tml-stat-chip__dot" style={{ background: accent }} />
+      <span className="tml-stat-chip__label">{label}</span>
+      <span className="tml-stat-chip__value">{display}</span>
     </div>
   )
 }
@@ -175,12 +174,10 @@ function HeroCard({ completedLectures, totalLectures, remainingCount, percent, h
         transition: isHovering ? 'transform 0.1s ease-out' : 'transform 0.4s ease-out',
       }}
     >
-      {/* 레이어 1: 메쉬 그라디언트 (애니메이션) */}
+      {/* 레이어 1: 메쉬 그라디언트 */}
       <div className="tml-hero__mesh" aria-hidden="true" />
-
       {/* 레이어 2: 노이즈 텍스처 */}
       <div className="tml-hero__noise" aria-hidden="true" />
-
       {/* 레이어 3: 플로팅 오브 */}
       <div className="tml-hero__decor" aria-hidden="true">
         <div className="tml-hero__orb tml-hero__orb--1" />
@@ -188,8 +185,7 @@ function HeroCard({ completedLectures, totalLectures, remainingCount, percent, h
         <div className="tml-hero__orb tml-hero__orb--3" />
         <div className="tml-hero__orb tml-hero__orb--4" />
       </div>
-
-      {/* 레이어 4: 마우스 따라가는 글레어 */}
+      {/* 레이어 4: 마우스 글레어 */}
       {isHovering && (
         <div
           className="tml-hero__glare"
@@ -198,7 +194,6 @@ function HeroCard({ completedLectures, totalLectures, remainingCount, percent, h
           }}
         />
       )}
-
       {/* 레이어 5: 스캔라인 */}
       <div className="tml-hero__scanline" aria-hidden="true" />
 
@@ -210,6 +205,9 @@ function HeroCard({ completedLectures, totalLectures, remainingCount, percent, h
           <h1 className="tml-hero__title">
             <span className="tml-hero__title-gradient">학습 진행률</span>
           </h1>
+          <p className="tml-hero__subtitle">
+            강의 녹화본에서 핵심 개념·퀴즈를 자동 생성합니다
+          </p>
           <p className="tml-hero__desc">
             {totalLectures > 0 ? (
               <>
@@ -284,105 +282,170 @@ export function Dashboard() {
 
   const nextLecture = allLectures.find((l) => l.status === 'idle')
 
+  /* 이번 주 (마지막 주차) 데이터 */
+  const currentWeek = weeks.length > 0 ? weeks[weeks.length - 1] : null
+  const weekPercent = currentWeek
+    ? Math.round((currentWeek.completed_count / currentWeek.lecture_count) * 100)
+    : 0
+
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
-      {/* 로딩 */}
-      {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div className="tml-skeleton" style={{ height: 220, borderRadius: 16 }} />
-          <div style={{ display: 'flex', gap: 12 }}>
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="tml-skeleton" style={{ height: 120, flex: 1, borderRadius: 12 }} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* 에러 */}
-      {!loading && error && <ErrorCard message={error} title="데이터 로드 실패" />}
-
-      {/* 콘텐츠 */}
-      {!loading && !error && (
-        <>
-          {/* ── 히어로 ── */}
-          <HeroCard
-            completedLectures={completedLectures}
-            totalLectures={totalLectures}
-            remainingCount={remainingCount}
-            percent={percent}
-            hasNext={!!nextLecture}
-          />
-
-          {/* ── 벤토 그리드 ── */}
-          <div className="tml-bento tml-animate">
-            <StatCard label="전체 강의" value={totalLectures} accent="var(--tml-orange)" icon="📚" delay={0} />
-            <StatCard label="분석 완료" value={completedLectures} accent="var(--tml-navy-mid)" icon="✅" delay={80} />
-            <StatCard label="생성 퀴즈" value={totalQuizzes} accent="var(--tml-quiz-fill)" icon="❓" delay={160} />
-            <StatCard label="핵심 개념" value={totalConcepts} accent="var(--tml-quiz-code)" icon="💡" delay={240} />
-            <div
-              className="tml-bento__map tml-card tml-dashboard-stagger"
-              style={{ animationDelay: '120ms' }}
-            >
-              <p className="tml-bento__map-label">
-                <span className="tml-bento__map-pulse" />
-                ACTIVITY
-              </p>
-              <ActivityHeatmap lectures={allLectures} />
+    <div className="tml-dashboard-bg">
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
+        {/* 로딩 */}
+        {loading && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="tml-skeleton" style={{ height: 220, borderRadius: 16 }} />
+            <div style={{ display: 'flex', gap: 12 }}>
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="tml-skeleton" style={{ height: 48, flex: 1, borderRadius: 12 }} />
+              ))}
             </div>
           </div>
+        )}
 
-          {/* ── 최근 완료 강의 ── */}
-          <ScrollRevealSection>
-            <div style={{
-              display: 'flex', justifyContent: 'space-between',
-              alignItems: 'center', marginBottom: 16,
-            }}>
-              <p className="section-label" style={{ margin: 0, paddingTop: 0, borderTop: 'none' }}>
-                최근 분석 완료
-              </p>
-              <Link
-                to="/lectures"
-                style={{
-                  fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
-                  color: 'var(--tml-orange)', textDecoration: 'none', fontWeight: 600,
-                }}
-              >
-                전체 보기 →
-              </Link>
+        {/* 에러 */}
+        {!loading && error && <ErrorCard message={error} title="데이터 로드 실패" />}
+
+        {/* 콘텐츠 */}
+        {!loading && !error && (
+          <>
+            {/* ── 히어로 ── */}
+            <HeroCard
+              completedLectures={completedLectures}
+              totalLectures={totalLectures}
+              remainingCount={remainingCount}
+              percent={percent}
+              hasNext={!!nextLecture}
+            />
+
+            {/* ── 스탯 칩 (인라인) ── */}
+            <div className="tml-stat-chips tml-animate">
+              <StatChip label="전체 강의" value={totalLectures} accent="var(--tml-orange)" delay={0} />
+              <StatChip label="분석 완료" value={completedLectures} accent="var(--tml-navy-mid)" delay={80} />
+              <StatChip label="생성 퀴즈" value={totalQuizzes} accent="var(--tml-quiz-fill)" delay={160} />
+              <StatChip label="핵심 개념" value={totalConcepts} accent="var(--tml-quiz-code)" delay={240} />
             </div>
-            {recentCompleted.length > 0 ? (
-              <div className="tml-recent-grid">
-                {recentCompleted.map((l, i) => (
-                  <RecentLectureCard
-                    key={l.lecture_id}
-                    lectureId={l.lecture_id}
-                    date={l.date}
-                    dayOfWeek={l.day_of_week}
-                    week={l.week}
-                    courseName={l.course_name}
-                    conceptCount={l.result_summary!.concept_count}
-                    quizCount={l.result_summary!.quiz_count}
-                    delay={i * 80}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="tml-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <p style={{
-                  fontFamily: 'var(--font-body)', color: 'var(--tml-ink-muted)',
-                  margin: '0 0 16px', fontSize: '0.875rem',
-                }}>
-                  아직 분석된 강의가 없습니다.
+
+            {/* ── 메인 콘텐츠 2컬럼 ── */}
+            <div className="tml-dash-grid tml-animate" style={{ animationDelay: '120ms' }}>
+              {/* 이번 주 학습 요약 */}
+              <div className="tml-glass-card tml-dashboard-stagger" style={{ animationDelay: '120ms' }}>
+                <p className="tml-glass-card__label">
+                  <span className="tml-glass-card__pulse" />
+                  이번 주 학습 요약
                 </p>
-                <Link to="/lectures" className="btn-primary" style={{ textDecoration: 'none' }}>
-                  강의 가져오기 →
+                {currentWeek ? (
+                  <div className="tml-glass-card__body">
+                    <div className="tml-glass-card__row">
+                      <span className="tml-glass-card__key">주차</span>
+                      <span className="tml-glass-card__val">{currentWeek.week}주차</span>
+                    </div>
+                    <div className="tml-glass-card__row">
+                      <span className="tml-glass-card__key">강의 수</span>
+                      <span className="tml-glass-card__val">{currentWeek.lecture_count}개</span>
+                    </div>
+                    <div className="tml-glass-card__row">
+                      <span className="tml-glass-card__key">완료율</span>
+                      <span className="tml-glass-card__val">{weekPercent}%</span>
+                    </div>
+                    <div className="tml-glass-card__bar-wrap">
+                      <div className="tml-glass-card__bar">
+                        <div className="tml-glass-card__bar-fill" style={{ width: `${weekPercent}%` }} />
+                      </div>
+                    </div>
+                    <Link to={`/weekly/${currentWeek.week}`} className="tml-glass-card__cta">
+                      주차 가이드 보기 →
+                    </Link>
+                  </div>
+                ) : (
+                  <p className="tml-glass-card__empty">등록된 주차 데이터가 없습니다.</p>
+                )}
+              </div>
+
+              {/* 빠른 시작 */}
+              <div className="tml-glass-card tml-dashboard-stagger" style={{ animationDelay: '200ms' }}>
+                <p className="tml-glass-card__label">
+                  <span className="tml-glass-card__pulse" />
+                  빠른 시작
+                </p>
+                <div className="tml-glass-card__body">
+                  <p className="tml-glass-card__desc">
+                    강의를 선택하면 AI가 핵심 개념, 학습 포인트, 퀴즈를 자동으로 생성합니다.
+                  </p>
+                  <Link to="/lectures" className="tml-glass-card__btn">
+                    새 강의 분석하기 →
+                  </Link>
+                  <Link to="/lectures" className="tml-glass-card__link">
+                    전체 강의 목록 보기
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* ── 최근 완료 강의 ── */}
+            <ScrollRevealSection>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between',
+                alignItems: 'center', marginBottom: 16,
+              }}>
+                <p className="tml-dash-section-label">
+                  최근 분석 완료
+                </p>
+                <Link
+                  to="/lectures"
+                  style={{
+                    fontFamily: 'var(--font-body)', fontSize: '0.8125rem',
+                    color: 'var(--tml-orange)', textDecoration: 'none', fontWeight: 600,
+                  }}
+                >
+                  전체 보기 →
                 </Link>
               </div>
-            )}
-          </ScrollRevealSection>
-        </>
-      )}
-    </main>
+              {recentCompleted.length > 0 ? (
+                <div className="tml-recent-grid">
+                  {recentCompleted.map((l, i) => (
+                    <RecentLectureCard
+                      key={l.lecture_id}
+                      lectureId={l.lecture_id}
+                      date={l.date}
+                      dayOfWeek={l.day_of_week}
+                      week={l.week}
+                      courseName={l.course_name}
+                      conceptCount={l.result_summary!.concept_count}
+                      quizCount={l.result_summary!.quiz_count}
+                      delay={i * 80}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="tml-glass-card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-body)', color: 'rgba(255,255,255,0.4)',
+                    margin: '0 0 16px', fontSize: '0.875rem',
+                  }}>
+                    아직 분석된 강의가 없습니다.
+                  </p>
+                  <Link to="/lectures" className="btn-primary" style={{ textDecoration: 'none' }}>
+                    강의 가져오기 →
+                  </Link>
+                </div>
+              )}
+            </ScrollRevealSection>
+
+            {/* ── Activity Heatmap (하단 독립 섹션) ── */}
+            <ScrollRevealSection>
+              <div className="tml-glass-card tml-heatmap-section">
+                <p className="tml-glass-card__label">
+                  <span className="tml-glass-card__pulse" />
+                  ACTIVITY
+                </p>
+                <ActivityHeatmap lectures={allLectures} />
+              </div>
+            </ScrollRevealSection>
+          </>
+        )}
+      </main>
+    </div>
   )
 }
 

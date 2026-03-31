@@ -81,18 +81,17 @@
 
 | 역할 | 폰트 | 선택 이유 |
 |------|------|----------|
-| 영문 헤딩/디스플레이 | **Syne** | 기하학적이고 대담함. 일반 산세리프와 다른 개성. 플랫폼 느낌에 최적 |
-| 한글 전체 | **Pretendard** | 한글 UI 최적화, 웨이트 범위 넓음, 모던하고 읽기 편함 |
-| 영문 본문/UI | **IBM Plex Sans** | 전문적이고 기술적. Syne 헤딩과 무게 균형 |
-| 수치/코드/ID | **IBM Plex Mono** | IBM Plex 패밀리 통일, 정밀하고 깔끔 |
+| 헤딩/디스플레이 | **Pretendard** | 한글 UI 최적화, 웨이트 범위 넓음, 모던하고 읽기 편함. 전체 폰트 통일 |
+| 본문/UI | **Pretendard** | 동일 폰트 패밀리로 시각적 일관성 확보 |
+| 수치/코드/ID | **IBM Plex Mono** | 고정폭, 정밀하고 깔끔 |
 
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap');
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css');
 
 :root {
-  --font-display: 'Syne', 'Pretendard Variable', 'Pretendard', sans-serif;
-  --font-body:    'IBM Plex Sans', 'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-display: 'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-body:    'Pretendard Variable', 'Pretendard', sans-serif;
   --font-mono:    'IBM Plex Mono', 'JetBrains Mono', monospace;
 }
 ```
