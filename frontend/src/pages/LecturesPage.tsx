@@ -335,12 +335,15 @@ function RightPanel({
   return (
     <aside className="tml-right-panel">
       {/* 분석 대기 */}
-      <div className="tml-right-panel__section">
-        <p className="tml-right-panel__section-title">
+      <div className={`tml-right-panel__section tml-right-panel__section--queue${selectedIds.size > 0 ? ' tml-right-panel__section--has-items' : ''}`}>
+        <p className="tml-right-panel__section-title" style={{ color: 'var(--tml-orange)' }}>
           분석 대기 ({selectedIds.size}개)
         </p>
         {selectedLectures.length === 0 ? (
-          <p className="tml-right-panel__empty">강의를 선택하세요</p>
+          <div className="tml-right-panel__hint">
+            <span className="tml-right-panel__hint-icon">👈</span>
+            <p className="tml-right-panel__hint-text">왼쪽 강의를 클릭해서 선택하세요</p>
+          </div>
         ) : (
           <ul className="tml-right-panel__list">
             {selectedLectures.map((l) => (
@@ -365,7 +368,7 @@ function RightPanel({
             width: '100%',
             marginTop: 12,
             fontSize: '0.8125rem',
-            padding: '8px 14px',
+            padding: '10px 14px',
             opacity: selectedIds.size === 0 ? 0.4 : 1,
             cursor: selectedIds.size === 0 ? 'not-allowed' : 'pointer',
           }}
