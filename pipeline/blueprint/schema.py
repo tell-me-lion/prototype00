@@ -1,4 +1,4 @@
-"""Blueprint 블록 출력 스키마: BlueprintDocument (task.md 기준)."""
+"""Blueprint 블록 출력 스키마: BlueprintDocument (v6)."""
 
 from pydantic import BaseModel, field_validator
 
@@ -25,10 +25,12 @@ class Evidence(BaseModel):
 
 
 class BlueprintDocument(BaseModel):
-    """퀴즈 블루프린트 문서 (task.md 스키마).
+    """퀴즈 블루프린트 문서 (v6 슬림화).
 
     EP 블록의 ConceptDocument를 기반으로 생성되며,
-    LLM이 실제 문항을 생성할 때 필요한 모든 정보를 제공한다.
+    Evidence 분리(correct_facts / distractor_facts)가 핵심 역할이다.
+    dominant_type, learning_goal, difficulty, review_point 등의 판단은
+    Quiz Generation 블록의 LLM이 담당한다.
     """
 
     blueprint_id: str
@@ -43,35 +45,17 @@ class BlueprintDocument(BaseModel):
     concept: str
     """개념명. 예: "UNION", "조인", "서브쿼리"."""
 
-    sentence_types: str
-    """dominant_type. 이 개념의 지배적인 문장 타입.
+    definition: str
+    """개념의 정의. ConceptDocument.definition 그대로 전달."""
 
-    예: "definition", "comparison", "warning", "procedure", "example"
-    """
+    importance: float
+    """중요도 점수. 0.0 ~ 1.0. ConceptDocument.importance 그대로 전달."""
 
-    learning_goal: str
-    """학습 목표. dominant_type으로 자동 매핑된 문장.
-
-    예: "UNION의 개념과 정의를 이해한다"
-    """
-
-    question_type_candidates: list[str]
-    """가능한 퀴즈 유형들. dominant_type으로 자동 매핑.
-
-    예: ["mcq_definition", "fill_blank", "ox_quiz"]
-    """
-
-    difficulty: str
-    """난이도. "상" | "중" | "하"."""
+    related_concepts: list[str]
+    """관련 개념 ID 목록. ConceptDocument.related_concepts 그대로 전달."""
 
     chunk_distance_minutes: float
     """첫 번째 청크(시간순)와 마지막 청크 사이의 시간 거리(분)."""
-
-    review_point: str
-    """학습 복습 포인트. 개념의 핵심 요약.
-
-    예: "UNION의 핵심 정의와 역할 복습"
-    """
 
     evidence: Evidence
     """문항 생성을 위한 근거 자료."""
@@ -93,15 +77,6 @@ class BlueprintDocument(BaseModel):
                 raise ValueError(f"blueprint_id={v!r} 이 규칙에 맞지 않습니다.")
         return v
 
-    @field_validator("difficulty")
-    @classmethod
-    def validate_difficulty(cls, v: str) -> str:
-        """difficulty가 허용된 값인지 확인."""
-        allowed = {"상", "중", "하"}
-        if v not in allowed:
-            raise ValueError(f"difficulty={v!r} 는 허용되지 않습니다. 허용값: {allowed}")
-        return v
-
     class Config:
         """Pydantic 설정."""
 
@@ -111,12 +86,10 @@ class BlueprintDocument(BaseModel):
                 "lecture_id": "2026-02-11_kdt-backend-21th",
                 "week": 21,
                 "concept": "UNION",
-                "sentence_types": "definition",
-                "learning_goal": "UNION의 개념과 정의를 이해한다",
-                "question_type_candidates": ["mcq_definition", "fill_blank", "ox_quiz"],
-                "difficulty": "중",
+                "definition": "두 SELECT 결과를 세로로 병합하면서 중복 행을 제거하는 집합 연산자이다.",
+                "importance": 0.87,
+                "related_concepts": ["concept_join", "concept_cast"],
                 "chunk_distance_minutes": 23.5,
-                "review_point": "UNION의 핵심 정의와 역할 복습",
                 "evidence": {
                     "chunk_ids": ["S01-C02"],
                     "correct_facts": [
