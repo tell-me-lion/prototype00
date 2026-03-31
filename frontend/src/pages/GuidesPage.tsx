@@ -1,56 +1,108 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { WeekSummary, ProcessingStatus } from '../types/models'
 import { fetchWeeks, triggerWeekProcess, ApiError } from '../services/api'
 import { ErrorCard } from '../components/Skeleton'
 import { ProcessingStatus as ProcessingStatusUI } from '../components/ProcessingStatus'
 
+// ── useCountUp (Dashboard 패턴 재사용) ──
+
+function useCountUp(target: number, duration = 600) {
+  const [value, setValue] = useState(0)
+  const rafRef = useRef(0)
+
+  useEffect(() => {
+    if (target === 0) { setValue(0); return }
+    const start = performance.now()
+    const animate = (now: number) => {
+      const elapsed = now - start
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setValue(Math.round(eased * target))
+      if (progress < 1) rafRef.current = requestAnimationFrame(animate)
+    }
+    rafRef.current = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [target, duration])
+
+  return value
+}
+
+// ── 그래디언트 헬퍼 ──
+
+function getGuideGradient(week: number): string {
+  const hues = [210, 25, 170, 340]
+  const baseHue = hues[(week - 1) % hues.length]
+  return `linear-gradient(135deg, hsl(${baseHue}, 55%, 38%), hsl(${baseHue + 35}, 45%, 28%))`
+}
+
+// ── StatCard ──
+
+interface StatCardProps {
+  label: string
+  value: number
+  accent: string
+  delay: number
+}
+
+function StatCard({ label, value, accent, delay }: StatCardProps) {
+  const display = useCountUp(value)
+  return (
+    <div className="tml-guide-stat tml-dashboard-stagger" style={{ animationDelay: `${delay}ms` }}>
+      <div className="tml-guide-stat__dot" style={{ background: accent }} />
+      <span className="tml-guide-stat__label">{label}</span>
+      <span className="tml-guide-stat__value">{display}</span>
+    </div>
+  )
+}
+
 // ── GuideCard ──
 
 interface GuideCardProps {
   weekSummary: WeekSummary
   status: ProcessingStatus
+  index: number
   onProcess: (week: number) => void
   onViewResults: (week: number) => void
   onProcessComplete: (week: number) => void
   onProcessError: (week: number) => void
 }
 
-function GuideCard({ weekSummary, status, onProcess, onViewResults, onProcessComplete, onProcessError }: GuideCardProps) {
+function GuideCard({ weekSummary, status, index, onProcess, onViewResults, onProcessComplete, onProcessError }: GuideCardProps) {
   const { week, lecture_count, completed_count, date_range } = weekSummary
+  const gradient = getGuideGradient(week)
+  const percent = lecture_count > 0 ? Math.round((completed_count / lecture_count) * 100) : 0
 
   return (
-    <div className="tml-card tml-animate" style={{ padding: '24px 28px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
-            <span className="badge-orange">{week}주차</span>
-            <span style={{
-              fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', color: 'var(--tml-ink-muted)',
-            }}>
-              {date_range}
-            </span>
-          </div>
-          <h3 style={{
-            fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: '1.125rem',
-            color: 'var(--tml-ink)', margin: '0 0 6px',
-          }}>
-            {week}주차 학습 가이드
-          </h3>
-          <p style={{
-            fontFamily: 'var(--font-body)', fontSize: '0.8125rem', color: 'var(--tml-ink-muted)',
-            margin: 0,
-          }}>
-            {lecture_count}개 강의 · {completed_count}개 분석 완료
-          </p>
+    <div
+      className="tml-guide-card tml-dashboard-stagger"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
+      {/* 그래디언트 헤더 */}
+      <div className="tml-guide-card__gradient" style={{ background: gradient }}>
+        <span className="tml-guide-card__week-badge">W{week}</span>
+        <span className="tml-guide-card__date-badge">{date_range}</span>
+      </div>
+
+      {/* 본문 */}
+      <div className="tml-guide-card__body">
+        <h3 className="tml-guide-card__title">{week}주차 학습 가이드</h3>
+        <p className="tml-guide-card__meta">
+          {lecture_count}개 강의 · {completed_count}개 분석 완료
+        </p>
+
+        {/* 프로그레스 바 */}
+        <div className="tml-guide-card__progress">
+          <div
+            className="tml-guide-card__progress-fill"
+            style={{ width: `${percent}%` }}
+          />
         </div>
 
-        <div style={{ flexShrink: 0 }}>
+        {/* 액션 */}
+        <div className="tml-guide-card__footer">
           {status === 'completed' ? (
-            <button
-              className="btn-primary"
-              onClick={() => onViewResults(week)}
-            >
+            <button className="btn-primary" onClick={() => onViewResults(week)}>
               가이드 보기 →
             </button>
           ) : status === 'processing' ? (
@@ -127,20 +179,24 @@ export function GuidesPage() {
 
   const getEffectiveStatus = (ws: WeekSummary): ProcessingStatus => {
     if (processingWeeks.has(ws.week)) return 'processing'
-    // 백엔드 버그 보정: 일부 idle + 일부 completed 시 processing으로 오는 문제
     if (ws.status === 'processing' && !processingWeeks.has(ws.week)) return 'idle'
     return ws.status
   }
 
+  // 통계 산출
+  const totalWeeks = weeks.length
+  const completedGuides = weeks.filter((w) => getEffectiveStatus(w) === 'completed').length
+  const totalAnalyzed = weeks.reduce((sum, w) => sum + w.completed_count, 0)
+
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 40px 80px' }}>
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '40px 40px 80px' }}>
       {/* 페이지 헤더 */}
       <div className="tml-animate">
         <p style={{
           fontFamily: 'var(--font-body)',
-          fontSize: '0.6875rem',
+          fontSize: '0.75rem',
           fontWeight: 600,
-          color: 'var(--tml-navy-mid)',
+          color: 'var(--tml-orange)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           margin: '0 0 8px',
@@ -161,9 +217,9 @@ export function GuidesPage() {
 
       {/* 로딩 */}
       {loading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {[1, 2].map((i) => (
-            <div key={i} className="tml-skeleton" style={{ height: 100, borderRadius: 6 }} />
+        <div className="tml-guide-grid">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="tml-skeleton" style={{ height: 200, borderRadius: 6 }} />
           ))}
         </div>
       )}
@@ -173,7 +229,7 @@ export function GuidesPage() {
         <ErrorCard message={error} title="학습 가이드 로드 실패" />
       )}
 
-      {/* 가이드 목록 */}
+      {/* 콘텐츠 */}
       {!loading && !error && (
         weeks.length === 0 ? (
           <div style={{ padding: '48px 24px', textAlign: 'center' }}>
@@ -184,19 +240,30 @@ export function GuidesPage() {
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {weeks.map((ws) => (
-              <GuideCard
-                key={ws.week}
-                weekSummary={ws}
-                status={getEffectiveStatus(ws)}
-                onProcess={handleProcess}
-                onViewResults={(w) => navigate(`/weekly/${w}`)}
-                onProcessComplete={handleProcessComplete}
-                onProcessError={handleProcessError}
-              />
-            ))}
-          </div>
+          <>
+            {/* 스탯 배너 */}
+            <div className="tml-guide-stats">
+              <StatCard label="전체 주차" value={totalWeeks} accent="var(--tml-orange)" delay={0} />
+              <StatCard label="완료된 가이드" value={completedGuides} accent="var(--tml-navy-mid)" delay={80} />
+              <StatCard label="분석 완료 강의" value={totalAnalyzed} accent="var(--tml-quiz)" delay={160} />
+            </div>
+
+            {/* 가이드 그리드 */}
+            <div className="tml-guide-grid">
+              {weeks.map((ws, i) => (
+                <GuideCard
+                  key={ws.week}
+                  weekSummary={ws}
+                  status={getEffectiveStatus(ws)}
+                  index={i}
+                  onProcess={handleProcess}
+                  onViewResults={(w) => navigate(`/weekly/${w}`)}
+                  onProcessComplete={handleProcessComplete}
+                  onProcessError={handleProcessError}
+                />
+              ))}
+            </div>
+          </>
         )
       )}
     </main>

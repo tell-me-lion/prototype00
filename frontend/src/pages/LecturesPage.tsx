@@ -591,7 +591,7 @@ export function LecturesPage() {
       <div className="tml-animate">
         <p style={{
           fontFamily: 'var(--font-body)',
-          fontSize: '0.6875rem',
+          fontSize: '0.75rem',
           fontWeight: 600,
           color: 'var(--tml-orange)',
           letterSpacing: '0.1em',

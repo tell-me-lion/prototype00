@@ -22,7 +22,7 @@ export function ConceptCard({ concept }: ConceptCardProps) {
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '0.6875rem',
+            fontSize: '0.75rem',
             color: 'var(--tml-ink-muted)',
           }}>
             {concept.lecture_id}

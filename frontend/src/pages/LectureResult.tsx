@@ -114,7 +114,7 @@ export function LectureResult() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -123,7 +123,7 @@ export function LectureResult() {
   // ── 존재하지 않는 강의 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
           ← 강의 목록
         </button>
@@ -146,7 +146,7 @@ export function LectureResult() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
           ← 강의 목록
         </button>
@@ -161,7 +161,7 @@ export function LectureResult() {
   if (state.tag === 'not-processed') {
     const { lecture } = state
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
           ← 강의 목록
         </button>
@@ -215,7 +215,7 @@ export function LectureResult() {
   if (state.tag === 'processing') {
     const { lecture } = state
     return (
-      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
         <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
           ← 강의 목록
         </button>
@@ -240,7 +240,7 @@ export function LectureResult() {
   const { concepts, learning_points, quizzes } = outputs
 
   return (
-    <main style={{ maxWidth: 1120, margin: '0 auto', padding: '56px 40px 80px' }}>
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
       {/* 뒤로가기 */}
       <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
         ← 강의 목록
@@ -264,12 +264,12 @@ export function LectureResult() {
           >
             {label}
             {key === 'concepts' && (
-              <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', color: 'var(--tml-ink-muted)' }}>
+              <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)' }}>
                 {concepts.length}
               </span>
             )}
             {key === 'learning-points' && (
-              <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: '0.6875rem', color: 'var(--tml-ink-muted)' }}>
+              <span style={{ marginLeft: 6, fontFamily: 'var(--font-mono)', fontSize: '0.75rem', color: 'var(--tml-ink-muted)' }}>
                 {learning_points.length}
               </span>
             )}
@@ -357,7 +357,7 @@ function LectureHeader({ lecture, outputs }: LectureHeaderProps) {
     <div>
       <p style={{
         fontFamily: 'var(--font-body)',
-        fontSize: '0.6875rem',
+        fontSize: '0.75rem',
         fontWeight: 600,
         color: 'var(--tml-orange)',
         letterSpacing: '0.1em',
@@ -434,7 +434,7 @@ function StatChip({ label, value }: StatChipProps) {
       </div>
       <div style={{
         fontFamily: 'var(--font-body)',
-        fontSize: '0.6875rem',
+        fontSize: '0.75rem',
         color: 'var(--tml-ink-muted)',
         marginTop: 2,
       }}>
