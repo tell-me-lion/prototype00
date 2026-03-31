@@ -88,16 +88,16 @@ def _validate_week(week: int) -> int:
 
 
 @router.get("/lectures", response_model=list[LectureCatalog])
-def get_lectures():
+async def get_lectures():
     """전체 강의 목록 (data/raw/ 스캔)."""
-    return load_lectures()
+    return await asyncio.to_thread(load_lectures)
 
 
 @router.get("/lectures/{lecture_id}", response_model=LectureCatalog)
-def get_lecture(lecture_id: str):
+async def get_lecture(lecture_id: str):
     """단일 강의 상세. 없으면 404."""
     _validate_lecture_id(lecture_id)
-    lectures = load_lectures()
+    lectures = await asyncio.to_thread(load_lectures)
     for lec in lectures:
         if lec.lecture_id == lecture_id:
             return lec
@@ -105,16 +105,16 @@ def get_lecture(lecture_id: str):
 
 
 @router.get("/weeks", response_model=list[WeekSummary])
-def get_weeks():
+async def get_weeks():
     """존재하는 주차 목록 (빈 주차 제외)."""
-    return load_weeks()
+    return await asyncio.to_thread(load_weeks)
 
 
 @router.get("/weeks/{week}", response_model=WeekSummary)
-def get_week(week: int):
+async def get_week(week: int):
     """특정 주차 상세. 없으면 404."""
     _validate_week(week)
-    weeks = load_weeks()
+    weeks = await asyncio.to_thread(load_weeks)
     for w in weeks:
         if w.week == week:
             return w
