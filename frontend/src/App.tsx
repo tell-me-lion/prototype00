@@ -131,7 +131,7 @@ function App() {
       {/* 브레드크럼 (상세 페이지에서만) */}
       {showBreadcrumb && (
         <div style={{
-          maxWidth: 1280, margin: '0 auto', padding: '20px 40px 0',
+          maxWidth: 1280, margin: '0 auto', padding: '28px 40px 20px',
         }}>
           <NavBreadcrumb />
         </div>
