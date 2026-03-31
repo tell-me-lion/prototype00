@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { ConceptCard } from '../components/ConceptCard'
 import { SkeletonGroup, ErrorCard } from '../components/Skeleton'
 import { ProcessingStatus } from '../components/ProcessingStatus'
@@ -29,8 +29,6 @@ const SECTION_TABS: { key: ResultSection; label: string }[] = [
 
 export function LectureResult() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
-
   const [state, setState] = useState<PageState>({ tag: 'loading' })
   const [activeSection, setActiveSection] = useState<ResultSection>('concepts')
 
@@ -114,7 +112,7 @@ export function LectureResult() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -123,11 +121,8 @@ export function LectureResult() {
   // ── 존재하지 않는 강의 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
-          ← 강의 목록
-        </button>
-        <div className="tml-animate" style={{ marginTop: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate">
           <ErrorCard message="존재하지 않는 강의입니다. 강의 ID를 확인해 주세요." />
           <div style={{ marginTop: 20 }}>
             <Link
@@ -146,11 +141,8 @@ export function LectureResult() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
-          ← 강의 목록
-        </button>
-        <div className="tml-animate" style={{ marginTop: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate">
           <ErrorCard message={state.message} />
         </div>
       </main>
@@ -161,12 +153,8 @@ export function LectureResult() {
   if (state.tag === 'not-processed') {
     const { lecture } = state
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
-          ← 강의 목록
-        </button>
-
-        <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate" style={{ marginBottom: 32 }}>
           <LectureHeader lecture={lecture} />
         </div>
 
@@ -215,12 +203,8 @@ export function LectureResult() {
   if (state.tag === 'processing') {
     const { lecture } = state
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
-          ← 강의 목록
-        </button>
-
-        <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate" style={{ marginBottom: 32 }}>
           <LectureHeader lecture={lecture} />
         </div>
 
@@ -240,14 +224,9 @@ export function LectureResult() {
   const { concepts, learning_points, quizzes } = outputs
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-      {/* 뒤로가기 */}
-      <button className="tml-back-btn tml-animate" onClick={() => navigate('/lectures')}>
-        ← 강의 목록
-      </button>
-
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
       {/* 강의 헤더 */}
-      <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <div className="tml-animate" style={{ marginBottom: 32 }}>
         <LectureHeader lecture={lecture} outputs={outputs} />
       </div>
 

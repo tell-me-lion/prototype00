@@ -21,7 +21,6 @@ type PageState =
 
 export function WeeklyResult() {
   const { week: weekParam } = useParams<{ week: string }>()
-  const navigate = useNavigate()
   const week = Number(weekParam)
 
   const [state, setState] = useState<PageState>({ tag: 'loading' })
@@ -114,7 +113,7 @@ export function WeeklyResult() {
   // ── 로딩 ──
   if (state.tag === 'loading') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
         <SkeletonGroup count={4} variant="card" />
       </main>
     )
@@ -123,11 +122,8 @@ export function WeeklyResult() {
   // ── 404 ──
   if (state.tag === 'not-found') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
-          ← 학습 가이드
-        </button>
-        <div className="tml-animate" style={{ marginTop: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate">
           <ErrorCard message="존재하지 않는 주차입니다. 학습 가이드에서 주차를 선택해 주세요." />
           <div style={{ marginTop: 20 }}>
             <Link
@@ -146,11 +142,8 @@ export function WeeklyResult() {
   // ── 에러 ──
   if (state.tag === 'error') {
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
-          ← 학습 가이드
-        </button>
-        <div className="tml-animate" style={{ marginTop: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate">
           <ErrorCard message={state.message} />
         </div>
       </main>
@@ -165,12 +158,8 @@ export function WeeklyResult() {
     const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
-          ← 학습 가이드
-        </button>
-
-        <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate" style={{ marginBottom: 32 }}>
           <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
         </div>
 
@@ -212,12 +201,8 @@ export function WeeklyResult() {
     const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
     return (
-      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-        <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
-          ← 학습 가이드
-        </button>
-
-        <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
+        <div className="tml-animate" style={{ marginBottom: 32 }}>
           <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
         </div>
 
@@ -270,14 +255,9 @@ export function WeeklyResult() {
   const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
   return (
-    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '56px 40px 80px' }}>
-      {/* 뒤로가기 */}
-      <button className="tml-back-btn tml-animate" onClick={() => navigate('/guides')}>
-        ← 학습 가이드
-      </button>
-
+    <main style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 40px 80px' }}>
       {/* 주차 헤더 */}
-      <div className="tml-animate" style={{ marginTop: 24, marginBottom: 32 }}>
+      <div className="tml-animate" style={{ marginBottom: 32 }}>
         <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
       </div>
 
