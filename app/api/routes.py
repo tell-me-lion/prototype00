@@ -141,6 +141,12 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
     if not job:
         return
     try:
+        # 처리 시작 마커 파일 생성 — 새로고침 후에도 processing 상태 감지 가능하게
+        from pipeline.paths import DATA_PHASE1_SESSIONS
+        marker = DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.touch()
+
         # Step 0: 전처리 (Phase 1~5)
         job.steps[0]["status"] = "running"
         await asyncio.to_thread(_exec_preprocess, lecture_id)
