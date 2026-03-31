@@ -2631,20 +2631,29 @@ body::after {
   padding: 14px 16px;
 }
 
-/* ── 분석 대기 섹션 강조 (애니메이션 보더 + 글로우) ── */
+/* ── 분석 대기 섹션 강조 (애니메이션 보더 + 유기적 글로우) ── */
 .tml-right-panel__section--queue {
   position: relative;
   border: 2px solid transparent;
   background:
-    linear-gradient(135deg, rgba(255, 107, 0, 0.04), rgba(255, 180, 80, 0.06), rgba(255, 107, 0, 0.03)) padding-box,
-    conic-gradient(from var(--queue-angle, 0deg), var(--tml-orange), rgba(255, 180, 80, 0.6), var(--tml-orange-dark), rgba(255, 140, 0, 0.4), var(--tml-orange)) border-box;
+    linear-gradient(to bottom, #fff, #fefefe) padding-box,
+    conic-gradient(from var(--queue-angle, 0deg),
+      var(--tml-orange) 0%,
+      rgba(255, 180, 80, 0.45) 15%,
+      var(--tml-orange-dark) 30%,
+      rgba(255, 140, 0, 0.3) 45%,
+      var(--tml-orange) 55%,
+      rgba(255, 180, 80, 0.7) 70%,
+      var(--tml-orange-dark) 85%,
+      var(--tml-orange) 100%
+    ) border-box;
   border-radius: 12px;
   padding: 18px 18px;
   box-shadow:
-    0 0 16px rgba(255, 107, 0, 0.12),
-    0 0 32px rgba(255, 107, 0, 0.06),
-    0 4px 20px rgba(255, 107, 0, 0.08);
-  animation: queue-border-rotate 4s linear infinite, queue-glow-pulse 3s ease-in-out infinite;
+    4px 2px 18px rgba(255, 107, 0, 0.10),
+    -3px 4px 24px rgba(255, 160, 60, 0.08),
+    0 -2px 14px rgba(255, 107, 0, 0.05);
+  animation: queue-border-rotate 4s linear infinite, queue-glow-drift 5s ease-in-out infinite;
   transform: scale(1.02);
 }
 
@@ -2658,52 +2667,94 @@ body::after {
   to { --queue-angle: 360deg; }
 }
 
-@keyframes queue-glow-pulse {
-  0%, 100% {
+/* 비대칭 글로우: 각 방향 shadow가 따로 움직이는 느낌 */
+@keyframes queue-glow-drift {
+  0% {
     box-shadow:
-      0 0 16px rgba(255, 107, 0, 0.12),
-      0 0 32px rgba(255, 107, 0, 0.06),
-      0 4px 20px rgba(255, 107, 0, 0.08);
+      4px 2px 18px rgba(255, 107, 0, 0.10),
+      -3px 4px 24px rgba(255, 160, 60, 0.08),
+      0 -2px 14px rgba(255, 107, 0, 0.05);
+  }
+  25% {
+    box-shadow:
+      -2px 5px 22px rgba(255, 140, 0, 0.14),
+      4px -3px 16px rgba(255, 107, 0, 0.06),
+      2px 2px 28px rgba(255, 180, 80, 0.10);
   }
   50% {
     box-shadow:
-      0 0 24px rgba(255, 107, 0, 0.22),
-      0 0 48px rgba(255, 107, 0, 0.10),
-      0 6px 28px rgba(255, 107, 0, 0.14);
+      0 -4px 20px rgba(255, 107, 0, 0.12),
+      5px 3px 26px rgba(255, 160, 60, 0.10),
+      -4px 0 18px rgba(255, 140, 0, 0.07);
+  }
+  75% {
+    box-shadow:
+      3px -2px 24px rgba(255, 180, 80, 0.11),
+      -5px 4px 16px rgba(255, 107, 0, 0.08),
+      0 5px 22px rgba(255, 140, 0, 0.13);
+  }
+  100% {
+    box-shadow:
+      4px 2px 18px rgba(255, 107, 0, 0.10),
+      -3px 4px 24px rgba(255, 160, 60, 0.08),
+      0 -2px 14px rgba(255, 107, 0, 0.05);
   }
 }
 
-/* 선택된 강의가 있을 때 글로우 폭발 */
+/* 선택된 강의가 있을 때 글로우 강화 */
 .tml-right-panel__section--queue.tml-right-panel__section--has-items {
-  border-width: 3px;
-  box-shadow:
-    0 0 24px rgba(255, 107, 0, 0.25),
-    0 0 48px rgba(255, 107, 0, 0.12),
-    0 8px 32px rgba(255, 107, 0, 0.16);
-  animation: queue-border-rotate 3s linear infinite, queue-glow-pulse-active 2s ease-in-out infinite;
-  transform: scale(1.04);
+  border-width: 2.5px;
+  animation: queue-border-rotate 3s linear infinite, queue-glow-drift-active 4s ease-in-out infinite;
+  transform: scale(1.03);
 }
 
-@keyframes queue-glow-pulse-active {
-  0%, 100% {
+@keyframes queue-glow-drift-active {
+  0% {
     box-shadow:
-      0 0 24px rgba(255, 107, 0, 0.25),
-      0 0 48px rgba(255, 107, 0, 0.12),
-      0 8px 32px rgba(255, 107, 0, 0.16);
+      5px 3px 24px rgba(255, 107, 0, 0.18),
+      -4px 5px 32px rgba(255, 160, 60, 0.14),
+      0 -3px 20px rgba(255, 107, 0, 0.08);
+  }
+  25% {
+    box-shadow:
+      -3px 6px 28px rgba(255, 140, 0, 0.22),
+      5px -4px 22px rgba(255, 107, 0, 0.10),
+      3px 2px 36px rgba(255, 180, 80, 0.16);
   }
   50% {
     box-shadow:
-      0 0 36px rgba(255, 107, 0, 0.35),
-      0 0 64px rgba(255, 107, 0, 0.18),
-      0 10px 40px rgba(255, 107, 0, 0.22);
+      0 -5px 26px rgba(255, 107, 0, 0.18),
+      6px 4px 34px rgba(255, 160, 60, 0.16),
+      -5px 0 24px rgba(255, 140, 0, 0.12);
+  }
+  75% {
+    box-shadow:
+      4px -3px 30px rgba(255, 180, 80, 0.17),
+      -6px 5px 22px rgba(255, 107, 0, 0.13),
+      0 6px 28px rgba(255, 140, 0, 0.20);
+  }
+  100% {
+    box-shadow:
+      5px 3px 24px rgba(255, 107, 0, 0.18),
+      -4px 5px 32px rgba(255, 160, 60, 0.14),
+      0 -3px 20px rgba(255, 107, 0, 0.08);
   }
 }
 
 /* 다크 모드 오버라이드 */
 [data-theme="dark"] .tml-right-panel__section--queue {
   background:
-    linear-gradient(135deg, rgba(255, 107, 0, 0.08), rgba(255, 140, 0, 0.05), rgba(255, 107, 0, 0.06)) padding-box,
-    conic-gradient(from var(--queue-angle, 0deg), var(--tml-orange), rgba(255, 180, 80, 0.6), var(--tml-orange-dark), rgba(255, 140, 0, 0.4), var(--tml-orange)) border-box;
+    linear-gradient(to bottom, rgba(30, 30, 35, 1), rgba(28, 28, 32, 1)) padding-box,
+    conic-gradient(from var(--queue-angle, 0deg),
+      var(--tml-orange) 0%,
+      rgba(255, 180, 80, 0.45) 15%,
+      var(--tml-orange-dark) 30%,
+      rgba(255, 140, 0, 0.3) 45%,
+      var(--tml-orange) 55%,
+      rgba(255, 180, 80, 0.7) 70%,
+      var(--tml-orange-dark) 85%,
+      var(--tml-orange) 100%
+    ) border-box;
 }
 
 /* 빈 상태 안내 강화 */
@@ -2713,16 +2764,6 @@ body::after {
   align-items: center;
   gap: 6px;
   padding: 12px 0 4px;
-}
-
-.tml-right-panel__hint-icon {
-  font-size: 1.5rem;
-  animation: queue-hint-bounce 2s ease-in-out infinite;
-}
-
-@keyframes queue-hint-bounce {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-6px); }
 }
 
 .tml-right-panel__hint-text {
