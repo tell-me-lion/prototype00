@@ -7,7 +7,6 @@ on:
       - 'app/**'
       - 'pipeline/**'
       - 'config/**'
-      - 'data/dummy/**'
       - 'requirements.txt'
       - 'scripts/**'
 
@@ -15,17 +14,38 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if requirements.txt changed
+        id: req_check
+        run: |
+          if git diff HEAD~1 --name-only | grep -q '^requirements.txt$'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: REQ_CHANGED
           script: |
             cd ~/wonder-girls
             git pull origin main
             source venv/bin/activate
-            pip install -r requirements.txt --quiet
+            if [ "$REQ_CHANGED" = "true" ]; then
+              echo "requirements.txt 변경 감지 — pip install 실행"
+              pip install -r requirements.txt --quiet
+            else
+              echo "requirements.txt 변경 없음 — pip install 건너뜀"
+            fi
             sudo systemctl restart tellmelion
             sleep 2
             curl -sf http://localhost:8000/health
+        env:
+          REQ_CHANGED: ${{ steps.req_check.outputs.changed }}
