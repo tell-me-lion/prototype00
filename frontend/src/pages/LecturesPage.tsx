@@ -341,7 +341,6 @@ function RightPanel({
         </p>
         {selectedLectures.length === 0 ? (
           <div className="tml-right-panel__hint">
-            <span className="tml-right-panel__hint-icon">👈</span>
             <p className="tml-right-panel__hint-text">왼쪽 강의를 클릭해서 선택하세요</p>
           </div>
         ) : (
