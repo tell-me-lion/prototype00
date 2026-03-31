@@ -51,6 +51,11 @@ MIN_SOURCE_CHUNKS = 2
 """STT 노이즈 필터: 최소 N개 이상의 청크에 등장한 개념만 유지.
 단일 청크에만 등장하는 오타(바바, 역슬러시, 아이오 등)를 제거."""
 
+MIN_IMPORTANCE = 0.1
+"""최종 출력 개념의 최소 importance 점수.
+facts 주어 추출로 들어온 저신호 후보(importance=TFIDF_THRESHOLD 수준)를 걸러낸다.
+(v12: 추가. 0.026 클러스터 — fragment/compound 노이즈 제거)"""
+
 
 # ================== 개념 추출 ==================
 
@@ -104,8 +109,12 @@ def extract_concepts(
     used_definitions: set[str] = set()
 
     # 중요도 높은 개념부터 definition을 먼저 배정받도록 정렬
+    # MIN_IMPORTANCE 이상인 개념만 유지 (0.026 노이즈 클러스터 제거)
     sorted_keywords = sorted(
-        keywords_pool.items(),
+        [
+            item for item in keywords_pool.items()
+            if importance_scores.get(item[0], 0.0) >= MIN_IMPORTANCE
+        ],
         key=lambda item: importance_scores.get(item[0], 0.0),
         reverse=True,
     )
@@ -113,14 +122,16 @@ def extract_concepts(
     # 3단계: ConceptDocument 생성
     concepts = []
     for keyword, metadata in sorted_keywords:
-        concept_id = _make_concept_id(keyword)
+        # canonical form: keywords_pool에 저장된 선호 표기 사용 (대소문자 정규화)
+        concept_name = metadata.get("_canonical", keyword)
+        concept_id = _make_concept_id(concept_name)
         definition = _pick_definition(keyword, chunks, used_definitions)
 
         importance = importance_scores.get(keyword, 0.0)
 
         doc = ConceptDocument(
             concept_id=concept_id,
-            concept=keyword,
+            concept=concept_name,
             definition=definition,
             related_concepts=[],  # 4단계에서 추가
             source_chunk_ids=sorted(metadata["chunks"]),
@@ -231,11 +242,21 @@ def _collect_keywords(chunks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]
         }
     """
     # ── 1단계: 강의 전체 TF-IDF 어휘 구축 (청크 경계 무시) ──
-    global_vocab: dict[str, float] = {}
+    # 소문자 키로 중복 제거: "io"/"IO", "nio"/"NIO" 등 케이스 변형 통합
+    # canonical_form: 동일 개념의 여러 표기 중 TF-IDF 점수가 가장 높은 형태를 선택
+    global_vocab: dict[str, float] = {}          # lowercase key → max score
+    canonical_form: dict[str, str] = {}          # lowercase key → 선호 표기
     for chunk in chunks:
         for keyword, score in chunk.get("tfidf_scores", {}).items():
-            if score >= TFIDF_THRESHOLD and keyword not in STOPWORDS:
-                global_vocab[keyword] = max(global_vocab.get(keyword, 0.0), score)
+            if keyword in STOPWORDS:
+                continue
+            lower = keyword.lower()
+            if lower in STOPWORDS:
+                continue
+            if score >= TFIDF_THRESHOLD:
+                if lower not in global_vocab or score > global_vocab[lower]:
+                    global_vocab[lower] = score
+                    canonical_form[lower] = keyword  # 높은 점수 형태가 canonical
 
     # ── 보조: facts 주어 추출로 TF-IDF 어휘 밖 개념 보완 ──
     # TF-IDF에 없지만 facts에서 주어로 등장하고 충분히 언급되는 개념 구제
@@ -243,35 +264,40 @@ def _collect_keywords(chunks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]
     for chunk in chunks:
         for fact in chunk.get("facts", []):
             subj = _extract_fact_subject(fact)
-            if subj and subj not in global_vocab and subj not in STOPWORDS:
-                fact_subj_candidates.add(subj)
+            if subj and subj not in STOPWORDS:
+                lower_subj = subj.lower()
+                if lower_subj not in global_vocab and lower_subj not in STOPWORDS:
+                    fact_subj_candidates.add(subj)
 
     for subj in fact_subj_candidates:
-        text_freq = sum(1 for c in chunks if subj.lower() in c.get("text", "").lower())
+        lower_subj = subj.lower()
+        text_freq = sum(1 for c in chunks if lower_subj in c.get("text", "").lower())
         if text_freq >= MIN_SOURCE_CHUNKS:
-            global_vocab[subj] = TFIDF_THRESHOLD  # 최소 점수로 삽입
+            global_vocab[lower_subj] = TFIDF_THRESHOLD  # 최소 점수로 삽입
+            canonical_form[lower_subj] = subj
 
     # ── 2단계: 전체 facts에서 어휘별 주어 출현 검색 (청크 경계 무시) ──
     keywords_pool: dict[str, dict[str, Any]] = {}
 
-    for keyword, max_tfidf in global_vocab.items():
+    for lower_kw, max_tfidf in global_vocab.items():
         for chunk in chunks:
             for fact in chunk.get("facts", []):
-                is_valid = _is_subject_of(keyword, fact)
+                is_valid = _is_subject_of(lower_kw, fact)
                 if not is_valid and max_tfidf >= TFIDF_HIGH_THRESHOLD:
-                    is_valid = _has_particle_match(keyword, fact, DEFINITION_SUFFIXES)
+                    is_valid = _has_particle_match(lower_kw, fact, DEFINITION_SUFFIXES)
 
                 if not is_valid:
                     continue
 
-                if keyword not in keywords_pool:
-                    keywords_pool[keyword] = {
+                if lower_kw not in keywords_pool:
+                    keywords_pool[lower_kw] = {
                         "freq": 0,
                         "max_tfidf": max_tfidf,
                         "chunks": set(),
+                        "_canonical": canonical_form.get(lower_kw, lower_kw),
                     }
-                keywords_pool[keyword]["freq"] += 1
-                keywords_pool[keyword]["chunks"].add(chunk["chunk_id"])
+                keywords_pool[lower_kw]["freq"] += 1
+                keywords_pool[lower_kw]["chunks"].add(chunk["chunk_id"])
 
     return keywords_pool
 
