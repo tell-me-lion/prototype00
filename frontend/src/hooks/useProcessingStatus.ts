@@ -52,6 +52,8 @@ export function useProcessingStatus({
 
     async function poll() {
       if (stopped) return
+      const target = lectureId ? `lecture:${lectureId}` : `week:${week}`
+      console.log(`[폴링] ${target} — 상태 조회 중... (재시도: ${retryCount})`)
       try {
         const result = lectureId
           ? await fetchLectureStatus(lectureId)
@@ -60,24 +62,29 @@ export function useProcessingStatus({
 
         retryCount = 0
         setStatus(result)
+        console.log(`[폴링] ${target} — 응답:`, result.status, result.steps ?? '', result.error_message ?? '')
 
         if (result.status === 'completed') {
+          console.log(`[폴링] ${target} — 완료!`)
           onCompleteRef.current?.()
           return
         }
         if (result.status === 'error') {
           const msg = result.error_message ?? '처리 중 오류가 발생했습니다.'
+          console.error(`[폴링] ${target} — 백엔드 에러:`, msg)
           setError(msg)
           onErrorRef.current?.(msg)
           return
         }
 
         timer = setTimeout(poll, interval)
-      } catch {
+      } catch (err) {
         if (stopped) return
         retryCount++
+        console.error(`[폴링] ${target} — 네트워크/요청 실패 (${retryCount}/${MAX_RETRIES}):`, err)
         if (retryCount >= MAX_RETRIES) {
           const msg = '서버와 연결할 수 없습니다. 네트워크를 확인해주세요.'
+          console.error(`[폴링] ${target} — 최대 재시도 초과, 에러로 전환`)
           setError(msg)
           onErrorRef.current?.(msg)
           return
