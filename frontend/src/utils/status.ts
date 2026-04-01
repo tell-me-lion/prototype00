@@ -18,7 +18,7 @@ export function getEffectiveLectureStatus(
 /**
  * 주차의 실제 처리 상태를 반환한다.
  * - 로컬 processingSet에 있으면 'processing'
- * - 서버가 processing인데 로컬에 없으면 'idle' (이전 세션 잔여)
+ * - 서버가 processing이면 'processing' (다른 세션에서 시작한 경우 포함)
  * - 그 외: 서버 상태
  */
 export function getEffectiveWeekStatus(
@@ -27,6 +27,6 @@ export function getEffectiveWeekStatus(
   processingSet: Set<number>,
 ): ProcessingStatus {
   if (processingSet.has(week)) return 'processing'
-  if (serverStatus === 'processing' && !processingSet.has(week)) return 'idle'
+  if (serverStatus === 'processing') return 'processing'
   return serverStatus
 }

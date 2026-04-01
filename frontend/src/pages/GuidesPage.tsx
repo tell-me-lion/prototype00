@@ -157,7 +157,7 @@ export function GuidesPage() {
 
   const getEffectiveStatus = (ws: WeekSummary): ProcessingStatus => {
     if (processingWeeks.has(ws.week)) return 'processing'
-    if (ws.status === 'processing' && !processingWeeks.has(ws.week)) return 'idle'
+    if (ws.status === 'processing') return 'processing'
     return ws.status
   }
 

@@ -12,9 +12,14 @@ interface ProcessingStatusProps {
 }
 
 const DEFAULT_STEPS: ProcessingStep[] = [
-  { name: '영상 분석', status: 'pending' },
-  { name: '텍스트 추출', status: 'pending' },
-  { name: 'AI 분석', status: 'pending' },
+  { name: '전처리', status: 'pending' },
+  { name: '개념 추출', status: 'pending' },
+  { name: '문제 설계', status: 'pending' },
+  { name: '퀴즈 생성', status: 'pending' },
+]
+
+const DEFAULT_WEEK_STEPS: ProcessingStep[] = [
+  { name: '학습 가이드 생성', status: 'pending' },
 ]
 
 function calcPercent(steps: ProcessingStep[]): number {
@@ -59,7 +64,8 @@ export function ProcessingStatus({
     onError,
   })
 
-  const steps = (status?.steps && status.steps.length > 0) ? status.steps : DEFAULT_STEPS
+  const defaultSteps = week !== undefined ? DEFAULT_WEEK_STEPS : DEFAULT_STEPS
+  const steps = (status?.steps && status.steps.length > 0) ? status.steps : defaultSteps
   const percent = calcPercent(steps)
   const elapsed = useElapsed(status?.started_at)
 
