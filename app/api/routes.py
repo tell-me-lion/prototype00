@@ -145,7 +145,7 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
 
     각 단계 출력 파일이 이미 존재하면 해당 단계를 건너뛴다.
     """
-    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_PHASE5_FACTS, DATA_BLUEPRINTS
+    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_BLUEPRINTS
 
     job = await get_lecture_job(lecture_id)
     if not job:
@@ -157,24 +157,17 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
         marker.touch()
         invalidate_catalog_cache()  # 캐시 즉시 만료 → 다음 /api/weeks 요청에서 processing 반환
 
-        # Step 0~4: 전처리 (Phase 1~5)
-        phase5_file = DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
-        if phase5_file.exists():
-            logger.info("[SKIP] Phase 1~5 전처리 — 출력 파일 존재: %s", phase5_file)
-            for i in range(5):
-                job.steps[i]["status"] = "done"
-        else:
-            def progress_callback(phase_num: int, status: str):
-                # phase_num: 1~5 -> steps indices: 0~4
-                idx = phase_num - 1
-                if 0 <= idx < 5:
-                    job.steps[idx]["status"] = status
+        # Step 0~4: 전처리 (Phase 1~5) — 단계별 스킵은 wrapper.py 내부에서 처리
+        def progress_callback(phase_num: int, status: str):
+            idx = phase_num - 1
+            if 0 <= idx < 5:
+                job.steps[idx]["status"] = status
 
-            def phase4_detail_callback(chunks_done: int, total_chunks: int, props_count: int):
-                job.steps[3]["detail"] = f"{chunks_done}/{total_chunks} 단락 | 명제 {props_count}개"
-                logger.info("[Phase 4] 명제 추출 진행: %d/%d 단락, 명제 %d개", chunks_done, total_chunks, props_count)
+        def phase4_detail_callback(chunks_done: int, total_chunks: int, props_count: int):
+            job.steps[3]["detail"] = f"{chunks_done}/{total_chunks} 단락 | 명제 {props_count}개"
+            logger.info("[Phase 4] 명제 추출 진행: %d/%d 단락, 명제 %d개", chunks_done, total_chunks, props_count)
 
-            await asyncio.to_thread(_exec_preprocess, lecture_id, progress_callback, phase4_detail_callback)
+        await asyncio.to_thread(_exec_preprocess, lecture_id, progress_callback, phase4_detail_callback)
 
         # Step 5: 개념 추출 (EP)
         ep_file = DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"
