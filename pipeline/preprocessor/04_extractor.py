@@ -126,26 +126,37 @@ class FactExtractor:
                 return []
 
         elif self.use_gemini and self.client:
-            try:
-                response = self.client.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=self.gen_config
-                )
-                time.sleep(2)
+            max_retries = 3
+            for attempt in range(max_retries + 1):
+                try:
+                    response = self.client.models.generate_content(
+                        model=self.model_name,
+                        contents=prompt,
+                        config=self.gen_config
+                    )
+                    time.sleep(2)
 
-                res_text = response.text.strip()
-                if res_text.startswith("```json"):
-                    res_text = res_text[7:-3]
-                elif res_text.startswith("```"):
-                    res_text = res_text[3:-3]
+                    res_text = response.text.strip()
+                    if res_text.startswith("```json"):
+                        res_text = res_text[7:-3]
+                    elif res_text.startswith("```"):
+                        res_text = res_text[3:-3]
 
-                parsed = json.loads(res_text.strip())
-                return parsed if isinstance(parsed, list) else []
-            except Exception as e:
-                print(f"[Gemini Error] 추출 실패: {e}")
-                time.sleep(4)
-                return []
+                    parsed = json.loads(res_text.strip())
+                    return parsed if isinstance(parsed, list) else []
+                except json.JSONDecodeError:
+                    return []
+                except Exception as e:
+                    err_str = str(e)
+                    if attempt < max_retries and ("429" in err_str or "503" in err_str or "RESOURCE_EXHAUSTED" in err_str or "UNAVAILABLE" in err_str):
+                        wait_sec = 10.0 * (2 ** attempt)
+                        print(f"[Gemini] 추출 재시도 ({attempt+1}/{max_retries}) — {wait_sec:.0f}초 대기: {err_str[:80]}")
+                        time.sleep(wait_sec)
+                    else:
+                        print(f"[Gemini Error] 추출 실패: {e}")
+                        time.sleep(4)
+                        return []
+            return []
                 
         return []
 

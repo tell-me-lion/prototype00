@@ -48,36 +48,57 @@ class SemanticChunker:
             self.model = SentenceTransformer(model_name)
 
     def _get_embeddings(self, texts: list[str]) -> list[list[float]]:
-        """Gemini API 또는 로컬 SBERT를 통해 임베딩 벡터 목록을 반환"""
-        if self.use_gemini_embed:
-            # Gemini Embedding API 한도 보호를 위해 청크 요청 (최대 100개)
-            all_embeddings = []
-            try:
-                for i in range(0, len(texts), 90):
-                    batch_texts = texts[i:i+90]
-                    response = self.gemini_client.models.embed_content(
-                        model=self.embed_model,
-                        contents=batch_texts
-                    )
-                    time.sleep(0.5) # API Rate Limit 회피
-                    
-                    # 만약 embeddings가 리스트라면 extend
-                    if hasattr(response, 'embeddings'):
-                        all_embeddings.extend([emb.values for emb in response.embeddings])
-                    else:
-                        # 예외적으로 단일 결과일 때
-                        all_embeddings.append(response.embeddings.values)
+        """Gemini API 또는 로컬 SBERT를 통해 임베딩 벡터 목록을 반환.
 
-                # 만약 어떤 이유로든 반환 길이가 다르면 패딩처리
-                if len(all_embeddings) != len(texts):
-                    print(f"[Warning] Mismatched embedding length. texts: {len(texts)}, embeds: {len(all_embeddings)}")
-                    return [[0.0]*768 for _ in texts]
-                    
-                return all_embeddings
-            except Exception as e:
-                print(f"[Gemini Embed Error] API 호출 실패: {e}")
-                # 오류 발생 시 임시로 0 벡터 반환 (실패 방지)
-                return [[0.0]*768 for _ in texts]
+        API 429 (rate limit) 발생 시 retryDelay를 준수하여 최대 3회 재시도.
+        재시도 실패 시 RuntimeError를 발생시킨다 (0 벡터 폴백은 청킹을 무력화하므로 금지).
+        """
+        if self.use_gemini_embed:
+            import re as _re
+            all_embeddings = []
+            max_retries = 3
+            for i in range(0, len(texts), 90):
+                batch_texts = texts[i:i+90]
+                last_error = None
+                for attempt in range(max_retries + 1):
+                    try:
+                        response = self.gemini_client.models.embed_content(
+                            model=self.embed_model,
+                            contents=batch_texts
+                        )
+                        time.sleep(0.5)
+                        if hasattr(response, 'embeddings'):
+                            all_embeddings.extend([emb.values for emb in response.embeddings])
+                        else:
+                            all_embeddings.append(response.embeddings.values)
+                        break  # 성공 시 다음 배치로
+                    except Exception as e:
+                        last_error = e
+                        err_str = str(e)
+                        # 429 rate limit: retryDelay 파싱 후 대기
+                        if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
+                            delay_match = _re.search(r"retry(?:Delay)?['\"]?:\s*['\"]?(\d+\.?\d*)", err_str)
+                            wait_sec = float(delay_match.group(1)) + 1.0 if delay_match else 15.0 * (attempt + 1)
+                            print(f"[Gemini Embed] 429 rate limit — {wait_sec:.0f}초 대기 후 재시도 ({attempt+1}/{max_retries})")
+                            time.sleep(wait_sec)
+                        elif "503" in err_str or "UNAVAILABLE" in err_str:
+                            wait_sec = 10.0 * (2 ** attempt)
+                            print(f"[Gemini Embed] 503 서비스 불가 — {wait_sec:.0f}초 대기 후 재시도 ({attempt+1}/{max_retries})")
+                            time.sleep(wait_sec)
+                        else:
+                            # 재시도 불가능한 에러
+                            raise RuntimeError(f"임베딩 API 호출 실패 (재시도 불가): {e}") from e
+                else:
+                    # 재시도 모두 소진
+                    raise RuntimeError(
+                        f"임베딩 API 호출 {max_retries}회 재시도 후에도 실패: {last_error}"
+                    )
+
+            if len(all_embeddings) != len(texts):
+                raise RuntimeError(
+                    f"임베딩 결과 길이 불일치: texts={len(texts)}, embeds={len(all_embeddings)}"
+                )
+            return all_embeddings
         else:
             return self.model.encode(texts).tolist()
 

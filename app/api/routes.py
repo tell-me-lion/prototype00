@@ -46,6 +46,9 @@ from app.state import (
 
 router = APIRouter(prefix="/api", tags=["산출물"])
 
+# 강의 파이프라인 동시 실행 제한 (Gemini API rate limit 보호)
+_lecture_semaphore = asyncio.Semaphore(1)
+
 
 def _write_jsonl(path, data: list[dict]) -> None:
     """JSONL 파일 atomic write. 임시 파일에 쓴 후 os.replace()로 교체."""
@@ -144,7 +147,16 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
     """Mode A: 강의 파이프라인 실행 (전처리 → EP → Blueprint → Quiz).
 
     각 단계 출력 파일이 이미 존재하면 해당 단계를 건너뛴다.
+    Semaphore(1)로 동시 실행을 1개로 제한한다 (Gemini API rate limit 보호).
     """
+    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_BLUEPRINTS
+
+    async with _lecture_semaphore:
+        await _run_lecture_pipeline_inner(lecture_id)
+
+
+async def _run_lecture_pipeline_inner(lecture_id: str) -> None:
+    """실제 파이프라인 실행 (Semaphore 내부에서 호출)."""
     from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_BLUEPRINTS
 
     job = await get_lecture_job(lecture_id)
@@ -255,14 +267,25 @@ def _exec_preprocess(
     )
 
 
+def _find_file(directory, lecture_id: str):
+    """디렉터리에서 lecture_id에 매칭되는 JSONL 파일을 찾는다 (정확 → 부분 매칭)."""
+    from pathlib import Path
+    exact = directory / f"{lecture_id}.jsonl"
+    if exact.exists() and exact.stat().st_size > 0:
+        return exact
+    date_part = lecture_id.split("_")[0] if "_" in lecture_id else lecture_id
+    candidates = [p for p in directory.glob(f"*{date_part}*.jsonl") if p.stat().st_size > 0]
+    return candidates[0] if candidates else None
+
+
 def _exec_ep(lecture_id: str) -> None:
     """EP 실행 (개념 + 학습 포인트 추출)."""
     from pipeline.ep.runner import run_ep
     from pipeline.paths import DATA_PHASE5_FACTS
 
-    phase5_file = DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
-    if not phase5_file.exists():
-        raise FileNotFoundError(f"전처리 출력 파일 없음: {phase5_file}")
+    phase5_file = _find_file(DATA_PHASE5_FACTS, lecture_id)
+    if not phase5_file:
+        raise FileNotFoundError(f"전처리 출력 파일 없음: {DATA_PHASE5_FACTS / f'{lecture_id}.jsonl'}")
     run_ep(input_file=phase5_file, out_dir=DATA_EP_CONCEPTS)
 
 
@@ -270,9 +293,9 @@ def _exec_blueprint(lecture_id: str) -> None:
     """Blueprint 실행."""
     from pipeline.blueprint.runner import run_blueprint
 
-    ep_file = DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"
-    if not ep_file.exists():
-        raise FileNotFoundError(f"EP 출력 파일 없음: {ep_file}")
+    ep_file = _find_file(DATA_EP_CONCEPTS, lecture_id)
+    if not ep_file:
+        raise FileNotFoundError(f"EP 출력 파일 없음: {DATA_EP_CONCEPTS / f'{lecture_id}.jsonl'}")
     run_blueprint(input_file=ep_file)
 
 
@@ -284,9 +307,9 @@ def _exec_quiz_generation(
     from pipeline.quiz_generation.runner import run_quiz_generation
     from pipeline.paths import DATA_BLUEPRINTS, DATA_QUIZZES_RAW
 
-    bp_file = DATA_BLUEPRINTS / f"{lecture_id}.jsonl"
-    if not bp_file.exists():
-        raise FileNotFoundError(f"Blueprint 출력 파일 없음: {bp_file}")
+    bp_file = _find_file(DATA_BLUEPRINTS, lecture_id)
+    if not bp_file:
+        raise FileNotFoundError(f"Blueprint 출력 파일 없음: {DATA_BLUEPRINTS / f'{lecture_id}.jsonl'}")
     run_quiz_generation(
         input_file=bp_file,
         output_file=DATA_QUIZZES_RAW / f"{lecture_id}.jsonl",

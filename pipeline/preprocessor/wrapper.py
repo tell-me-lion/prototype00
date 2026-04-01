@@ -150,6 +150,12 @@ def run_preprocess(
     phase5_file = _find_output_file(paths.DATA_PHASE5_FACTS, lecture_id)
     if phase5_file:
         logger.info("[SKIP] Phase 5 — 출력 파일 존재: %s", phase5_file)
+        # SKIP해도 정규화된 파일명이 없으면 복사 수행 (EP 등 후속 단계가 {lecture_id}.jsonl을 기대)
+        canonical = paths.DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
+        if not canonical.exists() and phase5_file != canonical:
+            import shutil
+            shutil.copy2(phase5_file, canonical)
+            logger.info("[Phase 5] 정규화 복사: %s → %s", phase5_file.name, canonical.name)
         if progress_callback:
             progress_callback(5, "done")
     else:
