@@ -47,7 +47,11 @@ def _calculate_week(lecture_date: date, first_date: date) -> int:
 
 def _get_status(lecture_id: str) -> ProcessingStatus:
     """파이프라인 출력 디렉터리를 확인해 처리 상태를 판별."""
-    if (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists():
+    if (
+        (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists()
+        and (DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl").exists()
+        and (DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl").exists()
+    ):
         return ProcessingStatus.completed
     if (DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl").exists():
         return ProcessingStatus.processing
@@ -181,7 +185,7 @@ def load_weeks() -> list[WeekSummary]:
 
         if completed_count == len(week_lectures):
             week_status = ProcessingStatus.completed
-        elif completed_count > 0 or any(l.status == ProcessingStatus.processing for l in week_lectures):
+        elif any(l.status == ProcessingStatus.processing for l in week_lectures):
             week_status = ProcessingStatus.processing
         else:
             week_status = ProcessingStatus.idle
