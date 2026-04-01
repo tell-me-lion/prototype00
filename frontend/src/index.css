@@ -3244,13 +3244,13 @@ body::after {
   gap: 6px;
   padding-left: 10px;
   border-left: 2px solid var(--tml-rule);
-  white-space: nowrap; /* prevent text breaking abruptly */
 }
 
 .tml-processing-substep {
   font-size: 0.8125rem;
   color: var(--tml-ink-muted);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
   transition: color 0.2s ease;
@@ -3273,10 +3273,13 @@ body::after {
 }
 
 .tml-processing-substep__detail {
-  margin-left: 6px;
-  font-size: 0.75rem;
+  display: block;
+  margin-left: 20px; /* icon width 맞춤 */
+  margin-top: 1px;
+  font-size: 0.725rem;
   color: var(--tml-ink-muted);
   font-weight: 400;
+  white-space: normal;
 }
 
 /* R-1: 극소형 모바일(375px) padding 과대 방지 */
