@@ -168,7 +168,7 @@ function StepRow({ step, index }: StepRowProps) {
   const { name, status, subSteps } = step
 
   return (
-    <div className={`tml-processing-step tml-processing-step--${status}`}>
+    <div className={`tml-processing-step tml-processing-step--${status} ${subSteps && subSteps.length > 0 && status !== 'pending' ? 'tml-processing-step--expanded' : ''}`}>
       {/* 단계 아이콘 */}
       <div className="tml-processing-step__icon">
         {status === 'done' ? '✓' : index + 1}

@@ -2949,6 +2949,15 @@ body::after {
   gap: 12px;
 }
 
+.tml-processing-step--expanded {
+  align-items: flex-start;
+}
+
+.tml-processing-step--expanded .tml-processing-step__icon,
+.tml-processing-step--expanded .tml-processing-step__label {
+  margin-top: 2px; /* Slight top offset to visually align with text top */
+}
+
 /* 단계 번호/체크 아이콘 */
 .tml-processing-step__icon {
   width: 28px;
