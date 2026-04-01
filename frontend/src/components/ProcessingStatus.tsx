@@ -178,23 +178,6 @@ function StepRow({ step, index }: StepRowProps) {
       <div className="tml-processing-step__content">
         <span className="tml-processing-step__name">{name}</span>
         
-        {/* 서브 스텝(전처리 상세) - 부모가 pending이 아닐 때 노출 */}
-        {subSteps && subSteps.length > 0 && status !== 'pending' && (
-          <div className="tml-processing-step__substeps">
-            {subSteps.map((sub) => {
-              const subName = sub.name.replace(/Step \d+:\s*/, '')
-              return (
-                <div key={sub.name} className={`tml-processing-substep tml-processing-substep--${sub.status}`}>
-                  <span className="tml-processing-substep__icon">
-                    {sub.status === 'done' ? '✓' : sub.status === 'running' ? '•' : '○'}
-                  </span>
-                  {subName}
-                </div>
-              )
-            })}
-          </div>
-        )}
-
         {status === 'running' && subSteps === undefined && (
           <div className="tml-processing-step__track">
             <div className="tml-processing-step__fill tml-processing-fill--running" />
@@ -206,6 +189,23 @@ function StepRow({ step, index }: StepRowProps) {
       <span className="tml-processing-step__label">
         {status === 'done' ? '완료' : status === 'running' ? '진행 중' : '대기'}
       </span>
+
+      {/* 서브 스텝(전처리 상세) - 부모가 pending이 아닐 때 넓게 쓰기 위해 그리드 외부로 뺌 */}
+      {subSteps && subSteps.length > 0 && status !== 'pending' && (
+        <div className="tml-processing-step__substeps">
+          {subSteps.map((sub) => {
+            const subName = sub.name.replace(/Step \d+:\s*/, '')
+            return (
+              <div key={sub.name} className={`tml-processing-substep tml-processing-substep--${sub.status}`}>
+                <span className="tml-processing-substep__icon">
+                  {sub.status === 'done' ? '✓' : sub.status === 'running' ? '•' : '○'}
+                </span>
+                {subName}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }

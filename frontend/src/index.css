@@ -3309,13 +3309,15 @@ body::after {
 
 /* ── Processing Substeps ── */
 .tml-processing-step__substeps {
-  margin-top: 8px;
-  margin-bottom: 8px;
+  grid-column: 2 / -1;
+  margin-top: -6px; /* pull up closer since it's in next grid row */
+  margin-bottom: 4px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding-left: 10px;
   border-left: 2px solid var(--tml-rule);
+  white-space: nowrap; /* prevent text breaking abruptly */
 }
 
 .tml-processing-substep {
