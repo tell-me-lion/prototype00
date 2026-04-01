@@ -2175,11 +2175,6 @@ body::after {
   margin: 0;
 }
 
-/* ── Activity Heatmap 하단 섹션 ── */
-.tml-heatmap-section {
-  margin-top: 8px;
-}
-
 /* ── 최근 강의 타일 (3열 그리드) ── */
 .tml-recent-grid {
   display: grid;
@@ -2342,115 +2337,7 @@ body::after {
   background: rgba(255, 255, 255, 0.06);
 }
 
-/* ── 활동 히트맵 ── */
-.tml-heatmap__grid {
-  display: flex;
-  gap: 4px;
-}
-
-.tml-heatmap__labels {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding-right: 6px;
-}
-
-.tml-heatmap__day-label {
-  font-family: var(--font-mono);
-  font-size: 0.5625rem;
-  color: var(--tml-ink-muted);
-  height: 14px;
-  display: flex;
-  align-items: center;
-  line-height: 1;
-}
-
-.tml-heatmap__weeks {
-  display: flex;
-  gap: 3px;
-  flex: 1;
-}
-
-.tml-heatmap__week-col {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-@keyframes tml-heatmap-pop {
-  from { opacity: 0; transform: scale(0.5); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-.tml-heatmap__cell {
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-  animation: tml-heatmap-pop 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
-  cursor: pointer;
-  transition: outline 0.1s ease;
-}
-
-.tml-heatmap__cell:hover {
-  outline: 2px solid var(--tml-ink-muted);
-  outline-offset: -1px;
-  box-shadow: 0 0 8px color-mix(in srgb, var(--tml-orange) 30%, transparent);
-}
-
-.tml-heatmap__cell--no-anim {
-  animation: none;
-  cursor: default;
-}
-
-.tml-heatmap__cell--no-anim:hover {
-  outline: none;
-}
-
-.tml-heatmap__cell--empty {
-  visibility: hidden;
-  animation: none;
-}
-
-.tml-heatmap__cell--level-0 { background: var(--tml-bg-overlay); }
-.tml-heatmap__cell--level-1 { background: var(--tml-orange-light); }
-.tml-heatmap__cell--level-2 { background: color-mix(in srgb, var(--tml-orange) 50%, transparent); }
-.tml-heatmap__cell--level-3 { background: var(--tml-orange); }
-
-/* 다크 테마에서 level-1 더 밝게 */
-[data-theme="dark"] .tml-heatmap__cell--level-1 { background: rgba(255, 107, 0, 0.2); }
-[data-theme="dark"] .tml-heatmap__cell--level-2 { background: rgba(255, 107, 0, 0.45); }
-
-.tml-heatmap__tooltip {
-  position: absolute;
-  transform: translate(-50%, -100%);
-  background: var(--tml-navy);
-  color: var(--tml-white);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding: 5px 10px;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 10;
-}
-
-.tml-heatmap__legend {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 10px;
-  justify-content: flex-end;
-}
-
-.tml-heatmap__legend-label {
-  font-family: 'Pretendard', sans-serif;
-  font-size: 0.5625rem;
-  color: var(--tml-ink-muted);
-  padding: 0 2px;
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .tml-heatmap__cell { animation: none; }
   .tml-progress-ring__circle { transition: none; }
   .tml-hero__bar-fill { transition: none; }
 }
