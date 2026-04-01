@@ -62,7 +62,15 @@ export function useProcessingStatus({
 
         retryCount = 0
         setStatus(result)
-        console.log(`[폴링] ${target} — 응답:`, result.status, result.steps ?? '', result.error_message ?? '')
+
+        const steps = result.steps ?? []
+        const doneCount = steps.filter((s) => s.status === 'done').length
+        const isRunning = steps.some((s) => s.status === 'running')
+        const percent = steps.length > 0
+          ? doneCount * Math.floor(100 / steps.length) + (isRunning ? Math.floor(50 / steps.length) : 0)
+          : null
+        const percentLabel = percent !== null ? ` ${percent}% (${doneCount}/${steps.length})` : ''
+        console.log(`[폴링] ${target} — 응답: ${result.status}${percentLabel}`, steps, result.error_message ?? '')
 
         if (result.status === 'completed') {
           console.log(`[폴링] ${target} — 완료!`)

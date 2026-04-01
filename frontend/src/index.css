@@ -3044,6 +3044,53 @@ body::after {
 .tml-processing-step--running .tml-processing-step__label { color: var(--tml-orange); font-weight: 700; }
 .tml-processing-step--done   .tml-processing-step__label { color: var(--tml-correct); }
 
+/* 전체 진행률 헤더 (바 + 퍼센트 + 경과 시간) */
+.tml-processing-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.tml-processing-bar-track {
+  height: 5px;
+  background: var(--tml-bg-overlay);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.tml-processing-bar-fill {
+  height: 100%;
+  background: var(--tml-orange);
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.tml-processing-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tml-processing-percent {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--tml-orange);
+}
+
+.tml-processing-elapsed {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+}
+
+.tml-processing-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 /* 에러 메시지 */
 .tml-processing-error {
   display: flex;

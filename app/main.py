@@ -16,29 +16,45 @@ from app.state import cleanup_expired_jobs
 
 
 def _cleanup_orphaned_markers() -> None:
-    """서버 시작 시 고아 마커 파일 정리.
+    """서버 시작 시 고아 마커 파일 및 중간 산출물 정리.
 
-    파이프라인 실행 중 서버가 비정상 종료(OOM 등)되면 phase1_sessions 마커 파일이
-    디스크에 남아 catalog이 영구적으로 processing을 반환하는 문제를 방지한다.
-    마커 파일은 있지만 완료 결과(ep_concepts)가 없는 경우 → 마커 삭제 → idle로 복구.
+    파이프라인 실행 중 서버가 비정상 종료(OOM, 배포 재시작 등)되면
+    마커 파일 및 중간 파일들이 디스크에 남는다.
+    마커 파일은 있지만 완료 결과(ep_concepts)가 없는 경우 →
+    해당 lecture_id의 모든 중간 파일 삭제 → idle로 복구 → 재분석 가능.
     """
     import logging
-    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_EP_CONCEPTS
+    from pipeline.paths import (
+        DATA_PHASE1_SESSIONS, DATA_PHASE2_SENTENCES, DATA_PHASE3_CHUNKS,
+        DATA_PHASE4_PROPOSITIONS, DATA_PHASE5_FACTS,
+        DATA_EP_CONCEPTS, DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
+    )
     from app.loaders.catalog import invalidate_catalog_cache
 
     logger = logging.getLogger(__name__)
+
+    _INTERMEDIATE_DIRS = [
+        DATA_PHASE1_SESSIONS, DATA_PHASE2_SENTENCES, DATA_PHASE3_CHUNKS,
+        DATA_PHASE4_PROPOSITIONS, DATA_PHASE5_FACTS,
+        DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
+    ]
+
     removed = 0
     if not DATA_PHASE1_SESSIONS.exists():
         return
     for marker in DATA_PHASE1_SESSIONS.glob("*.jsonl"):
         lecture_id = marker.stem
-        if not (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists():
-            marker.unlink()
-            logger.warning("고아 마커 파일 삭제 (서버 재시작 감지): %s", marker.name)
-            removed += 1
+        if (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists():
+            continue  # 완료된 강의는 건드리지 않음
+        for d in _INTERMEDIATE_DIRS:
+            f = d / f"{lecture_id}.jsonl"
+            if f.exists():
+                f.unlink()
+                logger.warning("고아 중간 파일 삭제: %s/%s", d.name, f.name)
+                removed += 1
     if removed:
         invalidate_catalog_cache()
-        logger.info("고아 마커 %d개 정리 완료", removed)
+        logger.info("고아 파일 %d개 정리 완료 (서버 재시작 감지)", removed)
 
 
 @asynccontextmanager
