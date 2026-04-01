@@ -419,7 +419,10 @@ async def get_week_status(week: int):
 
     job = await get_week_job(week)
     if not job:
-        return ProcessingStatusResponse(week=week, status=ws.status)
+        # 인메모리 job 없음 (서버 재시작 등) → 가이드 결과 파일로 판정
+        guide_file = DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl"
+        fallback_status = ProcessingStatus.completed if guide_file.exists() else ProcessingStatus.idle
+        return ProcessingStatusResponse(week=week, status=fallback_status)
 
     return ProcessingStatusResponse(
         week=week,

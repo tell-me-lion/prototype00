@@ -33,6 +33,7 @@ export interface WeekSummary {
   completed_count: number
   date_range: string
   status: ProcessingStatus
+  guide_status: ProcessingStatus
   lectures: Lecture[]
 }
 

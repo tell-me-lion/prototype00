@@ -160,8 +160,11 @@ export function GuidesPage() {
   const getEffectiveStatus = (ws: WeekSummary): ProcessingStatus => {
     if (completedWeeks.has(ws.week)) return 'completed'
     if (processingWeeks.has(ws.week)) return 'processing'
-    if (ws.status === 'processing') return 'processing'
-    return ws.status
+    // guide_status 기준 (Mode B 가이드 생성 상태)
+    const guideStatus = ws.guide_status ?? ws.status
+    if (guideStatus === 'completed') return 'completed'
+    if (guideStatus === 'processing') return 'processing'
+    return guideStatus
   }
 
   // 통계 산출

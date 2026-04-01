@@ -11,7 +11,7 @@ import time
 from datetime import date
 from pathlib import Path
 
-from pipeline.paths import DATA_RAW, DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED, DATA_PHASE1_SESSIONS
+from pipeline.paths import DATA_RAW, DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED, DATA_PHASE1_SESSIONS, DATA_LEARNING_GUIDES
 
 logger = logging.getLogger(__name__)
 from app.schemas.models import (
@@ -190,6 +190,10 @@ def load_weeks() -> list[WeekSummary]:
         else:
             week_status = ProcessingStatus.idle
 
+        # 가이드 결과 파일 존재 여부로 guide_status 결정
+        guide_file = DATA_LEARNING_GUIDES / f"week_{week_num:02d}.jsonl"
+        guide_status = ProcessingStatus.completed if guide_file.exists() else ProcessingStatus.idle
+
         summaries.append(
             WeekSummary(
                 week=week_num,
@@ -197,6 +201,7 @@ def load_weeks() -> list[WeekSummary]:
                 completed_count=completed_count,
                 date_range=date_range,
                 status=week_status,
+                guide_status=guide_status,
                 lectures=week_lectures,
             )
         )
