@@ -182,20 +182,25 @@ def _find_output_file(directory: Path, lecture_id: str) -> Path | None:
     파일명 규칙:
     - 정확히 일치: {lecture_id}.jsonl
     - 날짜 기반: {date}.jsonl (lecture_id에서 date 부분 추출)
+
+    빈 파일(0바이트 또는 0줄)은 존재하지 않는 것으로 간주한다.
     """
+    def _is_valid(p: Path) -> bool:
+        return p.exists() and p.stat().st_size > 0
+
     # 정확한 파일명 매칭
     exact = directory / f"{lecture_id}.jsonl"
-    if exact.exists():
+    if _is_valid(exact):
         return exact
 
     # 날짜 기반 매칭 (lecture_id = "2026-02-11_kdt-backend-21th" → date = "2026-02-11")
     date_part = lecture_id.split("_")[0] if "_" in lecture_id else lecture_id
     date_file = directory / f"{date_part}.jsonl"
-    if date_file.exists():
+    if _is_valid(date_file):
         return date_file
 
     # 부분 매칭 (lecture_id가 포함된 파일)
-    candidates = list(directory.glob(f"*{date_part}*.jsonl"))
+    candidates = [p for p in directory.glob(f"*{date_part}*.jsonl") if _is_valid(p)]
     if candidates:
         return candidates[0]
 

@@ -87,6 +87,8 @@ frontend/.env.*.local
 ########################
 ERRORS.md
 tasks/
+docs/legacy/
+docs/tasks/
 
 
 
