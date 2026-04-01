@@ -16,8 +16,7 @@
 
 강의 스크립트 하나를 분석하여 **핵심 개념**, **학습 포인트**, **퀴즈**(객관식 · 빈칸 채우기 · OX · 코드 실행)를 생성합니다.
 
-<!-- 📸 docs/images/lecture-result.png -->
-<!-- ![단일 강의 결과](./docs/images/lecture-result.png) -->
+![단일 강의 결과](./docs/images/lecture-result.png)
 
 ### Mode B — 주차별 학습 가이드
 

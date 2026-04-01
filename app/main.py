@@ -12,7 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router as api_router
-from app.state import cleanup_expired_jobs
+from app.state import cleanup_expired_jobs, init_jobs
 
 
 def _cleanup_orphaned_markers() -> None:
@@ -75,7 +75,8 @@ def _cleanup_orphaned_markers() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: 고아 마커 정리 + 주기적 job cleanup 시작. Shutdown: cleanup 중단."""
+    """Startup: Job 복원 + 고아 마커 정리 + 주기적 job cleanup 시작. Shutdown: cleanup 중단."""
+    init_jobs()
     _cleanup_orphaned_markers()
 
     async def periodic_cleanup():

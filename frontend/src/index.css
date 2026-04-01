@@ -3144,6 +3144,40 @@ body::after {
   color: #fff;
 }
 
+/* 대기 중(queued) UI */
+.tml-processing-queued {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tml-processing-queued__icon {
+  font-size: 0.875rem;
+}
+
+.tml-processing-queued__msg {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+}
+
+.tml-lecture-card__queued {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tml-lecture-card__queued-icon {
+  font-size: 0.875rem;
+}
+
+.tml-lecture-card__queued-msg {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  font-weight: 500;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tml-processing-fill--running {
     animation: none;

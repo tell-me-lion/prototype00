@@ -162,6 +162,17 @@ export function ProcessingStatus({
     )
   }
 
+  if (status?.status === 'queued') {
+    return (
+      <div className="tml-processing-status" aria-live="polite">
+        <div className="tml-processing-queued">
+          <span className="tml-processing-queued__icon">⏳</span>
+          <span className="tml-processing-queued__msg">다른 강의 처리 완료 후 시작됩니다</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="tml-processing-status" aria-live="polite" aria-atomic="false" aria-label="처리 진행 상태">
       {/* 전체 진행률 바 */}

@@ -10,8 +10,10 @@ export function getEffectiveLectureStatus(
   processingSet: Set<string>,
   erroredSet?: Set<string>,
 ): ProcessingStatus {
-  if (processingSet.has(lectureId)) return 'processing'
   if (erroredSet?.has(lectureId)) return 'error'
+  // 서버가 queued를 반환하면 그대로 사용
+  if (serverStatus === 'queued') return 'queued'
+  if (processingSet.has(lectureId)) return 'processing'
   return serverStatus
 }
 
