@@ -24,7 +24,6 @@ export function WeeklyResult() {
   const week = Number(weekParam)
 
   const [state, setState] = useState<PageState>({ tag: 'loading' })
-  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -72,7 +71,7 @@ export function WeeklyResult() {
 
     load()
     return () => { cancelled = true }
-  }, [week, weekParam, reloadKey])
+  }, [week, weekParam])
 
   const handleTrigger = async () => {
     try {
@@ -91,7 +90,21 @@ export function WeeklyResult() {
           }
         } catch {
           // force도 실패 시 결과 리로드
-          setReloadKey((k) => k + 1)
+          setState({ tag: 'loading' })
+          try {
+            const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
+            const availableWeeks = allWeeks.map((w) => w.week).sort((a, b) => a - b)
+            if (weekData.status === 'completed') {
+              const outputs = await fetchWeekResults(week)
+              setState({ tag: 'results', week: weekData, outputs, availableWeeks })
+            } else if (weekData.status === 'processing') {
+              setState({ tag: 'processing', week: weekData, availableWeeks })
+            } else {
+              setState({ tag: 'not-processed', week: weekData, availableWeeks })
+            }
+          } catch {
+            setState({ tag: 'error', message: '처리 결과를 불러오지 못했습니다.' })
+          }
         }
         return
       }
@@ -102,8 +115,20 @@ export function WeeklyResult() {
     }
   }
 
-  const handleProcessComplete = () => {
-    setReloadKey((k) => k + 1)
+  const handleProcessComplete = async () => {
+    // 폴링이 completed를 보고했으므로 상태 확인 없이 바로 결과 fetch
+    setState({ tag: 'loading' })
+    try {
+      const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
+      const availableWeeks = allWeeks.map((w) => w.week).sort((a, b) => a - b)
+      const outputs = await fetchWeekResults(week)
+      setState({ tag: 'results', week: weekData, outputs, availableWeeks })
+    } catch (err) {
+      setState({
+        tag: 'error',
+        message: err instanceof Error ? err.message : '결과를 불러오지 못했습니다.',
+      })
+    }
   }
 
   const handleProcessError = (message: string) => {
