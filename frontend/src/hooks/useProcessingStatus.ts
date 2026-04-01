@@ -49,6 +49,8 @@ export function useProcessingStatus({
     let timer: ReturnType<typeof setTimeout>
     let retryCount = 0
     let emptyStepsCount = 0
+    let lastLogTime = 0
+    const LOG_INTERVAL = 60000 // 콘솔 로그는 60초마다
     const MAX_RETRIES = 5
     const MAX_EMPTY_STEPS = 10
     const MAX_POLL_MS = 60 * 60 * 1000 // 60분 타임아웃
@@ -67,7 +69,12 @@ export function useProcessingStatus({
       }
 
       const target = lectureId ? `lecture:${lectureId}` : `week:${week}`
-      console.log(`[폴링] ${target} — 상태 조회 중... (재시도: ${retryCount})`)
+      const now = Date.now()
+      const shouldLog = now - lastLogTime >= LOG_INTERVAL
+      if (shouldLog) {
+        lastLogTime = now
+        console.log(`[폴링] ${target} — 상태 조회 중... (재시도: ${retryCount})`)
+      }
       try {
         const result = lectureId
           ? await fetchLectureStatus(lectureId)
@@ -78,13 +85,16 @@ export function useProcessingStatus({
         setStatus(result)
 
         const steps = result.steps ?? []
-        const doneCount = steps.filter((s) => s.status === 'done').length
-        const isRunning = steps.some((s) => s.status === 'running')
-        const percent = steps.length > 0
-          ? doneCount * Math.floor(100 / steps.length) + (isRunning ? Math.floor(50 / steps.length) : 0)
-          : null
-        const percentLabel = percent !== null ? ` ${percent}% (${doneCount}/${steps.length})` : ''
-        console.log(`[폴링] ${target} — 응답: ${result.status}${percentLabel}`, steps, result.error_message ?? '')
+
+        if (shouldLog) {
+          const doneCount = steps.filter((s) => s.status === 'done').length
+          const isRunning = steps.some((s) => s.status === 'running')
+          const percent = steps.length > 0
+            ? doneCount * Math.floor(100 / steps.length) + (isRunning ? Math.floor(50 / steps.length) : 0)
+            : null
+          const percentLabel = percent !== null ? ` ${percent}% (${doneCount}/${steps.length})` : ''
+          console.log(`[폴링] ${target} — 응답: ${result.status}${percentLabel}`, steps, result.error_message ?? '')
+        }
 
         if (result.status === 'completed') {
           console.log(`[폴링] ${target} — 완료!`)
@@ -102,7 +112,9 @@ export function useProcessingStatus({
         // processing + steps 빈 배열 연속 감지
         if (result.status === 'processing' && steps.length === 0) {
           emptyStepsCount++
-          console.warn(`[폴링] ${target} — processing이지만 steps 빈 배열 (${emptyStepsCount}/${MAX_EMPTY_STEPS})`)
+          if (shouldLog) {
+            console.warn(`[폴링] ${target} — processing이지만 steps 빈 배열 (${emptyStepsCount}/${MAX_EMPTY_STEPS})`)
+          }
           if (emptyStepsCount >= MAX_EMPTY_STEPS) {
             const msg = '처리 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.'
             console.error(`[폴링] ${target} — 빈 steps 연속 ${MAX_EMPTY_STEPS}회 초과, 에러로 전환`)
