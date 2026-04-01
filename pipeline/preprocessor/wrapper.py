@@ -26,6 +26,7 @@ def run_preprocess(
     use_gemini_embed: bool = True,
     threshold: float = 0.40,
     progress_callback: Callable[[int, str], None] | None = None,
+    phase4_progress_callback: Callable[[int, int, int], None] | None = None,
 ) -> None:
     """단일 강의에 대해 Phase 1~5 전처리를 순차 실행.
 
@@ -114,7 +115,7 @@ def run_preprocess(
     FactExtractor = mod4.FactExtractor
 
     extractor = FactExtractor(use_gemini=True, use_ollama=False)
-    extractor.process_file(phase3_file, paths.DATA_PHASE4_PROPOSITIONS)
+    extractor.process_file(phase3_file, paths.DATA_PHASE4_PROPOSITIONS, progress_callback=phase4_progress_callback)
     logger.info("[Phase 4] FactExtractor 완료")
 
     phase4_file = _find_output_file(paths.DATA_PHASE4_PROPOSITIONS, lecture_id)

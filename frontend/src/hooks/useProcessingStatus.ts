@@ -96,6 +96,16 @@ export function useProcessingStatus({
           console.log(`[폴링] ${target} — 응답: ${result.status}${percentLabel}`, steps, result.error_message ?? '')
         }
 
+        // 세부 진행 상황이 있는 step은 매 폴링마다 즉시 출력 (throttle 없음)
+        const phase4Step = steps.find((s) => s.name === 'Step 4: 명제 추출')
+        if (phase4Step?.status === 'running' && phase4Step?.detail) {
+          console.log(`[폴링] ${target} — [명제 추출] ${phase4Step.detail}`)
+        }
+        const quizStep = steps.find((s) => s.name === '퀴즈 생성')
+        if (quizStep?.status === 'running' && quizStep?.detail) {
+          console.log(`[폴링] ${target} — [퀴즈 생성] ${quizStep.detail}`)
+        }
+
         if (result.status === 'completed') {
           console.log(`[폴링] ${target} — 완료!`)
           onCompleteRef.current?.()
