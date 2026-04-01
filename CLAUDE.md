@@ -116,10 +116,16 @@ VITE_API_URL=http://15.165.140.229
 
 ## 배포 환경
 
-| 레이어 | 플랫폼 | 주소 |
-|--------|--------|------|
-| 프론트엔드 | Vercel | `wonder-girls.vercel.app` |
-| 백엔드 | AWS EC2 | `15.165.140.229` |
+| 레이어 | 플랫폼 | 주소 | 배포 방식 |
+|--------|--------|------|-----------|
+| 프론트엔드 | Vercel | `wonder-girls.vercel.app` | main push 시 Vercel 자동 배포 |
+| 백엔드 | AWS EC2 | `15.165.140.229` | main push 시 GitHub Actions 자동 배포 |
+
+### 자동 배포 상세
+
+- **프론트엔드**: Vercel이 main 브랜치 push 감지 → 자동 빌드·배포
+- **백엔드**: `.github/workflows/deploy-backend.yml` — main push 시 `app/`, `pipeline/`, `config/`, `requirements.txt`, `scripts/` 경로 변경 감지 → EC2에 SSH 접속 → `git pull` + `docker compose up -d --build` → health check(`/health`)
+- **양쪽 모두 수동 배포 불필요**. PR 머지 = 배포 완료.
 
 ---
 
