@@ -171,8 +171,8 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
                     job.steps[idx]["status"] = status
 
             def phase4_detail_callback(chunks_done: int, total_chunks: int, props_count: int):
-                job.steps[3]["detail"] = f"{chunks_done}/{total_chunks} 청크 | 명제 {props_count}개"
-                logger.info("[Phase 4] 명제 추출 진행: %d/%d 청크, 명제 %d개", chunks_done, total_chunks, props_count)
+                job.steps[3]["detail"] = f"{chunks_done}/{total_chunks} 단락 | 명제 {props_count}개"
+                logger.info("[Phase 4] 명제 추출 진행: %d/%d 단락, 명제 %d개", chunks_done, total_chunks, props_count)
 
             await asyncio.to_thread(_exec_preprocess, lecture_id, progress_callback, phase4_detail_callback)
 

@@ -220,9 +220,6 @@ function StepRow({ step, index }: StepRowProps) {
                   {sub.status === 'done' ? '✓' : sub.status === 'running' ? '•' : '○'}
                 </span>
                 {subName}
-                {sub.detail && (
-                  <span className="tml-processing-substep__detail">{sub.detail}</span>
-                )}
               </div>
             )
           })}
