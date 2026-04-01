@@ -149,9 +149,18 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
     각 단계 출력 파일이 이미 존재하면 해당 단계를 건너뛴다.
     Semaphore(1)로 동시 실행을 1개로 제한한다 (Gemini API rate limit 보호).
     """
-    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_BLUEPRINTS
+    job = await get_lecture_job(lecture_id)
+    if not job:
+        return
+
+    # 세마포어가 이미 사용 중이면 queued 상태로 전환
+    if _lecture_semaphore.locked():
+        job.status = ProcessingStatus.queued
+        await set_lecture_job(lecture_id, job)
 
     async with _lecture_semaphore:
+        job.status = ProcessingStatus.processing
+        await set_lecture_job(lecture_id, job)
         await _run_lecture_pipeline_inner(lecture_id)
 
 
@@ -218,12 +227,14 @@ async def _run_lecture_pipeline_inner(lecture_id: str) -> None:
 
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
+        await set_lecture_job(lecture_id, job)
         invalidate_catalog_cache()
     except Exception as e:
         logger.error("강의 처리 실패: lecture=%s, error=%s", lecture_id, e, exc_info=True)
         job.status = ProcessingStatus.error
         job.error_message = str(e)
         job.completed_at = datetime.now(tz=timezone.utc)
+        await set_lecture_job(lecture_id, job)
 
 
 async def _run_week_pipeline(week: int) -> None:
@@ -238,12 +249,14 @@ async def _run_week_pipeline(week: int) -> None:
 
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
+        await set_week_job(week, job)
         invalidate_catalog_cache()
     except Exception as e:
         logger.error("주차 처리 실패: week=%d, error=%s", week, e, exc_info=True)
         job.status = ProcessingStatus.error
         job.error_message = str(e)
         job.completed_at = datetime.now(tz=timezone.utc)
+        await set_week_job(week, job)
 
 
 # --- 파이프라인 실행 함수 (동기, asyncio.to_thread에서 호출) ---
@@ -316,13 +329,18 @@ def _exec_quiz_generation(
         detail_callback=detail_callback,
     )
 
-    # quizzes_raw → quizzes_validated 복사 (QA 별도 단계 불필요)
+    # QA Validation: 5단계 검증 (근거성·중복·난이도·변별력·Top10 선발)
+    from pipeline.qa_validation.runner import run_validation
+    from pipeline.paths import DATA_PHASE5_FACTS
+
     raw_file = DATA_QUIZZES_RAW / f"{lecture_id}.jsonl"
+    facts_file = _find_file(DATA_PHASE5_FACTS, lecture_id)
     if raw_file.exists():
-        validated_file = DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl"
-        DATA_QUIZZES_VALIDATED.mkdir(parents=True, exist_ok=True)
-        import shutil
-        shutil.copy2(raw_file, validated_file)
+        run_validation(
+            input_file=raw_file,
+            out_dir=DATA_QUIZZES_VALIDATED,
+            facts_file=facts_file,
+        )
 
 
 def _exec_guides(week: int) -> None:
@@ -356,8 +374,8 @@ async def process_lecture(
     started, existing = await start_lecture_job_if_idle(lecture_id, new_job, force=force)
 
     if not started and existing:
-        if existing.status == ProcessingStatus.processing:
-            raise HTTPException(status_code=409, detail="이미 처리 중인 강의입니다.")
+        if existing.status in (ProcessingStatus.processing, ProcessingStatus.queued):
+            raise HTTPException(status_code=409, detail="이미 처리 중이거나 대기 중인 강의입니다.")
         raise HTTPException(
             status_code=409,
             detail="이미 처리 완료된 강의입니다. 재처리하려면 ?force=true 를 사용하세요.",

@@ -111,6 +111,7 @@ class ProcessingStatus(str, Enum):
 
     idle = "idle"
     partial = "partial"       # 중간 단계까지 완료, 재개 가능
+    queued = "queued"         # 대기 중 (다른 강의 처리 완료 후 시작)
     processing = "processing"
     completed = "completed"
     error = "error"

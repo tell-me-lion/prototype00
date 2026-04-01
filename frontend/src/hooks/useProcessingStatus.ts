@@ -65,7 +65,7 @@ export function useProcessingStatus({
 
       // BUG-2: 전체 폴링 타임아웃
       if (Date.now() - pollStartTime > MAX_POLL_MS) {
-        const msg = '처리 시간이 초과되었습니다. 서버 상태를 확인해 주세요.'
+        const msg = '처리가 계속 진행 중일 수 있습니다. 페이지를 새로고침하면 결과를 확인할 수 있습니다.'
         console.error(`[폴링] 전체 타임아웃 초과 (${MAX_POLL_MS / 60000}분)`)
         setError(msg)
         onErrorRef.current?.(msg)
@@ -168,12 +168,12 @@ export function useProcessingStatus({
     }
   }, [enabled, lectureId, week, interval])
 
-  // isPolling: enabled이고 완료/오류 상태가 아닐 때
+  // isPolling: enabled이고 완료/오류 상태가 아닐 때 (queued/processing 모두 폴링)
   const isPolling =
     enabled &&
     error === null &&
     (status === null ||
-      (status.status !== 'completed' && status.status !== 'error'))
+      (status.status !== 'completed' && status.status !== 'error' && status.status !== 'idle' && status.status !== 'partial'))
 
   return { status, isPolling, error }
 }

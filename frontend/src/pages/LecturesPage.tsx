@@ -114,6 +114,15 @@ function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onPro
 
         <hr className="tml-lecture-card__rule" />
 
+        {status === 'queued' && (
+          <div className="tml-lecture-card__footer">
+            <div className="tml-lecture-card__queued">
+              <span className="tml-lecture-card__queued-icon">⏳</span>
+              <span className="tml-lecture-card__queued-msg">대기 중</span>
+            </div>
+          </div>
+        )}
+
         {status === 'processing' && (
           <div className="tml-lecture-card__footer">
             <ProcessingStatusUI
@@ -585,21 +594,20 @@ export function LecturesPage() {
     setSelectedIds(new Set())
     setFailedLectures(new Set())
     const failed: string[] = []
-    await Promise.all(
-      ids.map(async (id) => {
-        setProcessingLectures((prev) => new Set(prev).add(id))
-        try {
-          await triggerLectureProcess(id, false)
-        } catch {
-          failed.push(id)
-          setProcessingLectures((prev) => {
-            const next = new Set(prev)
-            next.delete(id)
-            return next
-          })
-        }
-      }),
-    )
+    // 순차 요청: 백엔드 Semaphore(1)와 맞춰 하나씩 트리거
+    for (const id of ids) {
+      setProcessingLectures((prev) => new Set(prev).add(id))
+      try {
+        await triggerLectureProcess(id, false)
+      } catch {
+        failed.push(id)
+        setProcessingLectures((prev) => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      }
+    }
     if (failed.length > 0) {
       setFailedLectures(new Set(failed))
     }

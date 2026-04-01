@@ -51,7 +51,15 @@ def load_lecture_results(lecture_id: str) -> tuple[list[dict], list[dict], list[
     else:
         logger.warning("learning_points 없음 (lecture=%s) — 파이프라인 미실행", lecture_id)
 
-    quizzes = _load_jsonl(DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl")
+    quizzes_raw_data = _load_jsonl(DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl")
+    # QA Validation 형식: {"quiz_id", "status", "validation_log", "quiz": {...}}
+    # → 내부 "quiz" 객체를 꺼내서 반환 (raw 복사 형식도 하위 호환)
+    quizzes = []
+    for item in quizzes_raw_data:
+        if "quiz" in item and isinstance(item["quiz"], dict):
+            quizzes.append(item["quiz"])
+        else:
+            quizzes.append(item)
     if quizzes:
         logger.info("quizzes 로드: pipeline (lecture=%s, %d건)", lecture_id, len(quizzes))
     else:
