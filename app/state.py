@@ -50,6 +50,12 @@ async def set_week_job(week: int, job: JobState) -> None:
         week_jobs[week] = job
 
 
+async def clear_week_job(week: int) -> None:
+    """stale 상태의 주차 Job을 제거한다."""
+    async with _lock:
+        week_jobs.pop(week, None)
+
+
 async def start_lecture_job_if_idle(
     lecture_id: str, new_job: JobState, *, force: bool = False,
 ) -> tuple[bool, JobState | None]:

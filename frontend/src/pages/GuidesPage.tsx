@@ -114,25 +114,16 @@ export function GuidesPage() {
   const navigate = useNavigate()
 
   const handleProcess = useCallback(async (week: number) => {
-    setProcessingWeeks((prev) => new Set(prev).add(week))
     try {
       await triggerWeekProcess(week)
+      // POST 성공 후에 폴링 시작 (stale 상태 방지)
+      setProcessingWeeks((prev) => new Set(prev).add(week))
     } catch (err) {
       // 409: 이미 처리 중이거나 완료 → 결과 페이지로 이동
       if (err instanceof ApiError && err.status === 409) {
-        setProcessingWeeks((prev) => {
-          const next = new Set(prev)
-          next.delete(week)
-          return next
-        })
         navigate(`/weekly/${week}`)
         return
       }
-      setProcessingWeeks((prev) => {
-        const next = new Set(prev)
-        next.delete(week)
-        return next
-      })
     }
   }, [navigate])
 
