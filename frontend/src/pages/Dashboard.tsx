@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorCard } from '../components/Skeleton'
 import { ProgressRing } from '../components/ProgressRing'
-import { ActivityHeatmap } from '../components/ActivityHeatmap'
+
 import { useCountUp } from '../hooks/useCountUp'
 import { useWeeks } from '../hooks/useWeeks'
 
@@ -398,16 +398,6 @@ export function Dashboard() {
               )}
             </ScrollRevealSection>
 
-            {/* ── Activity Heatmap (하단 독립 섹션) ── */}
-            <ScrollRevealSection>
-              <div className="tml-glass-card tml-heatmap-section">
-                <p className="tml-glass-card__label">
-                  <span className="tml-glass-card__pulse" />
-                  ACTIVITY
-                </p>
-                <ActivityHeatmap lectures={allLectures} />
-              </div>
-            </ScrollRevealSection>
           </>
         )}
       </main>

@@ -39,6 +39,7 @@ from app.state import (
     set_lecture_job,
     get_week_job,
     set_week_job,
+    clear_week_job,
     start_lecture_job_if_idle,
     start_week_job_if_idle,
 )
@@ -389,7 +390,14 @@ async def process_week(week: int, background_tasks: BackgroundTasks, force: bool
         steps=[dict(s) for s in _WEEK_STEPS_TEMPLATE],
         started_at=datetime.now(tz=timezone.utc),
     )
-    started, existing = await start_week_job_if_idle(week, new_job, force=force)
+    # completed job인데 가이드 파일이 없으면 stale → force 처리
+    guide_file = DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl"
+    effective_force = force
+    existing_check = await get_week_job(week)
+    if existing_check and existing_check.status == ProcessingStatus.completed and not guide_file.exists():
+        effective_force = True
+
+    started, existing = await start_week_job_if_idle(week, new_job, force=effective_force)
 
     if not started and existing:
         if existing.status == ProcessingStatus.processing:
@@ -417,19 +425,26 @@ async def get_week_status(week: int):
     if not ws:
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
+    guide_file = DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl"
+
     job = await get_week_job(week)
     if not job:
         # 인메모리 job 없음 (서버 재시작 등) → 가이드 결과 파일로 판정
-        guide_file = DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl"
         fallback_status = ProcessingStatus.completed if guide_file.exists() else ProcessingStatus.idle
         return ProcessingStatusResponse(week=week, status=fallback_status)
 
+    # job이 completed인데 가이드 파일이 없으면 stale → idle로 보정
+    effective_status = job.status
+    if job.status == ProcessingStatus.completed and not guide_file.exists():
+        effective_status = ProcessingStatus.idle
+        await clear_week_job(week)
+
     return ProcessingStatusResponse(
         week=week,
-        status=job.status,
-        steps=[ProcessingStep(**s) for s in job.steps],
-        started_at=job.started_at,
-        completed_at=job.completed_at,
+        status=effective_status,
+        steps=[ProcessingStep(**s) for s in job.steps] if effective_status != ProcessingStatus.idle else [],
+        started_at=job.started_at if effective_status != ProcessingStatus.idle else None,
+        completed_at=job.completed_at if effective_status != ProcessingStatus.idle else None,
         error_message=job.error_message,
     )
 
