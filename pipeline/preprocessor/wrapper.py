@@ -41,112 +41,139 @@ def run_preprocess(
     if not raw_file.exists():
         raise FileNotFoundError(f"원본 파일 없음: {raw_file}")
 
-    # Phase 1: Cleaner
-    if progress_callback:
-        progress_callback(1, "running")
-    logger.info("[Phase 1] Cleaner 시작: %s", lecture_id)
-    mod1 = importlib.import_module("pipeline.preprocessor.01_cleaner")
-    Cleaner = mod1.Cleaner
-
     import shutil
     date_part = lecture_id.split("_")[0]
 
-    cleaner = Cleaner(use_gemini=use_gemini_clean)
-    cleaner.process_file(raw_file, paths.DATA_PHASE1_SESSIONS)
-    logger.info("[Phase 1] Cleaner 완료")
-
-    # Phase 1 출력 파일을 lecture_id 기반 파일명으로 정규화
-    # (Cleaner가 {date}.jsonl 로 저장하므로 {lecture_id}.jsonl 로 이동)
-    phase1_src = paths.DATA_PHASE1_SESSIONS / f"{date_part}.jsonl"
-    phase1_dst = paths.DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl"
-    if phase1_src.exists() and phase1_src != phase1_dst:
-        shutil.move(str(phase1_src), phase1_dst)
-        logger.info("[Phase 1] 파일명 정규화: %s → %s", phase1_src.name, phase1_dst.name)
-
-    # Phase 1 출력 파일 찾기
+    # Phase 1: Cleaner
     phase1_file = _find_output_file(paths.DATA_PHASE1_SESSIONS, lecture_id)
-    if not phase1_file:
-        raise FileNotFoundError(f"Phase 1 출력 없음: {lecture_id}")
-    if progress_callback:
-        progress_callback(1, "done")
+    if phase1_file:
+        logger.info("[SKIP] Phase 1 — 출력 파일 존재: %s", phase1_file)
+        if progress_callback:
+            progress_callback(1, "done")
+    else:
+        if progress_callback:
+            progress_callback(1, "running")
+        logger.info("[Phase 1] Cleaner 시작: %s", lecture_id)
+        mod1 = importlib.import_module("pipeline.preprocessor.01_cleaner")
+        Cleaner = mod1.Cleaner
+
+        cleaner = Cleaner(use_gemini=use_gemini_clean)
+        cleaner.process_file(raw_file, paths.DATA_PHASE1_SESSIONS)
+        logger.info("[Phase 1] Cleaner 완료")
+
+        # Cleaner가 {date}.jsonl 로 저장하므로 {lecture_id}.jsonl 로 이동
+        phase1_src = paths.DATA_PHASE1_SESSIONS / f"{date_part}.jsonl"
+        phase1_dst = paths.DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl"
+        if phase1_src.exists() and phase1_src != phase1_dst:
+            shutil.move(str(phase1_src), phase1_dst)
+            logger.info("[Phase 1] 파일명 정규화: %s → %s", phase1_src.name, phase1_dst.name)
+
+        phase1_file = _find_output_file(paths.DATA_PHASE1_SESSIONS, lecture_id)
+        if not phase1_file:
+            raise FileNotFoundError(f"Phase 1 출력 없음: {lecture_id}")
+        if progress_callback:
+            progress_callback(1, "done")
 
     # Phase 2: Segmenter
-    if progress_callback:
-        progress_callback(2, "running")
-    logger.info("[Phase 2] Segmenter 시작")
-    mod2 = importlib.import_module("pipeline.preprocessor.02_segmenter")
-    Segmenter = mod2.Segmenter
-
-    segmenter = Segmenter()
-    segmenter.process_file(phase1_file, paths.DATA_PHASE2_SENTENCES)
-    logger.info("[Phase 2] Segmenter 완료")
-
     phase2_file = _find_output_file(paths.DATA_PHASE2_SENTENCES, lecture_id)
-    if not phase2_file:
-        raise FileNotFoundError(f"Phase 2 출력 없음: {lecture_id}")
-    if progress_callback:
-        progress_callback(2, "done")
+    if phase2_file:
+        logger.info("[SKIP] Phase 2 — 출력 파일 존재: %s", phase2_file)
+        if progress_callback:
+            progress_callback(2, "done")
+    else:
+        if progress_callback:
+            progress_callback(2, "running")
+        logger.info("[Phase 2] Segmenter 시작")
+        mod2 = importlib.import_module("pipeline.preprocessor.02_segmenter")
+        Segmenter = mod2.Segmenter
+
+        segmenter = Segmenter()
+        segmenter.process_file(phase1_file, paths.DATA_PHASE2_SENTENCES)
+        logger.info("[Phase 2] Segmenter 완료")
+
+        phase2_file = _find_output_file(paths.DATA_PHASE2_SENTENCES, lecture_id)
+        if not phase2_file:
+            raise FileNotFoundError(f"Phase 2 출력 없음: {lecture_id}")
+        if progress_callback:
+            progress_callback(2, "done")
 
     # Phase 3: SemanticChunker
-    if progress_callback:
-        progress_callback(3, "running")
-    logger.info("[Phase 3] SemanticChunker 시작")
-    mod3 = importlib.import_module("pipeline.preprocessor.03_chunker")
-    SemanticChunker = mod3.SemanticChunker
-
-    chunker = SemanticChunker(
-        threshold=threshold,
-        use_gemini_embed=use_gemini_embed,
-    )
-    chunker.process_file(phase2_file, paths.DATA_PHASE3_CHUNKS)
-    logger.info("[Phase 3] SemanticChunker 완료")
-
     phase3_file = _find_output_file(paths.DATA_PHASE3_CHUNKS, lecture_id)
-    if not phase3_file:
-        raise FileNotFoundError(f"Phase 3 출력 없음: {lecture_id}")
-    if progress_callback:
-        progress_callback(3, "done")
+    if phase3_file:
+        logger.info("[SKIP] Phase 3 — 출력 파일 존재: %s", phase3_file)
+        if progress_callback:
+            progress_callback(3, "done")
+    else:
+        if progress_callback:
+            progress_callback(3, "running")
+        logger.info("[Phase 3] SemanticChunker 시작")
+        mod3 = importlib.import_module("pipeline.preprocessor.03_chunker")
+        SemanticChunker = mod3.SemanticChunker
+
+        chunker = SemanticChunker(
+            threshold=threshold,
+            use_gemini_embed=use_gemini_embed,
+        )
+        chunker.process_file(phase2_file, paths.DATA_PHASE3_CHUNKS)
+        logger.info("[Phase 3] SemanticChunker 완료")
+
+        phase3_file = _find_output_file(paths.DATA_PHASE3_CHUNKS, lecture_id)
+        if not phase3_file:
+            raise FileNotFoundError(f"Phase 3 출력 없음: {lecture_id}")
+        if progress_callback:
+            progress_callback(3, "done")
 
     # Phase 4: FactExtractor
-    if progress_callback:
-        progress_callback(4, "running")
-    logger.info("[Phase 4] FactExtractor 시작")
-    mod4 = importlib.import_module("pipeline.preprocessor.04_extractor")
-    FactExtractor = mod4.FactExtractor
-
-    extractor = FactExtractor(use_gemini=True, use_ollama=False)
-    extractor.process_file(phase3_file, paths.DATA_PHASE4_PROPOSITIONS, progress_callback=phase4_progress_callback)
-    logger.info("[Phase 4] FactExtractor 완료")
-
     phase4_file = _find_output_file(paths.DATA_PHASE4_PROPOSITIONS, lecture_id)
-    if not phase4_file:
-        raise FileNotFoundError(f"Phase 4 출력 없음: {lecture_id}")
-    if progress_callback:
-        progress_callback(4, "done")
+    if phase4_file:
+        logger.info("[SKIP] Phase 4 — 출력 파일 존재: %s", phase4_file)
+        if progress_callback:
+            progress_callback(4, "done")
+    else:
+        if progress_callback:
+            progress_callback(4, "running")
+        logger.info("[Phase 4] FactExtractor 시작")
+        mod4 = importlib.import_module("pipeline.preprocessor.04_extractor")
+        FactExtractor = mod4.FactExtractor
+
+        extractor = FactExtractor(use_gemini=True, use_ollama=False)
+        extractor.process_file(phase3_file, paths.DATA_PHASE4_PROPOSITIONS, progress_callback=phase4_progress_callback)
+        logger.info("[Phase 4] FactExtractor 완료")
+
+        phase4_file = _find_output_file(paths.DATA_PHASE4_PROPOSITIONS, lecture_id)
+        if not phase4_file:
+            raise FileNotFoundError(f"Phase 4 출력 없음: {lecture_id}")
+        if progress_callback:
+            progress_callback(4, "done")
 
     # Phase 5: Formatter
-    if progress_callback:
-        progress_callback(5, "running")
-    logger.info("[Phase 5] Formatter 시작")
-    mod5 = importlib.import_module("pipeline.preprocessor.05_formatter")
-    Formatter = mod5.Formatter
+    phase5_file = _find_output_file(paths.DATA_PHASE5_FACTS, lecture_id)
+    if phase5_file:
+        logger.info("[SKIP] Phase 5 — 출력 파일 존재: %s", phase5_file)
+        if progress_callback:
+            progress_callback(5, "done")
+    else:
+        if progress_callback:
+            progress_callback(5, "running")
+        logger.info("[Phase 5] Formatter 시작")
+        mod5 = importlib.import_module("pipeline.preprocessor.05_formatter")
+        Formatter = mod5.Formatter
 
-    formatter = Formatter()
-    formatter.format_documents(phase3_file, phase4_file, paths.DATA_PHASE5_FACTS)
-    logger.info("[Phase 5] Formatter 완료")
+        formatter = Formatter()
+        formatter.format_documents(phase3_file, phase4_file, paths.DATA_PHASE5_FACTS)
+        logger.info("[Phase 5] Formatter 완료")
 
-    # Phase 5 출력 파일을 lecture_id 기반 파일명으로 정규화
-    # Formatter는 chunks_path.stem 기반으로 파일을 저장하므로 phase3_file.stem 사용
-    chunks_src = paths.DATA_PHASE5_FACTS / f"{phase3_file.stem}_chunks_formatted.jsonl"
-    chunks_dst = paths.DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
-    if chunks_src != chunks_dst:
-        if not chunks_src.exists():
-            raise FileNotFoundError(f"Phase 5 Formatter 출력 없음: {chunks_src}")
-        shutil.copy2(chunks_src, chunks_dst)
-        logger.info("[Phase 5] 파일명 정규화: %s → %s", chunks_src.name, chunks_dst.name)
+        # Formatter는 chunks_path.stem 기반으로 파일을 저장하므로 phase3_file.stem 사용
+        chunks_src = paths.DATA_PHASE5_FACTS / f"{phase3_file.stem}_chunks_formatted.jsonl"
+        chunks_dst = paths.DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
+        if chunks_src != chunks_dst:
+            if not chunks_src.exists():
+                raise FileNotFoundError(f"Phase 5 Formatter 출력 없음: {chunks_src}")
+            shutil.copy2(chunks_src, chunks_dst)
+            logger.info("[Phase 5] 파일명 정규화: %s → %s", chunks_src.name, chunks_dst.name)
 
-    if progress_callback:
-        progress_callback(5, "done")
+        if progress_callback:
+            progress_callback(5, "done")
 
 
 def _find_output_file(directory: Path, lecture_id: str) -> Path | None:
