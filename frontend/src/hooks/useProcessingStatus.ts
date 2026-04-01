@@ -48,7 +48,9 @@ export function useProcessingStatus({
     let stopped = false
     let timer: ReturnType<typeof setTimeout>
     let retryCount = 0
+    let emptyStepsCount = 0
     const MAX_RETRIES = 5
+    const MAX_EMPTY_STEPS = 10
     const MAX_POLL_MS = 60 * 60 * 1000 // 60분 타임아웃
     const pollStartTime = Date.now()
 
@@ -95,6 +97,21 @@ export function useProcessingStatus({
           setError(msg)
           onErrorRef.current?.(msg)
           return
+        }
+
+        // processing + steps 빈 배열 연속 감지
+        if (result.status === 'processing' && steps.length === 0) {
+          emptyStepsCount++
+          console.warn(`[폴링] ${target} — processing이지만 steps 빈 배열 (${emptyStepsCount}/${MAX_EMPTY_STEPS})`)
+          if (emptyStepsCount >= MAX_EMPTY_STEPS) {
+            const msg = '처리 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.'
+            console.error(`[폴링] ${target} — 빈 steps 연속 ${MAX_EMPTY_STEPS}회 초과, 에러로 전환`)
+            setError(msg)
+            onErrorRef.current?.(msg)
+            return
+          }
+        } else {
+          emptyStepsCount = 0
         }
 
         timer = setTimeout(poll, interval)

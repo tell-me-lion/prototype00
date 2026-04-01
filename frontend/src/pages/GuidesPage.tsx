@@ -110,6 +110,7 @@ function GuideCard({ weekSummary, status, index, onProcess, onViewResults, onPro
 export function GuidesPage() {
   const { weeks, loading, error } = useWeeks('주차 목록을 불러오지 못했습니다.')
   const [processingWeeks, setProcessingWeeks] = useState<Set<number>>(new Set())
+  const [completedWeeks, setCompletedWeeks] = useState<Set<number>>(new Set())
   const navigate = useNavigate()
 
   const handleProcess = useCallback(async (week: number) => {
@@ -142,6 +143,7 @@ export function GuidesPage() {
         next.delete(week)
         return next
       })
+      setCompletedWeeks((prev) => new Set(prev).add(week))
       navigate(`/weekly/${week}`)
     },
     [navigate],
@@ -156,6 +158,7 @@ export function GuidesPage() {
   }, [])
 
   const getEffectiveStatus = (ws: WeekSummary): ProcessingStatus => {
+    if (completedWeeks.has(ws.week)) return 'completed'
     if (processingWeeks.has(ws.week)) return 'processing'
     if (ws.status === 'processing') return 'processing'
     return ws.status

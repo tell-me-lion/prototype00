@@ -82,29 +82,21 @@ export function WeeklyResult() {
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        // 409: 이미 처리 중이거나 완료 → force=true로 재시도
+        // 409: 이미 processing 중이거나 completed → 서버 상태 조회 후 전환
+        setState({ tag: 'loading' })
         try {
-          await triggerWeekProcess(week, true)
-          if (state.tag === 'not-processed') {
-            setState({ tag: 'processing', week: state.week, availableWeeks: state.availableWeeks })
+          const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
+          const availableWeeks = allWeeks.map((w) => w.week).sort((a, b) => a - b)
+          if (weekData.status === 'completed') {
+            const outputs = await fetchWeekResults(week)
+            setState({ tag: 'results', week: weekData, outputs, availableWeeks })
+          } else if (weekData.status === 'processing') {
+            setState({ tag: 'processing', week: weekData, availableWeeks })
+          } else {
+            setState({ tag: 'not-processed', week: weekData, availableWeeks })
           }
         } catch {
-          // force도 실패 시 결과 리로드
-          setState({ tag: 'loading' })
-          try {
-            const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
-            const availableWeeks = allWeeks.map((w) => w.week).sort((a, b) => a - b)
-            if (weekData.status === 'completed') {
-              const outputs = await fetchWeekResults(week)
-              setState({ tag: 'results', week: weekData, outputs, availableWeeks })
-            } else if (weekData.status === 'processing') {
-              setState({ tag: 'processing', week: weekData, availableWeeks })
-            } else {
-              setState({ tag: 'not-processed', week: weekData, availableWeeks })
-            }
-          } catch {
-            setState({ tag: 'error', message: '처리 결과를 불러오지 못했습니다.' })
-          }
+          setState({ tag: 'error', message: '처리 결과를 불러오지 못했습니다.' })
         }
         return
       }
