@@ -554,9 +554,9 @@ export function LecturesPage() {
         next.delete(lectureId)
         return next
       })
-      navigate(`/lecture/${lectureId}`)
+      // navigate(`/lecture/${lectureId}`) 삭제: 사용자가 직접 "결과 보기" 버튼을 누르도록 함
     },
-    [navigate],
+    [],
   )
 
   const handleProcessError = useCallback((lectureId: string) => {
@@ -588,9 +588,9 @@ export function LecturesPage() {
         next.delete(week)
         return next
       })
-      navigate(`/weekly/${week}`)
+      // navigate(`/weekly/${week}`) 삭제 (명시적 액션 권장)
     },
-    [navigate],
+    [],
   )
 
   const handleWeekProcessError = useCallback((week: number) => {

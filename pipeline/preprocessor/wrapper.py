@@ -17,12 +17,15 @@ from pipeline import paths
 logger = logging.getLogger(__name__)
 
 
+from typing import Callable
+
 def run_preprocess(
     lecture_id: str,
     *,
     use_gemini_clean: bool = False,
     use_gemini_embed: bool = True,
     threshold: float = 0.40,
+    progress_callback: Callable[[int, str], None] | None = None,
 ) -> None:
     """단일 강의에 대해 Phase 1~5 전처리를 순차 실행.
 
@@ -38,6 +41,8 @@ def run_preprocess(
         raise FileNotFoundError(f"원본 파일 없음: {raw_file}")
 
     # Phase 1: Cleaner
+    if progress_callback:
+        progress_callback(1, "running")
     logger.info("[Phase 1] Cleaner 시작: %s", lecture_id)
     mod1 = importlib.import_module("pipeline.preprocessor.01_cleaner")
     Cleaner = mod1.Cleaner
@@ -61,8 +66,12 @@ def run_preprocess(
     phase1_file = _find_output_file(paths.DATA_PHASE1_SESSIONS, lecture_id)
     if not phase1_file:
         raise FileNotFoundError(f"Phase 1 출력 없음: {lecture_id}")
+    if progress_callback:
+        progress_callback(1, "done")
 
     # Phase 2: Segmenter
+    if progress_callback:
+        progress_callback(2, "running")
     logger.info("[Phase 2] Segmenter 시작")
     mod2 = importlib.import_module("pipeline.preprocessor.02_segmenter")
     Segmenter = mod2.Segmenter
@@ -74,8 +83,12 @@ def run_preprocess(
     phase2_file = _find_output_file(paths.DATA_PHASE2_SENTENCES, lecture_id)
     if not phase2_file:
         raise FileNotFoundError(f"Phase 2 출력 없음: {lecture_id}")
+    if progress_callback:
+        progress_callback(2, "done")
 
     # Phase 3: SemanticChunker
+    if progress_callback:
+        progress_callback(3, "running")
     logger.info("[Phase 3] SemanticChunker 시작")
     mod3 = importlib.import_module("pipeline.preprocessor.03_chunker")
     SemanticChunker = mod3.SemanticChunker
@@ -90,8 +103,12 @@ def run_preprocess(
     phase3_file = _find_output_file(paths.DATA_PHASE3_CHUNKS, lecture_id)
     if not phase3_file:
         raise FileNotFoundError(f"Phase 3 출력 없음: {lecture_id}")
+    if progress_callback:
+        progress_callback(3, "done")
 
     # Phase 4: FactExtractor
+    if progress_callback:
+        progress_callback(4, "running")
     logger.info("[Phase 4] FactExtractor 시작")
     mod4 = importlib.import_module("pipeline.preprocessor.04_extractor")
     FactExtractor = mod4.FactExtractor
@@ -103,8 +120,12 @@ def run_preprocess(
     phase4_file = _find_output_file(paths.DATA_PHASE4_PROPOSITIONS, lecture_id)
     if not phase4_file:
         raise FileNotFoundError(f"Phase 4 출력 없음: {lecture_id}")
+    if progress_callback:
+        progress_callback(4, "done")
 
     # Phase 5: Formatter
+    if progress_callback:
+        progress_callback(5, "running")
     logger.info("[Phase 5] Formatter 시작")
     mod5 = importlib.import_module("pipeline.preprocessor.05_formatter")
     Formatter = mod5.Formatter
@@ -120,6 +141,9 @@ def run_preprocess(
     if chunks_src.exists() and chunks_src != chunks_dst:
         shutil.copy2(chunks_src, chunks_dst)
         logger.info("[Phase 5] 파일명 정규화: %s → %s", chunks_src.name, chunks_dst.name)
+
+    if progress_callback:
+        progress_callback(5, "done")
 
 
 def _find_output_file(directory: Path, lecture_id: str) -> Path | None:

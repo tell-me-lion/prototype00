@@ -3297,3 +3297,39 @@ body::after {
   text-decoration: none;
   display: inline-block;
 }
+
+/* ── Processing Substeps ── */
+.tml-processing-step__substeps {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 10px;
+  border-left: 2px solid var(--tml-rule);
+}
+
+.tml-processing-substep {
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+
+.tml-processing-substep--running {
+  color: var(--tml-orange);
+  font-weight: 600;
+}
+
+.tml-processing-substep--done {
+  color: var(--tml-ink);
+}
+
+.tml-processing-substep__icon {
+  font-size: 0.75rem;
+  width: 16px;
+  display: flex;
+  justify-content: center;
+}

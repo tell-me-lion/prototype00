@@ -124,8 +124,12 @@ async def get_week(week: int):
 # --- 처리 트리거 & 상태 관리 ---
 
 _LECTURE_STEPS_TEMPLATE = [
-    {"name": "전처리", "status": "pending"},
-    {"name": "개념 추출", "status": "pending"},
+    {"name": "Step 1: 텍스트 정제", "status": "pending"},
+    {"name": "Step 2: 문장 분리", "status": "pending"},
+    {"name": "Step 3: 의미 단위 청킹", "status": "pending"},
+    {"name": "Step 4: 명제 추출", "status": "pending"},
+    {"name": "Step 5: 팩트 포맷팅", "status": "pending"},
+    {"name": "개념 분석 (EP)", "status": "pending"},
     {"name": "문제 설계", "status": "pending"},
     {"name": "퀴즈 생성", "status": "pending"},
 ]
@@ -148,25 +152,29 @@ async def _run_lecture_pipeline(lecture_id: str) -> None:
         marker.touch()
         invalidate_catalog_cache()  # 캐시 즉시 만료 → 다음 /api/weeks 요청에서 processing 반환
 
-        # Step 0: 전처리 (Phase 1~5)
-        job.steps[0]["status"] = "running"
-        await asyncio.to_thread(_exec_preprocess, lecture_id)
-        job.steps[0]["status"] = "done"
+        # Step 0~4: 전처리 (Phase 1~5)
+        def progress_callback(phase_num: int, status: str):
+            # phase_num: 1~5 -> steps indices: 0~4
+            idx = phase_num - 1
+            if 0 <= idx < 5:
+                job.steps[idx]["status"] = status
 
-        # Step 1: 개념 추출 (EP)
-        job.steps[1]["status"] = "running"
+        await asyncio.to_thread(_exec_preprocess, lecture_id, progress_callback)
+
+        # Step 5: 개념 추출 (EP)
+        job.steps[5]["status"] = "running"
         await asyncio.to_thread(_exec_ep, lecture_id)
-        job.steps[1]["status"] = "done"
+        job.steps[5]["status"] = "done"
 
-        # Step 2: 문제 설계 (Blueprint)
-        job.steps[2]["status"] = "running"
+        # Step 6: 문제 설계 (Blueprint)
+        job.steps[6]["status"] = "running"
         await asyncio.to_thread(_exec_blueprint, lecture_id)
-        job.steps[2]["status"] = "done"
+        job.steps[6]["status"] = "done"
 
-        # Step 3: 퀴즈 생성
-        job.steps[3]["status"] = "running"
+        # Step 7: 퀴즈 생성
+        job.steps[7]["status"] = "running"
         await asyncio.to_thread(_exec_quiz_generation, lecture_id)
-        job.steps[3]["status"] = "done"
+        job.steps[7]["status"] = "done"
 
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
@@ -201,11 +209,13 @@ async def _run_week_pipeline(week: int) -> None:
 # --- 파이프라인 실행 함수 (동기, asyncio.to_thread에서 호출) ---
 
 
-def _exec_preprocess(lecture_id: str) -> None:
+from typing import Callable
+
+def _exec_preprocess(lecture_id: str, progress_callback: Callable[[int, str], None] | None = None) -> None:
     """Phase 1~5 전처리 실행."""
     from pipeline.preprocessor.wrapper import run_preprocess
 
-    run_preprocess(lecture_id, use_gemini_embed=True)
+    run_preprocess(lecture_id, use_gemini_embed=True, progress_callback=progress_callback)
 
 
 def _exec_ep(lecture_id: str) -> None:
