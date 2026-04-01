@@ -81,21 +81,33 @@ function groupSteps(steps: ProcessingStep[]): MainStep[] {
   }))
 }
 
-function useElapsed(startedAt: string | null | undefined): string {
+function useElapsed(startedAt: string | null | undefined, completedAt: string | null | undefined): string {
   const [elapsed, setElapsed] = useState('')
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!startedAt) { setElapsed(''); return }
+    
+    const startTime = new Date(startedAt).getTime()
+    
     const update = () => {
-      const diff = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000)
+      const endTime = completedAt ? new Date(completedAt).getTime() : Date.now()
+      const diff = Math.max(0, Math.floor((endTime - startTime) / 1000))
+      
       if (diff < 60) setElapsed(`${diff}초`)
       else setElapsed(`${Math.floor(diff / 60)}분`)
     }
+    
     update()
-    timerRef.current = setInterval(update, 5000)
+
+    if (completedAt) {
+      if (timerRef.current) clearInterval(timerRef.current)
+      return
+    }
+
+    timerRef.current = setInterval(update, 1000)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [startedAt])
+  }, [startedAt, completedAt])
 
   return elapsed
 }
@@ -116,8 +128,8 @@ export function ProcessingStatus({
 
   const defaultSteps = week !== undefined ? DEFAULT_WEEK_STEPS : DEFAULT_STEPS
   const steps = (status?.steps && status.steps.length > 0) ? status.steps : defaultSteps
-  const percent = calcPercent(steps)
-  const elapsed = useElapsed(status?.started_at)
+  const percent = status?.status === 'completed' ? 100 : calcPercent(steps)
+  const elapsed = useElapsed(status?.started_at, status?.completed_at)
 
   if (error) {
     return (
