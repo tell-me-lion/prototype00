@@ -12,8 +12,12 @@ interface ProcessingStatusProps {
 }
 
 const DEFAULT_STEPS: ProcessingStep[] = [
-  { name: '전처리', status: 'pending' },
-  { name: '개념 추출', status: 'pending' },
+  { name: 'Step 1: 텍스트 정제', status: 'pending' },
+  { name: 'Step 2: 문장 분리', status: 'pending' },
+  { name: 'Step 3: 의미 단위 청킹', status: 'pending' },
+  { name: 'Step 4: 명제 추출', status: 'pending' },
+  { name: 'Step 5: 팩트 포맷팅', status: 'pending' },
+  { name: '개념 분석 (EP)', status: 'pending' },
   { name: '문제 설계', status: 'pending' },
   { name: '퀴즈 생성', status: 'pending' },
 ]
