@@ -20,14 +20,14 @@ def _cleanup_orphaned_markers() -> None:
 
     파이프라인 실행 중 서버가 비정상 종료(OOM, 배포 재시작 등)되면
     마커 파일 및 중간 파일들이 디스크에 남는다.
-    마커 파일은 있지만 완료 결과(ep_concepts)가 없는 경우 →
+    마커 파일은 있지만 완료 결과(ep_concepts + ep_learning_points + quizzes_validated 3개 모두)가 없는 경우 →
     해당 lecture_id의 모든 중간 파일 삭제 → idle로 복구 → 재분석 가능.
     """
     import logging
     from pipeline.paths import (
         DATA_PHASE1_SESSIONS, DATA_PHASE2_SENTENCES, DATA_PHASE3_CHUNKS,
         DATA_PHASE4_PROPOSITIONS, DATA_PHASE5_FACTS,
-        DATA_EP_CONCEPTS, DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
+        DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
     )
     from app.loaders.catalog import invalidate_catalog_cache
 
@@ -36,7 +36,7 @@ def _cleanup_orphaned_markers() -> None:
     _INTERMEDIATE_DIRS = [
         DATA_PHASE1_SESSIONS, DATA_PHASE2_SENTENCES, DATA_PHASE3_CHUNKS,
         DATA_PHASE4_PROPOSITIONS, DATA_PHASE5_FACTS,
-        DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
+        DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
     ]
 
     removed = 0
@@ -44,7 +44,11 @@ def _cleanup_orphaned_markers() -> None:
         return
     for marker in DATA_PHASE1_SESSIONS.glob("*.jsonl"):
         lecture_id = marker.stem
-        if (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists():
+        if (
+            (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists()
+            and (DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl").exists()
+            and (DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl").exists()
+        ):
             continue  # 완료된 강의는 건드리지 않음
         for d in _INTERMEDIATE_DIRS:
             f = d / f"{lecture_id}.jsonl"
