@@ -135,10 +135,12 @@ def run_preprocess(
     logger.info("[Phase 5] Formatter 완료")
 
     # Phase 5 출력 파일을 lecture_id 기반 파일명으로 정규화
-    # (Formatter가 {date}_chunks_formatted.jsonl 로 저장하므로 {lecture_id}.jsonl 로 복사)
-    chunks_src = paths.DATA_PHASE5_FACTS / f"{date_part}_chunks_formatted.jsonl"
+    # Formatter는 chunks_path.stem 기반으로 파일을 저장하므로 phase3_file.stem 사용
+    chunks_src = paths.DATA_PHASE5_FACTS / f"{phase3_file.stem}_chunks_formatted.jsonl"
     chunks_dst = paths.DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
-    if chunks_src.exists() and chunks_src != chunks_dst:
+    if chunks_src != chunks_dst:
+        if not chunks_src.exists():
+            raise FileNotFoundError(f"Phase 5 Formatter 출력 없음: {chunks_src}")
         shutil.copy2(chunks_src, chunks_dst)
         logger.info("[Phase 5] 파일명 정규화: %s → %s", chunks_src.name, chunks_dst.name)
 
