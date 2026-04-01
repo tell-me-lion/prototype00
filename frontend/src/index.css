@@ -2536,6 +2536,45 @@ body::after {
   flex-wrap: wrap;
 }
 
+.tml-week-guide-card__confirm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.tml-week-guide-card__confirm-msg {
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--tml-ink);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.tml-week-guide-card__confirm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tml-week-guide-card__cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  padding: 6px 10px;
+}
+
+.tml-week-guide-card__cancel-btn:hover {
+  color: var(--tml-ink);
+}
+
 .tml-week-guide-card__title {
   font-family: var(--font-display);
   font-weight: 600;
