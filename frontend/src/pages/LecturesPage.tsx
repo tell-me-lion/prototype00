@@ -689,7 +689,7 @@ export function LecturesPage() {
 
               <div className="tml-split-layout">
                 {/* 왼쪽: 강의 목록 */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
+                <div key={activeWeek} className="tml-week-content" style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
                   {filteredWeeks.map((weekSummary) => (
                     <WeekSection
                       key={weekSummary.week}

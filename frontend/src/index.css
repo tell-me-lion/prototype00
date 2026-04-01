@@ -398,6 +398,7 @@ body::after {
   font-size: 0.875rem;
   line-height: 1.7;
   color: var(--tml-ink-secondary);
+  text-wrap: pretty;
 }
 
 /* 빈 상태 영역 */
@@ -711,6 +712,7 @@ body::after {
   color: var(--tml-ink-muted);
   line-height: 1.7;
   margin: 0;
+  text-wrap: pretty;
 }
 
 /* 플래시카드 hover */
@@ -1548,7 +1550,7 @@ body::after {
     radial-gradient(ellipse 70% 50% at 50% 50%, rgba(180, 60, 0, 0.06) 0%, transparent 50%),
     linear-gradient(135deg, #060810 0%, #0A0D18 30%, #08060E 60%, #0A0710 100%);
   background-size: 200% 200%;
-  animation: tml-mesh-shift 12s ease-in-out infinite;
+  animation: tml-mesh-shift 12s ease-in-out 5;
 }
 
 /* 노이즈 텍스처 */
@@ -1580,7 +1582,7 @@ body::after {
   top: -60px;
   right: -30px;
   background: radial-gradient(circle, rgba(255, 107, 0, 0.3), rgba(255, 60, 0, 0.05) 70%);
-  animation: tml-orb-float-1 8s ease-in-out infinite;
+  animation: tml-orb-float-1 8s ease-in-out 6;
 }
 
 .tml-hero__orb--2 {
@@ -1589,7 +1591,7 @@ body::after {
   bottom: -40px;
   left: 10%;
   background: radial-gradient(circle, rgba(255, 160, 40, 0.2), transparent 70%);
-  animation: tml-orb-float-2 10s ease-in-out infinite;
+  animation: tml-orb-float-2 10s ease-in-out 5;
 }
 
 .tml-hero__orb--3 {
@@ -1598,7 +1600,7 @@ body::after {
   top: 20%;
   right: 30%;
   background: radial-gradient(circle, rgba(255, 80, 0, 0.15), transparent 70%);
-  animation: tml-orb-float-1 14s ease-in-out infinite reverse;
+  animation: tml-orb-float-1 14s ease-in-out 4 reverse;
 }
 
 .tml-hero__orb--4 {
@@ -1607,7 +1609,7 @@ body::after {
   bottom: 10%;
   right: 15%;
   background: radial-gradient(circle, rgba(255, 200, 100, 0.12), transparent 70%);
-  animation: tml-orb-float-2 7s ease-in-out infinite reverse;
+  animation: tml-orb-float-2 7s ease-in-out 7 reverse;
 }
 
 /* 마우스 글레어 */
@@ -3374,5 +3376,16 @@ body::after {
 @media (max-width: 479px) {
   .tml-page-container {
     padding: 16px 16px 60px;
+  }
+}
+
+/* R-2: 와이드스크린(1440px+) 최적화 */
+@media (min-width: 1440px) {
+  .tml-page-container {
+    padding-left: max(40px, calc((100vw - 1280px) / 2));
+    padding-right: max(40px, calc((100vw - 1280px) / 2));
+  }
+  .tml-split-layout {
+    gap: 40px;
   }
 }
