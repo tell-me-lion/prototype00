@@ -157,6 +157,7 @@ class ProcessingStep(BaseModel):
 
     name: str    # "영상 분석", "텍스트 추출", "AI 분석"
     status: Literal["pending", "running", "done"]
+    detail: str | None = None  # 세부 진행 정보 (예: "15/42 청크 | 명제 38개")
 
 
 class ProcessingStatusResponse(BaseModel):

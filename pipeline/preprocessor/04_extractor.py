@@ -149,7 +149,11 @@ class FactExtractor:
                 
         return []
 
-    def process_file(self, filepath: Path, output_dir: Path) -> dict[str, int]:
+    def process_file(self, filepath: Path, output_dir: Path, progress_callback=None) -> dict[str, int]:
+        """
+        Args:
+            progress_callback: Callable[[int, int, int], None] — (청크_완료수, 총_청크수, 명제_누적수)
+        """
         day = filepath.stem
         chunks = []
         with open(filepath, "r", encoding="utf-8") as f:
@@ -159,27 +163,28 @@ class FactExtractor:
                         chunks.append(json.loads(line))
                     except json.JSONDecodeError:
                         continue
-                        
+
         stats = {"input_chunks": len(chunks), "output_props": 0}
         results = []
         prop_counter = 1
-        
-        for chunk in tqdm(chunks, desc=f"  [지식 추출] {filepath.name}", leave=False):
+        total_chunks = len(chunks)
+
+        for i, chunk in enumerate(tqdm(chunks, desc=f"  [지식 추출] {filepath.name}", leave=False)):
             text = chunk.get("text", "")
             keywords = chunk.get("keywords", [])
-            
+
             props = self.extract_pattern(text)
-            
+
             if len(text) > 30 and (self.use_gemini or self.use_ollama):
                 llm_props = self.extract_llm(text, keywords)
                 for lp in llm_props:
                     lp["method"] = "llm"
                 props.extend(llm_props)
-                
+
             for prop in props:
                 c_candidates = list(set([prop.get("concept", "")] + keywords))
                 while "" in c_candidates: c_candidates.remove("")
-                
+
                 results.append({
                     "prop_id": f"{day}_P{prop_counter:04d}",
                     "chunk_id": chunk.get("chunk_id", ""),
@@ -193,7 +198,10 @@ class FactExtractor:
                     }
                 })
                 prop_counter += 1
-                
+
+            if progress_callback:
+                progress_callback(i + 1, total_chunks, len(results))
+
         stats["output_props"] = len(results)
         
         output_dir.mkdir(parents=True, exist_ok=True)

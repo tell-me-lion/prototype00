@@ -2922,6 +2922,19 @@ body::after {
 .tml-processing-step--running .tml-processing-step__name { color: var(--tml-ink); }
 .tml-processing-step--done   .tml-processing-step__name { color: var(--tml-ink-secondary); }
 
+.tml-processing-step__name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tml-processing-step__detail {
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  font-weight: 400;
+}
+
 .tml-processing-step__track {
   height: 4px;
   background: var(--tml-bg-overlay);
@@ -3257,6 +3270,13 @@ body::after {
   width: 16px;
   display: flex;
   justify-content: center;
+}
+
+.tml-processing-substep__detail {
+  margin-left: 6px;
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+  font-weight: 400;
 }
 
 /* R-1: 극소형 모바일(375px) padding 과대 방지 */

@@ -29,6 +29,7 @@ const DEFAULT_WEEK_STEPS: ProcessingStep[] = [
 interface MainStep {
   name: string
   status: 'pending' | 'running' | 'done'
+  detail?: string
   subSteps?: ProcessingStep[]
 }
 
@@ -65,6 +66,7 @@ function groupSteps(steps: ProcessingStep[]): MainStep[] {
         grouped.push({
           name: displayNames[idx],
           status: step.status as 'pending' | 'running' | 'done',
+          detail: step.detail,
         })
       } else {
         grouped.push({ name: displayNames[idx], status: 'pending' })
@@ -177,7 +179,7 @@ interface StepRowProps {
 }
 
 function StepRow({ step, index }: StepRowProps) {
-  const { name, status, subSteps } = step
+  const { name, status, detail, subSteps } = step
 
   return (
     <div className={`tml-processing-step tml-processing-step--${status} ${subSteps && subSteps.length > 0 && status !== 'pending' ? 'tml-processing-step--expanded' : ''}`}>
@@ -188,8 +190,13 @@ function StepRow({ step, index }: StepRowProps) {
 
       {/* 이름 + 플로우 + 진행 바 */}
       <div className="tml-processing-step__content">
-        <span className="tml-processing-step__name">{name}</span>
-        
+        <div className="tml-processing-step__name-row">
+          <span className="tml-processing-step__name">{name}</span>
+          {detail && status !== 'pending' && (
+            <span className="tml-processing-step__detail">{detail}</span>
+          )}
+        </div>
+
         {status === 'running' && subSteps === undefined && (
           <div className="tml-processing-step__track">
             <div className="tml-processing-step__fill tml-processing-fill--running" />
@@ -213,6 +220,9 @@ function StepRow({ step, index }: StepRowProps) {
                   {sub.status === 'done' ? '✓' : sub.status === 'running' ? '•' : '○'}
                 </span>
                 {subName}
+                {sub.detail && (
+                  <span className="tml-processing-substep__detail">{sub.detail}</span>
+                )}
               </div>
             )
           })}

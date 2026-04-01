@@ -8,6 +8,7 @@ Mode A 블록.
 
 import json
 from pathlib import Path
+from typing import Callable
 from uuid import uuid4
 
 from pipeline import paths
@@ -27,6 +28,7 @@ def run_quiz_generation(
     input_file: Path | None = None,
     output_file: Path | None = None,
     facts_file: Path | None = None,
+    detail_callback: Callable[[str], None] | None = None,
 ) -> None:
     """BlueprintDocument 전체 + Chunk 전체를 LLM에 넣어 퀴즈를 배치 생성.
 
@@ -71,9 +73,13 @@ def run_quiz_generation(
 
         # 단일 LLM 호출
         prompt = build_batch_prompt(blueprints, chunks, quiz_count=QUIZ_COUNT)
+        if detail_callback:
+            detail_callback(f"LLM 호출 중... (목표 {QUIZ_COUNT}개)")
         raw_quizzes = call_gemini_batch(prompt)
 
         # 검증
+        if detail_callback:
+            detail_callback(f"검증 중 (응답 {len(raw_quizzes)}개)")
         valid_quizzes, errors = validate_batch(raw_quizzes)
         for err in errors:
             print(f"  [INVALID] {err}")
@@ -91,6 +97,8 @@ def run_quiz_generation(
             for quiz in quizzes:
                 f.write(quiz.model_dump_json(ensure_ascii=False) + "\n")
 
+        if detail_callback:
+            detail_callback(f"퀴즈 {len(quizzes)}개 생성 완료")
         print(
             f"[OK]   {out_file.name} | "
             f"{len(quizzes)}/{len(raw_quizzes)} quizzes "

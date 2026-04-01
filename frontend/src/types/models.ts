@@ -5,6 +5,7 @@ export type ProcessingStatus = 'idle' | 'processing' | 'completed' | 'error'
 export interface ProcessingStep {
   name: string // "영상 분석", "텍스트 추출", "AI 분석"
   status: 'pending' | 'running' | 'done'
+  detail?: string // 세부 진행 정보 (예: "15/42 청크 | 명제 38개")
 }
 
 // ===== 강의 카탈로그 =====
