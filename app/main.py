@@ -15,9 +15,37 @@ from app.api.routes import router as api_router
 from app.state import cleanup_expired_jobs
 
 
+def _cleanup_orphaned_markers() -> None:
+    """서버 시작 시 고아 마커 파일 정리.
+
+    파이프라인 실행 중 서버가 비정상 종료(OOM 등)되면 phase1_sessions 마커 파일이
+    디스크에 남아 catalog이 영구적으로 processing을 반환하는 문제를 방지한다.
+    마커 파일은 있지만 완료 결과(ep_concepts)가 없는 경우 → 마커 삭제 → idle로 복구.
+    """
+    import logging
+    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_EP_CONCEPTS
+    from app.loaders.catalog import invalidate_catalog_cache
+
+    logger = logging.getLogger(__name__)
+    removed = 0
+    if not DATA_PHASE1_SESSIONS.exists():
+        return
+    for marker in DATA_PHASE1_SESSIONS.glob("*.jsonl"):
+        lecture_id = marker.stem
+        if not (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists():
+            marker.unlink()
+            logger.warning("고아 마커 파일 삭제 (서버 재시작 감지): %s", marker.name)
+            removed += 1
+    if removed:
+        invalidate_catalog_cache()
+        logger.info("고아 마커 %d개 정리 완료", removed)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup: 주기적 job cleanup 시작. Shutdown: cleanup 중단."""
+    """Startup: 고아 마커 정리 + 주기적 job cleanup 시작. Shutdown: cleanup 중단."""
+    _cleanup_orphaned_markers()
+
     async def periodic_cleanup():
         while True:
             await asyncio.sleep(600)  # 10분마다
