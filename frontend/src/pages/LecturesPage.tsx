@@ -599,7 +599,12 @@ export function LecturesPage() {
       setProcessingLectures((prev) => new Set(prev).add(id))
       try {
         await triggerLectureProcess(id, false)
-      } catch {
+      } catch (err: unknown) {
+        const status = (err as { status?: number }).status
+        if (status === 409) {
+          // 이미 처리 중/대기 중 → 폴링이 이어받으므로 spinner 유지
+          continue
+        }
         failed.push(id)
         setProcessingLectures((prev) => {
           const next = new Set(prev)
@@ -622,7 +627,12 @@ export function LecturesPage() {
     setProcessingLectures((prev) => new Set(prev).add(lectureId))
     try {
       await triggerLectureProcess(lectureId)
-    } catch {
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status
+      if (status === 409) {
+        // 이미 처리 중/대기 중 → 폴링이 이어받으므로 spinner 유지
+        return
+      }
       setProcessingLectures((prev) => {
         const next = new Set(prev)
         next.delete(lectureId)
