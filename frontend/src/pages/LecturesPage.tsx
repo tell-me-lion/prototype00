@@ -178,6 +178,7 @@ function LectureCardSkeleton() {
 interface WeekGuideCardProps {
   week: number
   lectureCount: number
+  completedCount: number
   status: ProcessingStatus
   onProcess: (week: number) => void
   onViewResults: (week: number) => void
@@ -185,7 +186,10 @@ interface WeekGuideCardProps {
   onProcessError: (week: number) => void
 }
 
-function WeekGuideCard({ week, lectureCount, status, onProcess, onViewResults, onProcessComplete, onProcessError }: WeekGuideCardProps) {
+function WeekGuideCard({ week, lectureCount, completedCount, status, onProcess, onViewResults, onProcessComplete, onProcessError }: WeekGuideCardProps) {
+  const allCompleted = completedCount >= lectureCount && lectureCount > 0
+  const remaining = lectureCount - completedCount
+
   return (
     <div className="tml-week-guide-card tml-card">
       <div className="tml-week-guide-card__bar" />
@@ -199,7 +203,7 @@ function WeekGuideCard({ week, lectureCount, status, onProcess, onViewResults, o
           </p>
         </div>
 
-        <div style={{ flexShrink: 0 }}>
+        <div style={{ flexShrink: 0, textAlign: 'right' }}>
           {status === 'completed' ? (
             <button
               className="tml-lecture-card__result-btn"
@@ -213,7 +217,7 @@ function WeekGuideCard({ week, lectureCount, status, onProcess, onViewResults, o
               onComplete={() => onProcessComplete(week)}
               onError={() => onProcessError(week)}
             />
-          ) : (
+          ) : allCompleted ? (
             <button
               className="btn-primary"
               style={{ fontSize: '0.8125rem', padding: '6px 14px' }}
@@ -221,6 +225,19 @@ function WeekGuideCard({ week, lectureCount, status, onProcess, onViewResults, o
             >
               가이드 생성 →
             </button>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+              <button
+                className="btn-primary"
+                style={{ fontSize: '0.8125rem', padding: '6px 14px', opacity: 0.4, cursor: 'not-allowed' }}
+                disabled
+              >
+                가이드 생성 →
+              </button>
+              <span style={{ fontSize: '0.7rem', color: 'var(--tml-ink-muted)' }}>
+                {remaining}개 강의 분석 필요
+              </span>
+            </div>
           )}
         </div>
       </div>
@@ -300,6 +317,7 @@ function WeekSection({
       <WeekGuideCard
         week={week}
         lectureCount={lecture_count}
+        completedCount={completed_count}
         status={effectiveWeekStatus}
         onProcess={onProcessWeek}
         onViewResults={onViewWeekResults}
