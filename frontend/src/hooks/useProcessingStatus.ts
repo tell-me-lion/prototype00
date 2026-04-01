@@ -11,6 +11,7 @@ interface UseProcessingStatusOptions {
   interval?: number
   onComplete?: () => void
   onError?: (message: string) => void
+  onPartial?: () => void  // 재개 가능 상태 감지 시 호출
 }
 
 interface UseProcessingStatusReturn {
@@ -26,6 +27,7 @@ export function useProcessingStatus({
   interval = 5000,
   onComplete,
   onError,
+  onPartial,
 }: UseProcessingStatusOptions): UseProcessingStatusReturn {
   const [status, setStatus] = useState<ProcessingStatusResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -33,9 +35,11 @@ export function useProcessingStatus({
   // refs로 콜백을 감싸 stale closure 방지
   const onCompleteRef = useRef(onComplete)
   const onErrorRef = useRef(onError)
+  const onPartialRef = useRef(onPartial)
   useEffect(() => {
     onCompleteRef.current = onComplete
     onErrorRef.current = onError
+    onPartialRef.current = onPartial
   })
 
   useEffect(() => {
@@ -109,6 +113,11 @@ export function useProcessingStatus({
         if (result.status === 'completed') {
           console.log(`[폴링] ${target} — 완료!`)
           onCompleteRef.current?.()
+          return
+        }
+        if (result.status === 'partial' || result.status === 'idle') {
+          console.log(`[폴링] ${target} — 재개 가능 상태 감지`)
+          onPartialRef.current?.()
           return
         }
         if (result.status === 'error') {

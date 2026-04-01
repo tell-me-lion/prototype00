@@ -60,9 +60,10 @@ interface LectureCardProps {
   onProcessComplete: (lectureId: string) => void
   onProcessError: (lectureId: string) => void
   onRetry: (lectureId: string) => void
+  onResume: (lectureId: string) => void
 }
 
-function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onProcessComplete, onProcessError, onRetry }: LectureCardProps) {
+function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onProcessComplete, onProcessError, onRetry, onResume }: LectureCardProps) {
   const { lecture_id, date, day_of_week, week, course_name, status, result_summary } = lecture
   const gradient = getLectureThumbnailGradient(date, week)
 
@@ -119,7 +120,22 @@ function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onPro
               lectureId={lecture_id}
               onComplete={() => onProcessComplete(lecture_id)}
               onError={() => onProcessError(lecture_id)}
+              onResume={() => onResume(lecture_id)}
             />
+          </div>
+        )}
+
+        {status === 'partial' && (
+          <div className="tml-lecture-card__footer">
+            <div className="tml-lecture-card__resume">
+              <span className="tml-lecture-card__resume-msg">이전 작업 이어서 진행 가능</span>
+              <button
+                className="tml-lecture-card__resume-btn"
+                onClick={(e) => { e.stopPropagation(); onResume(lecture_id) }}
+              >
+                재개하기 →
+              </button>
+            </div>
           </div>
         )}
 
@@ -278,6 +294,7 @@ interface WeekSectionProps {
   onProcessComplete: (lectureId: string) => void
   onProcessError: (lectureId: string) => void
   onRetry: (lectureId: string) => void
+  onResume: (lectureId: string) => void
   onProcessWeek: (week: number) => void
   onViewWeekResults: (week: number) => void
   onWeekProcessComplete: (week: number) => void
@@ -295,6 +312,7 @@ function WeekSection({
   onProcessComplete,
   onProcessError,
   onRetry,
+  onResume,
   onProcessWeek,
   onViewWeekResults,
   onWeekProcessComplete,
@@ -338,6 +356,7 @@ function WeekSection({
               onProcessComplete={onProcessComplete}
               onProcessError={onProcessError}
               onRetry={onRetry}
+              onResume={onResume}
             />
           )
         })}
@@ -518,8 +537,9 @@ export function LecturesPage() {
   // 서버 상태와 로컬 processingSet 동기화 (새로고침/뒤로가기 대응)
   useEffect(() => {
     const allLectures = weeks.flatMap((w) => w.lectures)
-    const serverProcessingIds = new Set(
-      allLectures.filter((l) => l.status === 'processing').map((l) => l.lecture_id),
+    // processing + partial 모두 폴링 대상 (partial은 폴링 후 재개 UI로 전환)
+    const serverActiveIds = new Set(
+      allLectures.filter((l) => l.status === 'processing' || l.status === 'partial').map((l) => l.lecture_id),
     )
     const serverCompletedIds = new Set(
       allLectures.filter((l) => l.status === 'completed').map((l) => l.lecture_id),
@@ -527,9 +547,7 @@ export function LecturesPage() {
 
     setProcessingLectures((prev) => {
       const next = new Set(prev)
-      // 서버에서 processing인 강의 추가
-      serverProcessingIds.forEach((id) => next.add(id))
-      // 서버에서 completed인 강의는 제거 (BUG-1: 뒤로가기 시 고착 방지)
+      serverActiveIds.forEach((id) => next.add(id))
       serverCompletedIds.forEach((id) => next.delete(id))
       return next
     })
@@ -597,6 +615,25 @@ export function LecturesPage() {
     try {
       await triggerLectureProcess(lectureId)
     } catch {
+      setProcessingLectures((prev) => {
+        const next = new Set(prev)
+        next.delete(lectureId)
+        return next
+      })
+    }
+  }, [])
+
+  const handleResume = useCallback(async (lectureId: string) => {
+    setProcessingLectures((prev) => new Set(prev).add(lectureId))
+    try {
+      await triggerLectureProcess(lectureId, false)
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status
+      if (status === 409) {
+        // 이미 처리 중 → 폴링이 이어받으므로 spinner 유지
+        return
+      }
+      // 그 외 에러 → spinner 해제
       setProcessingLectures((prev) => {
         const next = new Set(prev)
         next.delete(lectureId)
@@ -751,6 +788,7 @@ export function LecturesPage() {
                       onProcessComplete={handleProcessComplete}
                       onProcessError={handleProcessError}
                       onRetry={handleRetry}
+                      onResume={handleResume}
                       onProcessWeek={handleProcessWeek}
                       onViewWeekResults={(w) => navigate(`/weekly/${w}`)}
                       onWeekProcessComplete={handleWeekProcessComplete}

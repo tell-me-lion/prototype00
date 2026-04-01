@@ -110,6 +110,7 @@ class ProcessingStatus(str, Enum):
     """파이프라인 처리 상태."""
 
     idle = "idle"
+    partial = "partial"       # 중간 단계까지 완료, 재개 가능
     processing = "processing"
     completed = "completed"
     error = "error"

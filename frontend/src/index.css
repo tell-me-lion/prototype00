@@ -3080,6 +3080,70 @@ body::after {
   line-height: 1.4;
 }
 
+/* 재개하기 UI (ProcessingStatus) */
+.tml-processing-resumable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tml-processing-resumable__msg {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+}
+
+.tml-processing-resumable__btn {
+  align-self: flex-start;
+  background: none;
+  border: 1.5px solid var(--tml-orange);
+  color: var(--tml-orange);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tml-processing-resumable__btn:hover {
+  background: var(--tml-orange);
+  color: #fff;
+}
+
+/* 재개하기 UI (LectureCard partial) */
+.tml-lecture-card__resume {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tml-lecture-card__resume-msg {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  color: var(--tml-ink-muted);
+}
+
+.tml-lecture-card__resume-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1.5px solid var(--tml-orange);
+  color: var(--tml-orange);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tml-lecture-card__resume-btn:hover {
+  background: var(--tml-orange);
+  color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tml-processing-fill--running {
     animation: none;

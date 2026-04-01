@@ -9,6 +9,7 @@ interface ProcessingStatusProps {
   week?: number
   onComplete: () => void
   onError?: (message: string) => void
+  onResume?: () => void  // 재개하기 버튼 클릭 시 호출
 }
 
 const DEFAULT_STEPS: ProcessingStep[] = [
@@ -119,19 +120,39 @@ export function ProcessingStatus({
   week,
   onComplete,
   onError,
+  onResume,
 }: ProcessingStatusProps) {
+  const [isResumable, setIsResumable] = useState(false)
+
   const { status, error } = useProcessingStatus({
     lectureId,
     week,
-    enabled: true,
+    enabled: !isResumable,
     onComplete,
     onError,
+    onPartial: () => setIsResumable(true),
   })
 
   const defaultSteps = week !== undefined ? DEFAULT_WEEK_STEPS : DEFAULT_STEPS
   const steps = (status?.steps && status.steps.length > 0) ? status.steps : defaultSteps
   const percent = status?.status === 'completed' ? 100 : calcPercent(steps)
   const elapsed = useElapsed(status?.started_at, status?.completed_at)
+
+  if (isResumable) {
+    return (
+      <div className="tml-processing-resumable">
+        <span className="tml-processing-resumable__msg">이전 작업 이어서 진행 가능</span>
+        {onResume && (
+          <button
+            className="tml-processing-resumable__btn"
+            onClick={() => { setIsResumable(false); onResume() }}
+          >
+            재개하기 →
+          </button>
+        )}
+      </div>
+    )
+  }
 
   if (error) {
     return (
