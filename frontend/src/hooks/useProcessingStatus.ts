@@ -1,4 +1,4 @@
-/* useProcessingStatus — 강의/주차 처리 상태를 60초 간격으로 폴링한다. */
+/* useProcessingStatus — 강의/주차 처리 상태를 5초 간격으로 폴링한다. */
 
 import { useEffect, useRef, useState } from 'react'
 import type { ProcessingStatusResponse } from '../types/models'
@@ -23,7 +23,7 @@ export function useProcessingStatus({
   lectureId,
   week,
   enabled,
-  interval = 60000,
+  interval = 5000,
   onComplete,
   onError,
 }: UseProcessingStatusOptions): UseProcessingStatusReturn {
