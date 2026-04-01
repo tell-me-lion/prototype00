@@ -73,6 +73,13 @@ function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onPro
 
   const isClickable = status === 'idle' || status === 'completed'
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (isClickable && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault()
+      handleCardClick()
+    }
+  }
+
   return (
     <div
       className={[
@@ -80,7 +87,10 @@ function LectureCard({ lecture, isSelected, onToggleSelect, onViewResults, onPro
         isClickable ? 'tml-lecture-card--selectable' : '',
         isSelected ? 'tml-lecture-card--selected' : '',
       ].join(' ').trim()}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
       onClick={isClickable ? handleCardClick : undefined}
+      onKeyDown={isClickable ? handleKeyDown : undefined}
     >
       <div className="tml-lecture-card__thumb" style={{ background: gradient, position: 'relative' }}>
         <span className="tml-lecture-card__date-badge">

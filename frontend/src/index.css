@@ -51,6 +51,14 @@
   --font-display: 'Pretendard Variable', 'Pretendard', sans-serif;
   --font-body:    'Pretendard Variable', 'Pretendard', sans-serif;
   --font-mono:    'IBM Plex Mono', 'JetBrains Mono', monospace;
+
+  /* === Border Radius 토큰 === */
+  --radius-xs:   2px;    /* 세로 바, 인라인 요소 */
+  --radius-sm:   4px;    /* 뱃지, 태그 */
+  --radius-md:   6px;    /* 카드, 버튼 (기본) */
+  --radius-lg:   12px;   /* 강조 카드, 통계 */
+  --radius-xl:   20px;   /* 히어로, 프로그레스 바 */
+  --radius-full: 9999px; /* 원형, 필 */
 }
 
 /* 4. 다크 테마 오버라이드 */
@@ -127,6 +135,12 @@ body::after {
   .tml-scroll-reveal { opacity: 1; transform: none; }
 }
 
+/* A-1: 포커스 링 글로벌 스타일 (WCAG 2.1 AA — 2.4.7 Focus Visible) */
+:focus-visible {
+  outline: 2px solid var(--tml-orange);
+  outline-offset: 2px;
+}
+
 /* 스크롤 기반 페이드인 + 슬라이드업 */
 .tml-scroll-reveal {
   opacity: 0;
@@ -166,6 +180,7 @@ body::after {
   letter-spacing: -0.02em;
   color: var(--tml-ink);
   margin: 0 0 28px;
+  text-wrap: balance;
 }
 
 /* 8. 베이스 컴포넌트 */
@@ -240,6 +255,7 @@ body::after {
   left: 150%;
 }
 .btn-primary:active {
+  transform: scale(0.96);
   box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.25);
 }
 
@@ -350,6 +366,7 @@ body::after {
   font-size: 0.9375rem;
   color: var(--tml-ink);
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 .concept-score {
@@ -638,6 +655,7 @@ body::after {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--tml-ink-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* 질문 텍스트 */
@@ -649,6 +667,7 @@ body::after {
   line-height: 1.6;
   margin: 0 0 24px;
   letter-spacing: -0.01em;
+  text-wrap: balance;
 }
 
 /* 피드백 배너 */
@@ -1128,6 +1147,7 @@ body::after {
   border-radius: 4px;
   padding: 5px 12px;
   line-height: 1;
+  cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -1454,6 +1474,11 @@ body::after {
 
 @media (prefers-reduced-motion: reduce) {
   .tml-dashboard-stagger { animation: none; }
+  .tml-hero__mesh { animation: none; }
+  .tml-hero__orb { animation: none; }
+  .tml-hero__scanline::after { animation: none; }
+  .tml-hero__cta-pulse { animation: none; }
+  .tml-hero__bar-fill::after { animation: none; }
 }
 
 /* ── 히어로 (3D tilt + aurora mesh) ── */
@@ -3343,4 +3368,11 @@ body::after {
   width: 16px;
   display: flex;
   justify-content: center;
+}
+
+/* R-1: 극소형 모바일(375px) padding 과대 방지 */
+@media (max-width: 479px) {
+  .tml-page-container {
+    padding: 16px 16px 60px;
+  }
 }

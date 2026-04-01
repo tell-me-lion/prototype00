@@ -223,12 +223,10 @@ def _exec_ep(lecture_id: str) -> None:
     from pipeline.ep.runner import run_ep
     from pipeline.paths import DATA_PHASE5_FACTS
 
-    # wrapper.py에서 정규화된 {lecture_id}.jsonl 파일 사용
     phase5_file = DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
-    if phase5_file.exists():
-        run_ep(input_file=phase5_file, out_dir=DATA_EP_CONCEPTS)
-    else:
-        run_ep()
+    if not phase5_file.exists():
+        raise FileNotFoundError(f"전처리 출력 파일 없음: {phase5_file}")
+    run_ep(input_file=phase5_file, out_dir=DATA_EP_CONCEPTS)
 
 
 def _exec_blueprint(lecture_id: str) -> None:
@@ -236,10 +234,9 @@ def _exec_blueprint(lecture_id: str) -> None:
     from pipeline.blueprint.runner import run_blueprint
 
     ep_file = DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"
-    if ep_file.exists():
-        run_blueprint(input_file=ep_file)
-    else:
-        run_blueprint()
+    if not ep_file.exists():
+        raise FileNotFoundError(f"EP 출력 파일 없음: {ep_file}")
+    run_blueprint(input_file=ep_file)
 
 
 def _exec_quiz_generation(lecture_id: str) -> None:
@@ -248,13 +245,12 @@ def _exec_quiz_generation(lecture_id: str) -> None:
     from pipeline.paths import DATA_BLUEPRINTS, DATA_QUIZZES_RAW
 
     bp_file = DATA_BLUEPRINTS / f"{lecture_id}.jsonl"
-    if bp_file.exists():
-        run_quiz_generation(
-            input_file=bp_file,
-            output_file=DATA_QUIZZES_RAW / f"{lecture_id}.jsonl",
-        )
-    else:
-        run_quiz_generation()
+    if not bp_file.exists():
+        raise FileNotFoundError(f"Blueprint 출력 파일 없음: {bp_file}")
+    run_quiz_generation(
+        input_file=bp_file,
+        output_file=DATA_QUIZZES_RAW / f"{lecture_id}.jsonl",
+    )
 
     # quizzes_raw → quizzes_validated 복사 (QA 별도 단계 불필요)
     raw_file = DATA_QUIZZES_RAW / f"{lecture_id}.jsonl"
@@ -284,7 +280,7 @@ async def process_lecture(
 ):
     """강의 처리 시작 트리거 (Mode A)."""
     _validate_lecture_id(lecture_id)
-    lectures = load_lectures()
+    lectures = await asyncio.to_thread(load_lectures)
     if not any(lec.lecture_id == lecture_id for lec in lectures):
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
 
@@ -316,7 +312,7 @@ async def process_lecture(
 async def get_lecture_status(lecture_id: str):
     """강의 처리 상태 조회."""
     _validate_lecture_id(lecture_id)
-    lectures = load_lectures()
+    lectures = await asyncio.to_thread(load_lectures)
     lec = next((l for l in lectures if l.lecture_id == lecture_id), None)
     if not lec:
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
@@ -342,7 +338,7 @@ async def get_lecture_status(lecture_id: str):
 async def get_lecture_results(lecture_id: str):
     """강의 처리 결과 조회. 완료 전이면 202 반환."""
     _validate_lecture_id(lecture_id)
-    lectures = load_lectures()
+    lectures = await asyncio.to_thread(load_lectures)
     lec = next((l for l in lectures if l.lecture_id == lecture_id), None)
     if not lec:
         raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
@@ -384,7 +380,7 @@ async def get_lecture_results(lecture_id: str):
 async def process_week(week: int, background_tasks: BackgroundTasks, force: bool = False):
     """주차 처리 시작 트리거 (Mode B)."""
     _validate_week(week)
-    weeks = load_weeks()
+    weeks = await asyncio.to_thread(load_weeks)
     if not any(w.week == week for w in weeks):
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
 
@@ -416,7 +412,7 @@ async def process_week(week: int, background_tasks: BackgroundTasks, force: bool
 async def get_week_status(week: int):
     """주차 처리 상태 조회."""
     _validate_week(week)
-    weeks = load_weeks()
+    weeks = await asyncio.to_thread(load_weeks)
     ws = next((w for w in weeks if w.week == week), None)
     if not ws:
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
@@ -439,7 +435,7 @@ async def get_week_status(week: int):
 async def get_week_results(week: int):
     """주차 처리 결과 조회. 완료 전이면 202 반환."""
     _validate_week(week)
-    weeks = load_weeks()
+    weeks = await asyncio.to_thread(load_weeks)
     ws = next((w for w in weeks if w.week == week), None)
     if not ws:
         raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
