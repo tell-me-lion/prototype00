@@ -255,11 +255,7 @@ function WeekSection({
 }: WeekSectionProps) {
   const { week, lecture_count, completed_count, date_range, lectures } = weekSummary
 
-  const effectiveWeekStatus: ProcessingStatus = processingWeeks.has(week)
-    ? 'processing'
-    : weekSummary.status === 'processing' && !processingWeeks.has(week)
-      ? 'idle'
-      : weekSummary.status
+  const effectiveWeekStatus = getEffectiveWeekStatus(week, weekSummary.status, processingWeeks)
 
   return (
     <section className="tml-week-section tml-animate">
@@ -461,19 +457,24 @@ export function LecturesPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
-  // 서버에서 processing 상태인 강의를 로컬 상태에 동기화 (새로고침 후 상태바 복원)
+  // 서버 상태와 로컬 processingSet 동기화 (새로고침/뒤로가기 대응)
   useEffect(() => {
-    const ids = weeks
-      .flatMap((w) => w.lectures)
-      .filter((l) => l.status === 'processing')
-      .map((l) => l.lecture_id)
-    if (ids.length > 0) {
-      setProcessingLectures((prev) => {
-        const next = new Set(prev)
-        ids.forEach((id) => next.add(id))
-        return next
-      })
-    }
+    const allLectures = weeks.flatMap((w) => w.lectures)
+    const serverProcessingIds = new Set(
+      allLectures.filter((l) => l.status === 'processing').map((l) => l.lecture_id),
+    )
+    const serverCompletedIds = new Set(
+      allLectures.filter((l) => l.status === 'completed').map((l) => l.lecture_id),
+    )
+
+    setProcessingLectures((prev) => {
+      const next = new Set(prev)
+      // 서버에서 processing인 강의 추가
+      serverProcessingIds.forEach((id) => next.add(id))
+      // 서버에서 completed인 강의는 제거 (BUG-1: 뒤로가기 시 고착 방지)
+      serverCompletedIds.forEach((id) => next.delete(id))
+      return next
+    })
   }, [weeks])
 
   const activeWeek = searchParams.get('week') ? Number(searchParams.get('week')) : null
@@ -512,7 +513,7 @@ export function LecturesPage() {
       ids.map(async (id) => {
         setProcessingLectures((prev) => new Set(prev).add(id))
         try {
-          await triggerLectureProcess(id, true)
+          await triggerLectureProcess(id, false)
         } catch {
           failed.push(id)
           setProcessingLectures((prev) => {

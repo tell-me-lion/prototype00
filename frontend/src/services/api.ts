@@ -104,9 +104,17 @@ export async function fetchWeekStatus(week: number): Promise<ProcessingStatusRes
 // ===== 결과 =====
 
 export async function fetchLectureResults(lectureId: string): Promise<LectureOutputs> {
-  return request(`/api/lectures/${lectureId}/results`)
+  const data = await request<LectureOutputs & { status?: string }>(`/api/lectures/${lectureId}/results`)
+  if (data.status === 'processing') {
+    throw new ApiError(202, '아직 처리가 완료되지 않았습니다.')
+  }
+  return data
 }
 
 export async function fetchWeekResults(week: number): Promise<WeeklyOutputs> {
-  return request(`/api/weeks/${week}/results`)
+  const data = await request<WeeklyOutputs & { status?: string }>(`/api/weeks/${week}/results`)
+  if (data.status === 'processing') {
+    throw new ApiError(202, '아직 처리가 완료되지 않았습니다.')
+  }
+  return data
 }

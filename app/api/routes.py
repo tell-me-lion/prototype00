@@ -341,6 +341,7 @@ async def get_lecture_results(lecture_id: str):
     is_completed = (
         (job and job.status == ProcessingStatus.completed)
         or lec.status == ProcessingStatus.completed
+        or (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists()
     )
     if not is_completed:
         return JSONResponse(status_code=202, content={"status": "processing"})
@@ -437,6 +438,7 @@ async def get_week_results(week: int):
     is_completed = (
         (job and job.status == ProcessingStatus.completed)
         or ws.status == ProcessingStatus.completed
+        or (DATA_LEARNING_GUIDES / f"week_{week:02d}.jsonl").exists()
     )
     if not is_completed:
         return JSONResponse(status_code=202, content={"status": "processing"})

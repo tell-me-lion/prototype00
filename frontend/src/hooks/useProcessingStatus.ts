@@ -1,4 +1,4 @@
-/* useProcessingStatus — 강의/주차 처리 상태를 2초 간격으로 폴링한다. */
+/* useProcessingStatus — 강의/주차 처리 상태를 10초 간격으로 폴링한다. */
 
 import { useEffect, useRef, useState } from 'react'
 import type { ProcessingStatusResponse } from '../types/models'
@@ -23,7 +23,7 @@ export function useProcessingStatus({
   lectureId,
   week,
   enabled,
-  interval = 30000,
+  interval = 10000,
   onComplete,
   onError,
 }: UseProcessingStatusOptions): UseProcessingStatusReturn {
@@ -49,9 +49,21 @@ export function useProcessingStatus({
     let timer: ReturnType<typeof setTimeout>
     let retryCount = 0
     const MAX_RETRIES = 5
+    const MAX_POLL_MS = 60 * 60 * 1000 // 60분 타임아웃
+    const pollStartTime = Date.now()
 
     async function poll() {
       if (stopped) return
+
+      // BUG-2: 전체 폴링 타임아웃
+      if (Date.now() - pollStartTime > MAX_POLL_MS) {
+        const msg = '처리 시간이 초과되었습니다. 서버 상태를 확인해 주세요.'
+        console.error(`[폴링] 전체 타임아웃 초과 (${MAX_POLL_MS / 60000}분)`)
+        setError(msg)
+        onErrorRef.current?.(msg)
+        return
+      }
+
       const target = lectureId ? `lecture:${lectureId}` : `week:${week}`
       console.log(`[폴링] ${target} — 상태 조회 중... (재시도: ${retryCount})`)
       try {
