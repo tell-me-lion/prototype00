@@ -11,7 +11,11 @@ import time
 from datetime import date
 from pathlib import Path
 
-from pipeline.paths import DATA_RAW, DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED, DATA_PHASE1_SESSIONS, DATA_LEARNING_GUIDES
+from pipeline.paths import (
+    DATA_RAW, DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_QUIZZES_VALIDATED,
+    DATA_PHASE1_SESSIONS, DATA_PHASE2_SENTENCES, DATA_PHASE3_CHUNKS,
+    DATA_PHASE4_PROPOSITIONS, DATA_PHASE5_FACTS, DATA_LEARNING_GUIDES,
+)
 
 logger = logging.getLogger(__name__)
 from app.schemas.models import (
@@ -53,8 +57,17 @@ def _get_status(lecture_id: str) -> ProcessingStatus:
         and (DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl").exists()
     ):
         return ProcessingStatus.completed
-    if (DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl").exists():
-        return ProcessingStatus.processing
+    # 중간 단계 파일이 하나라도 있으면 재개 가능 상태
+    _partial_paths = [
+        DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl",
+        DATA_PHASE2_SENTENCES / f"{lecture_id}.jsonl",
+        DATA_PHASE3_CHUNKS / f"{lecture_id}.jsonl",
+        DATA_PHASE4_PROPOSITIONS / f"{lecture_id}.jsonl",
+        DATA_PHASE5_FACTS / f"{lecture_id}.jsonl",
+        DATA_EP_CONCEPTS / f"{lecture_id}.jsonl",
+    ]
+    if any(p.exists() for p in _partial_paths):
+        return ProcessingStatus.partial
     return ProcessingStatus.idle
 
 

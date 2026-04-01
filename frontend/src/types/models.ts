@@ -1,6 +1,6 @@
 // ===== 처리 상태 =====
 
-export type ProcessingStatus = 'idle' | 'processing' | 'completed' | 'error'
+export type ProcessingStatus = 'idle' | 'partial' | 'processing' | 'completed' | 'error'
 
 export interface ProcessingStep {
   name: string // "영상 분석", "텍스트 추출", "AI 분석"
