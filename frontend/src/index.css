@@ -3376,13 +3376,11 @@ body::after {
 }
 
 .tml-processing-substep__detail {
-  display: block;
-  margin-left: 20px; /* icon width 맞춤 */
-  margin-top: 1px;
+  flex-basis: 100%;
+  margin-left: 22px; /* icon width + gap 맞춤 */
   font-size: 0.725rem;
   color: var(--tml-ink-muted);
   font-weight: 400;
-  white-space: normal;
 }
 
 /* R-1: 극소형 모바일(375px) padding 과대 방지 */
