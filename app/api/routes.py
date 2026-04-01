@@ -141,41 +141,75 @@ _WEEK_STEPS_TEMPLATE = [
 
 
 async def _run_lecture_pipeline(lecture_id: str) -> None:
-    """Mode A: 강의 파이프라인 실행 (전처리 → EP → Blueprint → Quiz)."""
+    """Mode A: 강의 파이프라인 실행 (전처리 → EP → Blueprint → Quiz).
+
+    각 단계 출력 파일이 이미 존재하면 해당 단계를 건너뛴다.
+    """
+    from pipeline.paths import DATA_PHASE1_SESSIONS, DATA_PHASE5_FACTS, DATA_BLUEPRINTS
+
     job = await get_lecture_job(lecture_id)
     if not job:
         return
     try:
         # 처리 시작 마커 파일 생성 — 새로고침 후에도 processing 상태 감지 가능하게
-        from pipeline.paths import DATA_PHASE1_SESSIONS
         marker = DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl"
         marker.parent.mkdir(parents=True, exist_ok=True)
         marker.touch()
         invalidate_catalog_cache()  # 캐시 즉시 만료 → 다음 /api/weeks 요청에서 processing 반환
 
         # Step 0~4: 전처리 (Phase 1~5)
-        def progress_callback(phase_num: int, status: str):
-            # phase_num: 1~5 -> steps indices: 0~4
-            idx = phase_num - 1
-            if 0 <= idx < 5:
-                job.steps[idx]["status"] = status
+        phase5_file = DATA_PHASE5_FACTS / f"{lecture_id}.jsonl"
+        if phase5_file.exists():
+            logger.info("[SKIP] Phase 1~5 전처리 — 출력 파일 존재: %s", phase5_file)
+            for i in range(5):
+                job.steps[i]["status"] = "done"
+        else:
+            def progress_callback(phase_num: int, status: str):
+                # phase_num: 1~5 -> steps indices: 0~4
+                idx = phase_num - 1
+                if 0 <= idx < 5:
+                    job.steps[idx]["status"] = status
 
-        await asyncio.to_thread(_exec_preprocess, lecture_id, progress_callback)
+            def phase4_detail_callback(chunks_done: int, total_chunks: int, props_count: int):
+                job.steps[3]["detail"] = f"{chunks_done}/{total_chunks} 청크 | 명제 {props_count}개"
+                logger.info("[Phase 4] 명제 추출 진행: %d/%d 청크, 명제 %d개", chunks_done, total_chunks, props_count)
+
+            await asyncio.to_thread(_exec_preprocess, lecture_id, progress_callback, phase4_detail_callback)
 
         # Step 5: 개념 추출 (EP)
-        job.steps[5]["status"] = "running"
-        await asyncio.to_thread(_exec_ep, lecture_id)
-        job.steps[5]["status"] = "done"
+        ep_file = DATA_EP_CONCEPTS / f"{lecture_id}.jsonl"
+        if ep_file.exists():
+            logger.info("[SKIP] EP — 출력 파일 존재: %s", ep_file)
+            job.steps[5]["status"] = "done"
+        else:
+            job.steps[5]["status"] = "running"
+            await asyncio.to_thread(_exec_ep, lecture_id)
+            job.steps[5]["status"] = "done"
 
         # Step 6: 문제 설계 (Blueprint)
-        job.steps[6]["status"] = "running"
-        await asyncio.to_thread(_exec_blueprint, lecture_id)
-        job.steps[6]["status"] = "done"
+        bp_file = DATA_BLUEPRINTS / f"{lecture_id}.jsonl"
+        if bp_file.exists():
+            logger.info("[SKIP] Blueprint — 출력 파일 존재: %s", bp_file)
+            job.steps[6]["status"] = "done"
+        else:
+            job.steps[6]["status"] = "running"
+            await asyncio.to_thread(_exec_blueprint, lecture_id)
+            job.steps[6]["status"] = "done"
 
         # Step 7: 퀴즈 생성
-        job.steps[7]["status"] = "running"
-        await asyncio.to_thread(_exec_quiz_generation, lecture_id)
-        job.steps[7]["status"] = "done"
+        quiz_file = DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl"
+        if quiz_file.exists() and quiz_file.stat().st_size > 0:
+            logger.info("[SKIP] 퀴즈 생성 — 출력 파일 존재: %s", quiz_file)
+            job.steps[7]["status"] = "done"
+        else:
+            job.steps[7]["status"] = "running"
+
+            def quiz_detail_callback(detail: str):
+                job.steps[7]["detail"] = detail
+                logger.info("[퀴즈 생성] %s", detail)
+
+            await asyncio.to_thread(_exec_quiz_generation, lecture_id, quiz_detail_callback)
+            job.steps[7]["status"] = "done"
 
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
@@ -212,11 +246,20 @@ async def _run_week_pipeline(week: int) -> None:
 
 from typing import Callable
 
-def _exec_preprocess(lecture_id: str, progress_callback: Callable[[int, str], None] | None = None) -> None:
+def _exec_preprocess(
+    lecture_id: str,
+    progress_callback: Callable[[int, str], None] | None = None,
+    phase4_progress_callback: Callable[[int, int, int], None] | None = None,
+) -> None:
     """Phase 1~5 전처리 실행."""
     from pipeline.preprocessor.wrapper import run_preprocess
 
-    run_preprocess(lecture_id, use_gemini_embed=True, progress_callback=progress_callback)
+    run_preprocess(
+        lecture_id,
+        use_gemini_embed=True,
+        progress_callback=progress_callback,
+        phase4_progress_callback=phase4_progress_callback,
+    )
 
 
 def _exec_ep(lecture_id: str) -> None:
@@ -240,7 +283,10 @@ def _exec_blueprint(lecture_id: str) -> None:
     run_blueprint(input_file=ep_file)
 
 
-def _exec_quiz_generation(lecture_id: str) -> None:
+def _exec_quiz_generation(
+    lecture_id: str,
+    detail_callback: Callable[[str], None] | None = None,
+) -> None:
     """퀴즈 생성 실행."""
     from pipeline.quiz_generation.runner import run_quiz_generation
     from pipeline.paths import DATA_BLUEPRINTS, DATA_QUIZZES_RAW
@@ -251,6 +297,7 @@ def _exec_quiz_generation(lecture_id: str) -> None:
     run_quiz_generation(
         input_file=bp_file,
         output_file=DATA_QUIZZES_RAW / f"{lecture_id}.jsonl",
+        detail_callback=detail_callback,
     )
 
     # quizzes_raw → quizzes_validated 복사 (QA 별도 단계 불필요)
