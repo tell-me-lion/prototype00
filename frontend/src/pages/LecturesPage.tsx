@@ -184,63 +184,83 @@ interface WeekGuideCardProps {
   onViewResults: (week: number) => void
   onProcessComplete: (week: number) => void
   onProcessError: (week: number) => void
+  onAnalyzeAll: () => void
 }
 
-function WeekGuideCard({ week, lectureCount, completedCount, status, onProcess, onViewResults, onProcessComplete, onProcessError }: WeekGuideCardProps) {
+function WeekGuideCard({ week, lectureCount, completedCount, status, onProcess, onViewResults, onProcessComplete, onProcessError, onAnalyzeAll }: WeekGuideCardProps) {
+  const [showConfirm, setShowConfirm] = useState(false)
   const allCompleted = completedCount >= lectureCount && lectureCount > 0
   const remaining = lectureCount - completedCount
+
+  const handleGuideClick = () => {
+    if (allCompleted) {
+      onProcess(week)
+    } else {
+      setShowConfirm(true)
+    }
+  }
+
+  const handleAnalyzeAll = () => {
+    setShowConfirm(false)
+    onAnalyzeAll()
+  }
 
   return (
     <div className="tml-week-guide-card tml-card">
       <div className="tml-week-guide-card__bar" />
-      <div className="tml-week-guide-card__content">
-        <div>
-          <p className="tml-week-guide-card__title">
-            {week}주차 전체 학습 가이드
+      {showConfirm ? (
+        <div className="tml-week-guide-card__confirm">
+          <p className="tml-week-guide-card__confirm-msg">
+            {remaining}개 강의 분석이 남아있어요.
+            <br />
+            먼저 이 주차 강의를 모두 분석할까요?
           </p>
-          <p className="tml-week-guide-card__desc">
-            {lectureCount}개 강의 통합 분석
-          </p>
+          <div className="tml-week-guide-card__confirm-actions">
+            <button className="btn-primary" style={{ fontSize: '0.8125rem', padding: '6px 14px' }} onClick={handleAnalyzeAll}>
+              지금 분석하기
+            </button>
+            <button className="tml-week-guide-card__cancel-btn" onClick={() => setShowConfirm(false)}>
+              취소
+            </button>
+          </div>
         </div>
+      ) : (
+        <div className="tml-week-guide-card__content">
+          <div>
+            <p className="tml-week-guide-card__title">
+              {week}주차 전체 학습 가이드
+            </p>
+            <p className="tml-week-guide-card__desc">
+              {lectureCount}개 강의 통합 분석
+            </p>
+          </div>
 
-        <div style={{ flexShrink: 0, textAlign: 'right' }}>
-          {status === 'completed' ? (
-            <button
-              className="tml-lecture-card__result-btn"
-              onClick={() => onViewResults(week)}
-            >
-              가이드 보기 →
-            </button>
-          ) : status === 'processing' ? (
-            <ProcessingStatusUI
-              week={week}
-              onComplete={() => onProcessComplete(week)}
-              onError={() => onProcessError(week)}
-            />
-          ) : allCompleted ? (
-            <button
-              className="btn-primary"
-              style={{ fontSize: '0.8125rem', padding: '6px 14px' }}
-              onClick={() => onProcess(week)}
-            >
-              가이드 생성 →
-            </button>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          <div style={{ flexShrink: 0 }}>
+            {status === 'completed' ? (
+              <button
+                className="tml-lecture-card__result-btn"
+                onClick={() => onViewResults(week)}
+              >
+                가이드 보기 →
+              </button>
+            ) : status === 'processing' ? (
+              <ProcessingStatusUI
+                week={week}
+                onComplete={() => onProcessComplete(week)}
+                onError={() => onProcessError(week)}
+              />
+            ) : (
               <button
                 className="btn-primary"
-                style={{ fontSize: '0.8125rem', padding: '6px 14px', opacity: 0.4, cursor: 'not-allowed' }}
-                disabled
+                style={{ fontSize: '0.8125rem', padding: '6px 14px' }}
+                onClick={handleGuideClick}
               >
                 가이드 생성 →
               </button>
-              <span style={{ fontSize: '0.7rem', color: 'var(--tml-ink-muted)' }}>
-                {remaining}개 강의 분석 필요
-              </span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -284,6 +304,15 @@ function WeekSection({
 
   const effectiveWeekStatus = getEffectiveWeekStatus(week, weekSummary.status, processingWeeks)
 
+  const handleAnalyzeAll = () => {
+    lectures.forEach((lecture) => {
+      const effectiveStatus = getEffectiveLectureStatus(lecture.lecture_id, lecture.status, processingLectures, erroredLectures)
+      if (effectiveStatus !== 'completed' && effectiveStatus !== 'processing') {
+        onRetry(lecture.lecture_id)
+      }
+    })
+  }
+
   return (
     <section className="tml-week-section tml-animate">
       <div className="tml-week-section__header">
@@ -323,6 +352,7 @@ function WeekSection({
         onViewResults={onViewWeekResults}
         onProcessComplete={onWeekProcessComplete}
         onProcessError={onWeekProcessError}
+        onAnalyzeAll={handleAnalyzeAll}
       />
     </section>
   )
