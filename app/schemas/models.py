@@ -145,6 +145,7 @@ class WeekSummary(BaseModel):
     completed_count: int
     date_range: str
     status: ProcessingStatus
+    guide_status: ProcessingStatus = ProcessingStatus.idle
     lectures: list[LectureCatalog] = Field(default_factory=list)
 
 

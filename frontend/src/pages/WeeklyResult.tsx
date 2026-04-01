@@ -47,11 +47,13 @@ export function WeeklyResult() {
           return
         }
 
-        if (weekData.status === 'completed') {
+        // guide_status 기준으로 판정 (Mode B 가이드 생성 상태)
+        const guideStatus = weekData.guide_status ?? weekData.status
+        if (guideStatus === 'completed') {
           const outputs = await fetchWeekResults(week)
           if (cancelled) return
           setState({ tag: 'results', week: weekData, outputs, availableWeeks })
-        } else if (weekData.status === 'processing') {
+        } else if (guideStatus === 'processing') {
           setState({ tag: 'processing', week: weekData, availableWeeks })
         } else {
           setState({ tag: 'not-processed', week: weekData, availableWeeks })
@@ -87,10 +89,11 @@ export function WeeklyResult() {
         try {
           const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
           const availableWeeks = allWeeks.map((w) => w.week).sort((a, b) => a - b)
-          if (weekData.status === 'completed') {
+          const gs = weekData.guide_status ?? weekData.status
+          if (gs === 'completed') {
             const outputs = await fetchWeekResults(week)
             setState({ tag: 'results', week: weekData, outputs, availableWeeks })
-          } else if (weekData.status === 'processing') {
+          } else if (gs === 'processing') {
             setState({ tag: 'processing', week: weekData, availableWeeks })
           } else {
             setState({ tag: 'not-processed', week: weekData, availableWeeks })
