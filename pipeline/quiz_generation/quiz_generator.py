@@ -29,15 +29,20 @@ def _get_client() -> genai.Client:
 def call_gemini_batch(prompt: str) -> list[dict]:
     """Gemini API를 호출하고 JSON 배열 응답을 파싱해 반환.
 
+    429/503 에러 시 최대 3회 지수 백오프 재시도.
+
     Args:
         prompt: 배치 퀴즈 생성 프롬프트.
 
     Returns:
-        파싱된 퀴즈 dict 목록. 파싱 실패 시 빈 리스트.
+        파싱된 퀴즈 dict 목록.
 
     Raises:
         RuntimeError: API 키 없음 또는 API 호출 실패.
+        ValueError: JSON 파싱 실패.
     """
+    import time
+
     client = _get_client()
     gen_config = types.GenerateContentConfig(
         system_instruction=SYSTEM_INSTRUCTION,
@@ -47,11 +52,27 @@ def call_gemini_batch(prompt: str) -> list[dict]:
         max_output_tokens=8192,
     )
 
-    response = client.models.generate_content(
-        model=MODEL_NAME,
-        contents=prompt,
-        config=gen_config,
-    )
+    max_retries = 3
+    last_error = None
+    for attempt in range(max_retries + 1):
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt,
+                config=gen_config,
+            )
+            break
+        except Exception as e:
+            last_error = e
+            err_str = str(e)
+            if attempt < max_retries and ("429" in err_str or "503" in err_str or "RESOURCE_EXHAUSTED" in err_str or "UNAVAILABLE" in err_str):
+                wait_sec = 15.0 * (2 ** attempt)
+                print(f"[Quiz Gen] Gemini API 재시도 ({attempt+1}/{max_retries}) — {wait_sec:.0f}초 대기")
+                time.sleep(wait_sec)
+            else:
+                raise RuntimeError(f"Gemini API 호출 실패: {e}") from e
+    else:
+        raise RuntimeError(f"Gemini API {max_retries}회 재시도 후에도 실패: {last_error}")
 
     raw_text = response.text.strip()
 

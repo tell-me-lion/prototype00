@@ -39,18 +39,30 @@ def _cleanup_orphaned_markers() -> None:
         DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_BLUEPRINTS, DATA_QUIZZES_RAW, DATA_QUIZZES_VALIDATED,
     ]
 
+    def _has_any(directory, lid):
+        """디렉터리에서 lecture_id에 매칭되는 파일이 있는지 부분 매칭으로 확인."""
+        exact = directory / f"{lid}.jsonl"
+        if exact.exists() and exact.stat().st_size > 0:
+            return True
+        date_part = lid.split("_")[0] if "_" in lid else lid
+        return any(p.stat().st_size > 0 for p in directory.glob(f"*{date_part}*.jsonl"))
+
     removed = 0
     if not DATA_PHASE1_SESSIONS.exists():
         return
     for marker in DATA_PHASE1_SESSIONS.glob("*.jsonl"):
         lecture_id = marker.stem
         if (
-            (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists()
-            and (DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl").exists()
-            and (DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl").exists()
+            _has_any(DATA_EP_CONCEPTS, lecture_id)
+            and _has_any(DATA_EP_LEARNING_POINTS, lecture_id)
+            and _has_any(DATA_QUIZZES_VALIDATED, lecture_id)
         ):
             continue  # 완료된 강의는 건드리지 않음
+        # phase5까지 도달한 파일이 있으면 중간 단계(phase1~3)만 정리, phase5 보존
+        has_phase5 = _has_any(DATA_PHASE5_FACTS, lecture_id)
         for d in _INTERMEDIATE_DIRS:
+            if has_phase5 and d in (DATA_PHASE5_FACTS, DATA_EP_CONCEPTS, DATA_EP_LEARNING_POINTS, DATA_BLUEPRINTS):
+                continue  # Phase 5 이후 파일은 보존
             f = d / f"{lecture_id}.jsonl"
             if f.exists():
                 f.unlink()

@@ -49,24 +49,34 @@ def _calculate_week(lecture_date: date, first_date: date) -> int:
     return (delta_days // 7) + 1
 
 
+def _has_output(directory: Path, lecture_id: str) -> bool:
+    """디렉터리에서 lecture_id에 매칭되는 비어있지 않은 JSONL 파일이 있는지 확인.
+    정확한 이름({lecture_id}.jsonl) 또는 부분 매칭(*{date_part}*.jsonl)을 시도한다.
+    """
+    exact = directory / f"{lecture_id}.jsonl"
+    if exact.exists() and exact.stat().st_size > 0:
+        return True
+    date_part = lecture_id.split("_")[0] if "_" in lecture_id else lecture_id
+    return any(
+        p.stat().st_size > 0
+        for p in directory.glob(f"*{date_part}*.jsonl")
+    )
+
+
 def _get_status(lecture_id: str) -> ProcessingStatus:
     """파이프라인 출력 디렉터리를 확인해 처리 상태를 판별."""
     if (
-        (DATA_EP_CONCEPTS / f"{lecture_id}.jsonl").exists()
-        and (DATA_EP_LEARNING_POINTS / f"{lecture_id}.jsonl").exists()
-        and (DATA_QUIZZES_VALIDATED / f"{lecture_id}.jsonl").exists()
+        _has_output(DATA_EP_CONCEPTS, lecture_id)
+        and _has_output(DATA_EP_LEARNING_POINTS, lecture_id)
+        and _has_output(DATA_QUIZZES_VALIDATED, lecture_id)
     ):
         return ProcessingStatus.completed
     # 중간 단계 파일이 하나라도 있으면 재개 가능 상태
-    _partial_paths = [
-        DATA_PHASE1_SESSIONS / f"{lecture_id}.jsonl",
-        DATA_PHASE2_SENTENCES / f"{lecture_id}.jsonl",
-        DATA_PHASE3_CHUNKS / f"{lecture_id}.jsonl",
-        DATA_PHASE4_PROPOSITIONS / f"{lecture_id}.jsonl",
-        DATA_PHASE5_FACTS / f"{lecture_id}.jsonl",
-        DATA_EP_CONCEPTS / f"{lecture_id}.jsonl",
+    _partial_dirs = [
+        DATA_PHASE1_SESSIONS, DATA_PHASE2_SENTENCES, DATA_PHASE3_CHUNKS,
+        DATA_PHASE4_PROPOSITIONS, DATA_PHASE5_FACTS, DATA_EP_CONCEPTS,
     ]
-    if any(p.exists() for p in _partial_paths):
+    if any(_has_output(d, lecture_id) for d in _partial_dirs):
         return ProcessingStatus.partial
     return ProcessingStatus.idle
 
