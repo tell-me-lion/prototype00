@@ -478,75 +478,214 @@
         </div>
       </section>
 
-      <!-- ==================== 3. 솔루션 소개 ==================== -->
+      <!-- ==================== 3-1. 솔루션 - 두 가지 사용 모드 ==================== -->
       <section>
         <div class="accent-bar"></div>
         <h2>솔루션 — 알려주사자</h2>
-        <p style="margin-bottom: 24px;">파일 업로드 없이, 대시보드에서 <strong style="color: var(--orange);">강의를 선택</strong>하기만 하면 서버가 나머지를 처리합니다.</p>
+        <p style="margin-bottom: 24px;">두 가지 작동 모드를 통해 단기 복습부터 주간 누적 복습까지 지원합니다.</p>
 
         <div class="card-grid cols-2">
           <div class="card" style="border-left: 3px solid var(--orange);">
-            <div class="tag">Mode A</div>
-            <h3>단일 강의 분석</h3>
-            <p>강의 1개를 선택하면</p>
-            <ul>
-              <li>핵심 개념 자동 추출</li>
-              <li>학습 포인트 정리</li>
-              <li>다양한 유형의 퀴즈 생성</li>
-            </ul>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="tag">Mode A</div>
+              <span style="font-size:0.55em; color:#8899aa; font-weight:600;">단일 강의</span>
+            </div>
+            <h3 style="margin-top:16px; color: var(--orange);">단일 강의 분석</h3>
+            <p style="color: #c8d0dc; margin-bottom: 20px;">특정 강의 복습을 위한 집중 모드</p>
+            <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px;">
+              <p style="font-size:0.6em; margin:0 0 8px 0;"><span style="color:#8899aa; display:inline-block; width:40px;">입력</span> 강의 스크립트 1개</p>
+              <p style="font-size:0.6em; margin:0;"><span style="color:#8899aa; display:inline-block; width:40px;">산출물</span> 핵심 개념, 설계, 퀴즈</p>
+            </div>
           </div>
           <div class="card" style="border-left: 3px solid var(--navy-mid);">
-            <div class="tag navy">Mode B</div>
-            <h3>주차별 학습 가이드</h3>
-            <p>1주치 강의 전체를 통합하여</p>
-            <ul>
-              <li>주차별 핵심 요약</li>
-              <li>복습 우선순위</li>
-              <li>자가 점검 문항</li>
-            </ul>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="tag navy">Mode B</div>
+              <span style="font-size:0.55em; color:#8899aa; font-weight:600;">주차 단위</span>
+            </div>
+            <h3 style="margin-top:16px; color: #7ea8cc;">주차별 학습 가이드</h3>
+            <p style="color: #c8d0dc; margin-bottom: 20px;">주간 복습 및 시험 대비용 통합 모드</p>
+            <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 6px;">
+              <p style="font-size:0.6em; margin:0 0 8px 0;"><span style="color:#8899aa; display:inline-block; width:40px;">입력</span> 1주치 강의 전체</p>
+              <p style="font-size:0.6em; margin:0;"><span style="color:#8899aa; display:inline-block; width:40px;">산출물</span> 주차별 학습 가이드, 핵심 요약</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ==================== 4. 서비스 데모 ==================== -->
+      <!-- ==================== 3-2. Mode A - Concept & Blueprint ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Mode A — 단일 강의 지식 추출</h2>
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 24px;">가공된 데이터베이스를 바탕으로 할루시네이션 없는 콘텐츠를 생성합니다.</p>
+
+        <div class="card-grid cols-2" style="gap: 24px; align-items: stretch;">
+          <!-- Concept -->
+          <div class="card" style="padding: 20px; border-top: 3px solid var(--orange);">
+            <h3 style="color: var(--orange); font-size: 0.75em; margin-bottom: 8px;">1. 핵심 개념 (Concept)</h3>
+            <p style="font-size: 0.55em; color: #8899aa; margin-bottom: 12px; line-height: 1.4;">개념 정의, 중요도 점수(0~1), 연관 개념 매핑</p>
+            <pre style="margin: 0; box-shadow: none; width: 100%;"><code class="language-json" data-trim style="font-size: 0.45em; line-height: 1.4; border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3);">
+{
+  "concept_id": "concept_추상",
+  "concept": "추상",
+  "definition": "추상 클래스는 주요 메소드인...",
+  "importance": 0.302,
+  "related_concepts": ["concept_바이트", "concept_캐릭터"]
+}
+            </code></pre>
+          </div>
+
+          <!-- Blueprint -->
+          <div class="card" style="padding: 20px; border-top: 3px solid #7ea8cc;">
+            <h3 style="color: #7ea8cc; font-size: 0.75em; margin-bottom: 8px;">2. 설계 (Blueprint)</h3>
+            <p style="font-size: 0.55em; color: #8899aa; margin-bottom: 12px; line-height: 1.4;">정답 근거 및 오답 재료 사전 분리로 신뢰도 확보</p>
+            <pre style="margin: 0; box-shadow: none; width: 100%;"><code class="language-json" data-trim style="font-size: 0.40em; line-height: 1.4; border-radius: 8px; padding: 12px; background: rgba(0,0,0,0.3);">
+{
+  "blueprint_id": "bp_추상",
+  "concept": "추상",
+  "evidence": {
+    "correct_facts": [
+      "추상 클래스에는 스트링 단위로 된 애가 없었다."
+    ],
+    "distractor_facts": [
+      "추상 클래스는 character 세트를 가지고 있다.",
+      "OutputStream은 추상 클래스이고..."
+    ]
+  }
+}
+            </code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3-3. Mode A - Quiz ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Mode A — 퀴즈 생성 및 5대 유형</h2>
+        
+        <div class="card-grid cols-2" style="align-items: center; gap: 24px;">
+          <div>
+            <table style="font-size: 0.5em; margin-top: 0; width: 100%;">
+              <thead>
+                <tr>
+                  <th width="35%">유형</th>
+                  <th width="65%">설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color:var(--orange); font-weight:600;">개념 정의형 객관식</td>
+                  <td>핵심 개념의 정의 4지선다</td>
+                </tr>
+                <tr>
+                  <td style="color:#7ea8cc; font-weight:600;">오개념 객관식</td>
+                  <td>흔한 오해를 선지에 포함하여 검증</td>
+                </tr>
+                <tr>
+                  <td>빈칸 채우기</td>
+                  <td>핵심 용어를 타이핑하는 직접 입력형</td>
+                </tr>
+                <tr>
+                  <td>OX 퀴즈</td>
+                  <td>참/거짓 판별 방식의 빠른 개념 확인</td>
+                </tr>
+                <tr>
+                  <td>코드 실행형</td>
+                  <td>SQL/코드의 실행 결과를 예측하는 문제</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="padding: 20px; border-left: 3px solid var(--orange);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="color: #e0e6ee; font-size: 0.7em; margin:0;">생성된 퀴즈 예시</h3>
+              <span class="tag">난이도: 중</span>
+            </div>
+            <pre style="margin: 0; box-shadow: none; width:100%;"><code class="language-json" data-trim style="font-size: 0.40em; line-height: 1.4; border-radius: 8px; padding: 16px; background: rgba(0,0,0,0.3);">
+{
+  "question_type": "mcq_definition",
+  "question": "추상 클래스에 대한 설명으로 올바른 것은?",
+  "choices": [
+    { "text": "인스턴스를 직접 생성할 수 있다.", "is_answer": false },
+    { "text": "추상 메서드를 포함할 수 있다.", "is_answer": true }
+  ],
+  "explanation": "하위 클래스가 반드시 구현해야 하는 추상..."
+}
+            </code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3-4. Mode B - 주차별 학습 가이드 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Mode B — 주차별 학습 가이드</h2>
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 24px;">1주치 강의 전체를 통합 분석하여 <strong style="color: #fff;">학습 로드맵</strong>과 <strong style="color: #fff;">핵심 요약</strong>을 제공합니다.</p>
+
+        <div class="card-grid cols-2" style="align-items: center; gap: 24px;">
+          <div class="card" style="border-left: 3px solid var(--navy-mid); padding: 24px;">
+            <div class="tag navy" style="margin-bottom: 16px;">통합 산출물 포맷</div>
+            <pre style="margin: 0; box-shadow: none; width: 100%;"><code class="language-json" data-trim style="font-size: 0.5em; line-height: 1.5; border-radius: 8px; padding: 16px; background: rgba(0,0,0,0.3);">
+{
+  "week": 5,
+  "summary": "이번 주차에서는 Java I/O 스트림의 계층 구조와 직렬화...",
+  "key_concepts": [
+    "추상 클래스", 
+    "바이트 스트림", 
+    "직렬화"
+  ],
+  "meta": { 
+    "lecture_count": 4, 
+    "total_concepts": 15 
+  }
+}
+            </code></pre>
+          </div>
+          <div>
+            <div style="background: rgba(30, 58, 95, 0.4); padding: 24px; border-radius: 8px; border: 1px solid rgba(126, 168, 204, 0.2);">
+              <h3 style="color: #7ea8cc; font-size: 0.75em; margin-bottom: 12px;">통합 가이드의 장점</h3>
+              <ul style="font-size: 0.6em; line-height: 1.8; margin-bottom: 0; color: #c8d0dc;">
+                <li>여러 강의에서 산발적으로 언급된 개념을 주차 단위로 하나로 통합</li>
+                <li>강의 간의 흐름과 맥락을 학습자에게 로드맵 형태로 제공</li>
+                <li>한 주 동안 배운 핵심 개념에 대한 효과적인 누적 반복 복습</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 4. 서비스 흐름 ==================== -->
       <section>
         <div class="accent-bar"></div>
         <h2>서비스 흐름</h2>
 
         <div class="demo-flow">
-          <div class="demo-step">
-            <div class="step-num">1</div>
-            <h3>대시보드</h3>
+          <div class="demo-step" style="border-top: 3px solid #667788;">
+            <div class="step-num" style="background:#667788; border: 2px solid #0a1020;">1</div>
+            <h3 style="color:#e0e6ee;">대시보드</h3>
             <p>전체 학습 진행률과 최근 분석 결과를 한눈에 확인</p>
           </div>
-          <div class="demo-step">
-            <div class="step-num">2</div>
-            <h3>강의 선택</h3>
-            <p>분석할 강의를 선택하고 "분석 시작" 클릭. 실시간 진행 상태 표시</p>
+          <div class="demo-step" style="border-top: 3px solid var(--orange);">
+            <div class="step-num" style="background:var(--orange); border: 2px solid #0a1020;">2</div>
+            <h3 style="color:var(--orange);">Mode 선택</h3>
+            <p>단일 강의(Mode A) 또는 주차별 통합(Mode B) 선택 후 자동 처리</p>
           </div>
-          <div class="demo-step">
-            <div class="step-num">3</div>
-            <h3>결과 확인</h3>
-            <p>핵심 개념 · 학습 포인트 · 퀴즈를 탭으로 전환하며 학습</p>
+          <div class="demo-step" style="border-top: 3px solid var(--orange);">
+            <div class="step-num" style="background:var(--orange); border: 2px solid #0a1020;">3</div>
+            <h3 style="color:var(--orange);">단일 분석 확인</h3>
+            <p>추출된 핵심 개념, 학습 포인트, 5개 유형 퀴즈 풀이</p>
           </div>
-          <div class="demo-step">
-            <div class="step-num">4</div>
-            <h3>주차 가이드</h3>
-            <p>주차별 통합 학습 가이드로 체계적 복습</p>
+          <div class="demo-step" style="border-top: 3px solid var(--navy-mid);">
+            <div class="step-num" style="background:#4D7FA8; border: 2px solid #0a1020;">4</div>
+            <h3 style="color:#7ea8cc;">주차 통합 복습</h3>
+            <p>1주치 요약본과 로드맵으로 체계적인 시험 대비</p>
           </div>
         </div>
 
-        <div style="margin-top: 32px;">
-          <div class="card-grid cols-2">
-            <div class="card" style="text-align: center;">
-              <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">Mode A — 단일 강의 결과</p>
-              <p style="font-size: 0.5em; color: #556677;">핵심 개념 카드 (오렌지 사이드바)<br/>학습 포인트 카드 (네이비 사이드바)<br/>퀴즈 CTA 배너</p>
-            </div>
-            <div class="card" style="text-align: center;">
-              <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">Mode B — 주차별 가이드</p>
-              <p style="font-size: 0.5em; color: #556677;">Overview 히어로 · 선수 지식<br/>주제별 섹션 · 복습 우선순위<br/>자가 점검 Q&A · 개념 맵</p>
-            </div>
-          </div>
+        <div style="margin-top: 36px; text-align: center; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px;">
+          <p style="font-size: 0.6em; color: #8899aa; margin: 0;">
+            파일 업로드나 복잡한 설정 없이, 대시보드 클릭만으로 맞춤형 학습 콘텐츠를 획득합니다.
+          </p>
         </div>
       </section>
 
