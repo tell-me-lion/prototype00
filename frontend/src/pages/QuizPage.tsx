@@ -112,7 +112,7 @@ export function QuizPage() {
   const { lecture, outputs } = state
   const { quizzes } = outputs
 
-  const mcqQuizzes  = quizzes.filter((q) => q.question_type === 'mcq_definition' || q.question_type === 'mcq_misconception')
+  const mcqQuizzes  = quizzes.filter((q) => q.question_type === 'mcq_definition' || q.question_type === 'mcq_misconception' || q.question_type === 'mcq')
   const oxQuizzes   = quizzes.filter((q) => q.question_type === 'ox_quiz')
   const fillQuizzes = quizzes.filter((q) => q.question_type === 'fill_blank')
   const codeQuizzes = quizzes.filter((q) => q.question_type === 'code_execution')

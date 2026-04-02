@@ -98,7 +98,7 @@ export interface Quiz {
   blueprint_id: string
   lecture_id: string
   week: number
-  question_type: 'mcq_definition' | 'mcq_misconception' | 'fill_blank' | 'ox_quiz' | 'code_execution'
+  question_type: 'mcq' | 'mcq_definition' | 'mcq_misconception' | 'fill_blank' | 'ox_quiz' | 'code_execution'
   question_format: string
   difficulty: '상' | '중' | '하'
   question: string

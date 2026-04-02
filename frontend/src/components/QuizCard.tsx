@@ -281,8 +281,7 @@ function CodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
 
 /* ── 진입점 ──────────────────────────────────────────── */
 export function QuizCard({ quiz, quizIndex, totalInType, onNext }: QuizCardProps) {
-  switch (quiz.question_type) {
-    case 'mcq_definition':
+  switch (quiz.question_type) {    case 'mcq':    case 'mcq_definition':
     case 'mcq_misconception':
       return <McqCard quiz={quiz} quizIndex={quizIndex} totalInType={totalInType} onNext={onNext} />
     case 'ox_quiz':
