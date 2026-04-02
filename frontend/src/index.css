@@ -3417,6 +3417,36 @@ body::after {
   font-weight: 400;
 }
 
+/* 퀴즈 생성 세부 진행 바 */
+.tml-processing-quiz-progress {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tml-processing-quiz-progress__bar-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--tml-surface-alt, #e5e7eb);
+  overflow: hidden;
+}
+
+.tml-processing-quiz-progress__bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--tml-accent, #6366f1);
+  transition: width 0.4s ease;
+}
+
+.tml-processing-quiz-progress__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--tml-ink-muted);
+  font-weight: 500;
+}
+
 /* R-1: 극소형 모바일(375px) padding 과대 방지 */
 @media (max-width: 479px) {
   .tml-page-container {

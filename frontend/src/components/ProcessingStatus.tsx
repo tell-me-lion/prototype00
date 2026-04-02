@@ -203,6 +203,31 @@ export function ProcessingStatus({
   )
 }
 
+// ── 퀴즈 생성 detail 파싱 ──
+
+interface QuizProgress {
+  generated?: number
+  total?: number
+  qaProgress?: string
+  raw: string
+}
+
+function parseQuizDetail(detail: string): QuizProgress {
+  const result: QuizProgress = { raw: detail }
+  // "12/30개 생성 완료" 또는 "12/30" 패턴
+  const genMatch = detail.match(/(\d+)\s*\/\s*(\d+)\s*개?\s*(생성|완료)?/)
+  if (genMatch) {
+    result.generated = parseInt(genMatch[1], 10)
+    result.total = parseInt(genMatch[2], 10)
+  }
+  // "QA 3/12" 또는 "QA 진행 3/12" 패턴
+  const qaMatch = detail.match(/QA\s*(?:진행\s*)?(\d+\s*\/\s*\d+)/)
+  if (qaMatch) {
+    result.qaProgress = qaMatch[1]
+  }
+  return result
+}
+
 // ── 개별 단계 행 ──
 
 interface StepRowProps {
@@ -212,6 +237,8 @@ interface StepRowProps {
 
 function StepRow({ step, index }: StepRowProps) {
   const { name, status, detail, subSteps } = step
+  const isQuizStep = name === '퀴즈 생성'
+  const quizProgress = isQuizStep && detail ? parseQuizDetail(detail) : null
 
   return (
     <div className={`tml-processing-step tml-processing-step--${status} ${subSteps && subSteps.length > 0 && status !== 'pending' ? 'tml-processing-step--expanded' : ''}`}>
@@ -224,12 +251,28 @@ function StepRow({ step, index }: StepRowProps) {
       <div className="tml-processing-step__content">
         <div className="tml-processing-step__name-row">
           <span className="tml-processing-step__name">{name}</span>
-          {detail && status !== 'pending' && (
+          {detail && status !== 'pending' && !quizProgress?.generated && (
             <span className="tml-processing-step__detail">{detail}</span>
           )}
         </div>
 
-        {status === 'running' && subSteps === undefined && (
+        {/* 퀴즈 생성 세부 진행 표시 */}
+        {quizProgress && status === 'running' && quizProgress.generated != null && (
+          <div className="tml-processing-quiz-progress">
+            <div className="tml-processing-quiz-progress__bar-track">
+              <div
+                className="tml-processing-quiz-progress__bar-fill"
+                style={{ width: `${quizProgress.total ? (quizProgress.generated / quizProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <div className="tml-processing-quiz-progress__labels">
+              <span>문제 생성 {quizProgress.generated}/{quizProgress.total ?? '?'}개</span>
+              {quizProgress.qaProgress && <span>QA {quizProgress.qaProgress}</span>}
+            </div>
+          </div>
+        )}
+
+        {status === 'running' && subSteps === undefined && !(quizProgress?.generated != null) && (
           <div className="tml-processing-step__track">
             <div className="tml-processing-step__fill tml-processing-fill--running" />
           </div>
