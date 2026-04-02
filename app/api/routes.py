@@ -42,6 +42,8 @@ from app.state import (
     clear_week_job,
     start_lecture_job_if_idle,
     start_week_job_if_idle,
+    lecture_jobs as _lecture_jobs,
+    week_jobs as _week_jobs,
 )
 
 router = APIRouter(prefix="/api", tags=["산출물"])
@@ -91,10 +93,51 @@ def _validate_week(week: int) -> int:
 # --- 강의 카탈로그 ---
 
 
+_JOB_OVERRIDE_STATUSES = frozenset({
+    ProcessingStatus.processing,
+    ProcessingStatus.queued,
+    ProcessingStatus.error,
+})
+
+
+def _overlay_lecture_jobs(lectures: list[LectureCatalog]) -> list[LectureCatalog]:
+    """카탈로그(파일 기반)에 인메모리 job 상태를 덮어씌운다.
+    processing/queued/error 상태의 job이 있으면 해당 상태로 교체."""
+    if not _lecture_jobs:
+        return lectures
+    result = []
+    for lec in lectures:
+        job = _lecture_jobs.get(lec.lecture_id)
+        if job and job.status in _JOB_OVERRIDE_STATUSES:
+            lec = lec.model_copy(update={"status": job.status})
+        result.append(lec)
+    return result
+
+
+def _overlay_week_summaries(weeks: list[WeekSummary]) -> list[WeekSummary]:
+    """주차 요약의 강의 리스트에 인메모리 job 상태를 반영한다."""
+    if not _lecture_jobs:
+        return weeks
+    result = []
+    for w in weeks:
+        updated_lectures = _overlay_lecture_jobs(w.lectures)
+        if updated_lectures is not w.lectures:
+            completed_count = sum(
+                1 for l in updated_lectures if l.status == ProcessingStatus.completed
+            )
+            w = w.model_copy(update={
+                "lectures": updated_lectures,
+                "completed_count": completed_count,
+            })
+        result.append(w)
+    return result
+
+
 @router.get("/lectures", response_model=list[LectureCatalog])
 async def get_lectures():
     """전체 강의 목록 (data/raw/ 스캔)."""
-    return await asyncio.to_thread(load_lectures)
+    lectures = await asyncio.to_thread(load_lectures)
+    return _overlay_lecture_jobs(lectures)
 
 
 @router.get("/lectures/{lecture_id}", response_model=LectureCatalog)
@@ -102,7 +145,7 @@ async def get_lecture(lecture_id: str):
     """단일 강의 상세. 없으면 404."""
     _validate_lecture_id(lecture_id)
     lectures = await asyncio.to_thread(load_lectures)
-    for lec in lectures:
+    for lec in _overlay_lecture_jobs(lectures):
         if lec.lecture_id == lecture_id:
             return lec
     raise HTTPException(status_code=404, detail=f"강의 {lecture_id}를 찾을 수 없습니다.")
@@ -111,7 +154,8 @@ async def get_lecture(lecture_id: str):
 @router.get("/weeks", response_model=list[WeekSummary])
 async def get_weeks():
     """존재하는 주차 목록 (빈 주차 제외)."""
-    return await asyncio.to_thread(load_weeks)
+    weeks = await asyncio.to_thread(load_weeks)
+    return _overlay_week_summaries(weeks)
 
 
 @router.get("/weeks/{week}", response_model=WeekSummary)
@@ -119,7 +163,7 @@ async def get_week(week: int):
     """특정 주차 상세. 없으면 404."""
     _validate_week(week)
     weeks = await asyncio.to_thread(load_weeks)
-    for w in weeks:
+    for w in _overlay_week_summaries(weeks):
         if w.week == week:
             return w
     raise HTTPException(status_code=404, detail=f"{week}주차 데이터를 찾을 수 없습니다.")
