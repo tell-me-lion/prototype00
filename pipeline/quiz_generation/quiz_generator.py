@@ -67,7 +67,7 @@ def call_gemini_batch(prompt: str) -> list[dict]:
         temperature=0.7,
         top_p=0.95,
         response_mime_type="application/json",
-        max_output_tokens=8192,
+        max_output_tokens=65536,
     )
 
     max_retries = 3
