@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ConceptCard } from '../components/ConceptCard'
+import { LearningPointCard } from '../components/LearningPointCard'
 import { SkeletonGroup, ErrorCard } from '../components/Skeleton'
 import { ProcessingStatus } from '../components/ProcessingStatus'
 import {
@@ -283,11 +284,10 @@ export function LectureResult() {
         {activeSection === 'learning-points' && (
           <div>
             <p className="section-label">학습 포인트 — {learning_points.length}개</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {learning_points.map((lp, i) => (
-                <div key={`lp-${i}`} className="tml-card learning-point-item tml-animate">
-                  <span className="learning-point-check">✓</span>
-                  <span className="learning-point-text">{lp.concept}</span>
+                <div key={`lp-${i}`} className="tml-animate">
+                  <LearningPointCard point={lp} />
                 </div>
               ))}
             </div>

@@ -9,6 +9,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 2-1. Tailwind preflight 폰트 오버라이드 */
+html {
+  font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+}
+
 /* 3. 라이트 테마 변수 (기본) */
 :root {
   /* === 브랜드 === */
@@ -376,29 +381,21 @@ body::after {
   white-space: nowrap;
 }
 
-/* 학습 포인트 아이템 */
-.learning-point-item {
+/* 학습 포인트 카드 */
+.learning-point-card {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 18px;
+  gap: 0;
+  padding: 16px 18px 16px 0;
+  cursor: default;
 }
 
-.learning-point-check {
-  color: var(--tml-orange);
-  font-size: 0.75rem;
-  font-weight: 600;
+.lp-bar {
+  width: 3px;
+  background: var(--tml-navy-mid);
+  border-radius: 2px;
   flex-shrink: 0;
-  margin-top: 3px;
-  font-family: var(--font-mono);
-}
-
-.learning-point-text {
-  font-family: var(--font-body);
-  font-size: 0.875rem;
-  line-height: 1.7;
-  color: var(--tml-ink-secondary);
-  text-wrap: pretty;
+  margin-right: 16px;
+  align-self: stretch;
 }
 
 /* 빈 상태 영역 */
@@ -2954,7 +2951,7 @@ body::after {
   align-items: center;
   justify-content: center;
   font-size: 0.8125rem;
-  font-family: 'Pretendard', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   flex-shrink: 0;
   transition: background 0.2s ease;
@@ -2985,7 +2982,7 @@ body::after {
 }
 
 .tml-processing-step__name {
-  font-family: 'Pretendard', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.875rem;
   font-weight: 500;
   line-height: 1.2;
@@ -3042,7 +3039,7 @@ body::after {
 
 /* 상태 라벨 */
 .tml-processing-step__label {
-  font-family: 'Pretendard', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.8125rem;
   letter-spacing: 0.02em;
   flex-shrink: 0;
