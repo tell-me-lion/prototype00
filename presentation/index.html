@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>알려주사자 — 발표 자료</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css" rel="stylesheet" />
+  <style>
+    :root {
+      --orange: #FF6B00;
+      --orange-light: #FFF0E6;
+      --orange-dark: #CC5500;
+      --navy: #0F1F3D;
+      --navy-mid: #1E3A5F;
+      --navy-light: #EBF0F8;
+    }
+
+    .reveal {
+      font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+    }
+
+    .reveal .slides {
+      text-align: left;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+
+    .reveal h1 { font-size: 2.4em; }
+    .reveal h2 { font-size: 1.6em; margin-bottom: 0.6em; }
+    .reveal h3 { font-size: 1.1em; color: var(--orange); margin-bottom: 0.4em; }
+
+    .reveal p, .reveal li {
+      font-size: 0.72em;
+      line-height: 1.8;
+      color: #c8d0dc;
+    }
+
+    .reveal ul { list-style: none; padding-left: 0; }
+    .reveal ul li::before {
+      content: '';
+      display: inline-block;
+      width: 6px; height: 6px;
+      background: var(--orange);
+      border-radius: 50%;
+      margin-right: 12px;
+      vertical-align: middle;
+    }
+
+    .reveal code, .reveal .mono {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.85em;
+    }
+
+    /* --- Slide: Title --- */
+    .title-slide {
+      text-align: center;
+    }
+
+    .title-slide h1 {
+      color: #fff;
+      margin-bottom: 0.15em;
+    }
+
+    .title-slide .dot {
+      color: var(--orange);
+    }
+
+    .title-slide .subtitle {
+      font-size: 0.65em;
+      color: #8899aa;
+      margin-bottom: 1.5em;
+    }
+
+    .title-slide .team {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+    }
+
+    .title-slide .team-member {
+      text-align: center;
+    }
+
+    .title-slide .team-member .name {
+      font-size: 0.7em;
+      font-weight: 600;
+      color: #e0e6ee;
+    }
+
+    .title-slide .team-member .role {
+      font-size: 0.55em;
+      color: #667788;
+      margin-top: 4px;
+    }
+
+    /* --- accent bar --- */
+    .accent-bar {
+      width: 48px;
+      height: 4px;
+      background: var(--orange);
+      border-radius: 2px;
+      margin-bottom: 20px;
+    }
+
+    /* --- tag/badge --- */
+    .tag {
+      display: inline-block;
+      background: rgba(255, 107, 0, 0.15);
+      color: var(--orange);
+      font-size: 0.55em;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-right: 8px;
+      margin-bottom: 6px;
+      letter-spacing: 0.04em;
+    }
+
+    .tag.navy {
+      background: rgba(30, 58, 95, 0.4);
+      color: #7ea8cc;
+    }
+
+    /* --- card grid --- */
+    .card-grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+    .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 24px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      font-size: 0.75em;
+    }
+
+    .card p, .card li {
+      font-size: 0.6em;
+    }
+
+    /* --- flow / pipeline --- */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .flow-step {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 14px 20px;
+      text-align: center;
+      font-size: 0.6em;
+      color: #c8d0dc;
+      font-weight: 500;
+    }
+
+    .flow-step.highlight {
+      background: rgba(255, 107, 0, 0.12);
+      border-color: var(--orange);
+      color: var(--orange);
+    }
+
+    .flow-arrow {
+      font-size: 1.2em;
+      color: #445566;
+    }
+
+    /* --- architecture diagram --- */
+    .arch-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 12px 0;
+    }
+
+    .arch-box {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 16px 28px;
+      text-align: center;
+      font-size: 0.6em;
+      color: #c8d0dc;
+      min-width: 140px;
+    }
+
+    .arch-box.orange {
+      border-color: var(--orange);
+      background: rgba(255, 107, 0, 0.08);
+    }
+
+    .arch-box.navy {
+      border-color: var(--navy-mid);
+      background: rgba(30, 58, 95, 0.3);
+    }
+
+    .arch-box .label {
+      display: block;
+      font-size: 0.8em;
+      color: #667788;
+      margin-top: 4px;
+    }
+
+    .arch-arrow {
+      font-size: 1.4em;
+      color: #445566;
+    }
+
+    /* --- table --- */
+    .reveal table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.6em;
+      margin-top: 16px;
+    }
+
+    .reveal table th {
+      background: rgba(255, 107, 0, 0.1);
+      color: var(--orange);
+      font-weight: 600;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 2px solid rgba(255, 107, 0, 0.3);
+    }
+
+    .reveal table td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: #c8d0dc;
+    }
+
+    /* --- number highlight --- */
+    .big-number {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 2.4em;
+      font-weight: 700;
+      color: var(--orange);
+      line-height: 1;
+    }
+
+    .big-number .unit {
+      font-size: 0.4em;
+      color: #667788;
+      font-weight: 400;
+      margin-left: 4px;
+    }
+
+    /* --- demo section --- */
+    .demo-flow {
+      display: flex;
+      align-items: stretch;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .demo-step {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 24px;
+      position: relative;
+    }
+
+    .demo-step .step-num {
+      position: absolute;
+      top: -12px;
+      left: 16px;
+      background: var(--orange);
+      color: #fff;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6em;
+      font-weight: 700;
+    }
+
+    .demo-step h3 { margin-top: 8px; font-size: 0.7em; }
+    .demo-step p { font-size: 0.55em; }
+
+    /* --- quiz types --- */
+    .quiz-types {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .quiz-type-card {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 20px;
+      border-left: 3px solid;
+      text-align: center;
+    }
+
+    .quiz-type-card.mcq { border-color: var(--orange); }
+    .quiz-type-card.short { border-color: var(--navy-mid); }
+    .quiz-type-card.fill { border-color: #4D7FA8; }
+    .quiz-type-card.code { border-color: #2D6A4F; }
+
+    .quiz-type-card .type-name {
+      font-size: 0.7em;
+      font-weight: 600;
+      color: #e0e6ee;
+      margin-bottom: 6px;
+    }
+
+    .quiz-type-card .type-desc {
+      font-size: 0.5em;
+      color: #8899aa;
+    }
+
+    /* --- timeline --- */
+    .timeline {
+      position: relative;
+      margin-top: 24px;
+      padding-left: 32px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -28px;
+      top: 6px;
+      width: 10px; height: 10px;
+      background: var(--orange);
+      border-radius: 50%;
+    }
+
+    .timeline-item h3 { font-size: 0.7em; margin-bottom: 4px; }
+    .timeline-item p { font-size: 0.55em; margin: 0; }
+
+    /* --- QA slide --- */
+    .qa-slide {
+      text-align: center;
+    }
+
+    .qa-slide h1 {
+      font-size: 3em;
+      margin-bottom: 0.2em;
+    }
+
+    .qa-slide p {
+      font-size: 0.8em;
+      color: #667788;
+    }
+
+    /* --- fragment custom --- */
+    .reveal .slides section .fragment.fade-up {
+      transform: translateY(20px);
+    }
+
+    /* --- override reveal background --- */
+    .reveal .slide-background {
+      background: #0a1020;
+    }
+
+    section {
+      padding: 40px !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ==================== 1. 표지 ==================== -->
+      <section>
+        <div class="title-slide">
+          <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">AI 기반 학습 콘텐츠 자동 생성 시스템</p>
+          <h1><span class="dot">●</span> 알려주사자</h1>
+          <p class="subtitle">강의 녹화본에서 핵심 개념 · 퀴즈 · 학습 가이드를 자동으로</p>
+          <div class="team">
+            <div class="team-member">
+              <div class="name">시훈</div>
+              <div class="role">전처리 파이프라인 · 배포</div>
+            </div>
+            <div class="team-member">
+              <div class="name">경현</div>
+              <div class="role">퀴즈 · 개념 · 학습포인트 생성</div>
+            </div>
+            <div class="team-member">
+              <div class="name">주노</div>
+              <div class="role">UI/UX · 프론트-백 연동</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 2. 문제 정의 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>문제 정의</h2>
+        <div class="card-grid cols-2">
+          <div class="card">
+            <h3>수강생의 어려움</h3>
+            <ul>
+              <li>강의 녹화본은 쌓이지만 복습이 어렵다</li>
+              <li>핵심 내용을 직접 정리하는 데 시간이 과다 소요</li>
+              <li>스스로 학습 수준을 점검할 방법이 부족하다</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>교육 업체의 한계</h3>
+            <ul>
+              <li>강의마다 요약·퀴즈를 수작업으로 만들 리소스 부족</li>
+              <li>주차별 학습 가이드 제작에 반복적 노동 발생</li>
+              <li>콘텐츠 품질의 일관성 유지가 어렵다</li>
+            </ul>
+          </div>
+        </div>
+        <div style="text-align: center; margin-top: 36px;">
+          <p style="font-size: 0.7em; color: var(--orange); font-weight: 600;">
+            "강의를 선택하기만 하면, 나머지는 AI가 처리할 수 없을까?"
+          </p>
+        </div>
+      </section>
+
+      <!-- ==================== 3. 솔루션 소개 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>솔루션 — 알려주사자</h2>
+        <p style="margin-bottom: 24px;">파일 업로드 없이, 대시보드에서 <strong style="color: var(--orange);">강의를 선택</strong>하기만 하면 서버가 나머지를 처리합니다.</p>
+
+        <div class="card-grid cols-2">
+          <div class="card" style="border-left: 3px solid var(--orange);">
+            <div class="tag">Mode A</div>
+            <h3>단일 강의 분석</h3>
+            <p>강의 1개를 선택하면</p>
+            <ul>
+              <li>핵심 개념 자동 추출</li>
+              <li>학습 포인트 정리</li>
+              <li>다양한 유형의 퀴즈 생성</li>
+            </ul>
+          </div>
+          <div class="card" style="border-left: 3px solid var(--navy-mid);">
+            <div class="tag navy">Mode B</div>
+            <h3>주차별 학습 가이드</h3>
+            <p>1주치 강의 전체를 통합하여</p>
+            <ul>
+              <li>주차별 핵심 요약</li>
+              <li>복습 우선순위</li>
+              <li>자가 점검 문항</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 4. 서비스 데모 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>서비스 흐름</h2>
+
+        <div class="demo-flow">
+          <div class="demo-step">
+            <div class="step-num">1</div>
+            <h3>대시보드</h3>
+            <p>전체 학습 진행률과 최근 분석 결과를 한눈에 확인</p>
+          </div>
+          <div class="demo-step">
+            <div class="step-num">2</div>
+            <h3>강의 선택</h3>
+            <p>분석할 강의를 선택하고 "분석 시작" 클릭. 실시간 진행 상태 표시</p>
+          </div>
+          <div class="demo-step">
+            <div class="step-num">3</div>
+            <h3>결과 확인</h3>
+            <p>핵심 개념 · 학습 포인트 · 퀴즈를 탭으로 전환하며 학습</p>
+          </div>
+          <div class="demo-step">
+            <div class="step-num">4</div>
+            <h3>주차 가이드</h3>
+            <p>주차별 통합 학습 가이드로 체계적 복습</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px;">
+          <div class="card-grid cols-2">
+            <div class="card" style="text-align: center;">
+              <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">Mode A — 단일 강의 결과</p>
+              <p style="font-size: 0.5em; color: #556677;">핵심 개념 카드 (오렌지 사이드바)<br/>학습 포인트 카드 (네이비 사이드바)<br/>퀴즈 CTA 배너</p>
+            </div>
+            <div class="card" style="text-align: center;">
+              <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">Mode B — 주차별 가이드</p>
+              <p style="font-size: 0.5em; color: #556677;">Overview 히어로 · 선수 지식<br/>주제별 섹션 · 복습 우선순위<br/>자가 점검 Q&A · 개념 맵</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 5. 시스템 아키텍처 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>시스템 아키텍처</h2>
+
+        <div class="arch-row" style="margin-top: 32px;">
+          <div class="arch-box orange">
+            <strong>Frontend</strong>
+            <span class="label">React + TypeScript + Vite</span>
+            <span class="label">Vercel</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box navy">
+            <strong>Backend</strong>
+            <span class="label">FastAPI</span>
+            <span class="label">AWS EC2</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box">
+            <strong>Pipeline</strong>
+            <span class="label">전처리 + 분석</span>
+            <span class="label">Python</span>
+          </div>
+          <div class="arch-arrow">→</div>
+          <div class="arch-box" style="border-color: #2D6A4F; background: rgba(45, 106, 79, 0.08);">
+            <strong>Gemini API</strong>
+            <span class="label">LLM 추론</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 36px;">
+          <h3>배포 자동화</h3>
+          <div class="card-grid cols-2">
+            <div class="card">
+              <p style="font-size: 0.55em; color: var(--orange); font-weight: 600;">프론트엔드</p>
+              <p style="font-size: 0.5em;">main push → Vercel 자동 빌드 · 배포</p>
+            </div>
+            <div class="card">
+              <p style="font-size: 0.55em; color: #7ea8cc; font-weight: 600;">백엔드</p>
+              <p style="font-size: 0.5em;">main push → GitHub Actions → EC2 SSH → Docker Compose → Health Check</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 6. 핵심 기술 — 파이프라인 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>핵심 기술 — 분석 파이프라인</h2>
+
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 20px;">강의 원문 텍스트에서 학습 콘텐츠까지, 8단계 자동화 파이프라인</p>
+
+        <div class="flow">
+          <div class="flow-step">텍스트 정제</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">문장 분리</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">의미 청킹</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight">명제 추출<br/><span style="font-size:0.8em; opacity:0.7;">LLM</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">팩트 포맷팅</div>
+        </div>
+
+        <div class="flow" style="margin-top: 8px;">
+          <div class="flow-step highlight">개념 · 학습포인트<br/><span style="font-size:0.8em; opacity:0.7;">TF-IDF + LLM</span></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">문제 블루프린트</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight">퀴즈 생성<br/><span style="font-size:0.8em; opacity:0.7;">Gemini 배치</span></div>
+        </div>
+
+        <div style="margin-top: 28px;">
+          <div class="card-grid cols-3">
+            <div class="card">
+              <h3>TF-IDF 중요도</h3>
+              <p>팩트 빈도 + 강의 내 유일성 + 교육적 가치를 종합하여 핵심 개념 랭킹</p>
+            </div>
+            <div class="card">
+              <h3>청크-개념 매핑</h3>
+              <p>추출된 개념을 원문 청크에 역매핑하여 근거 기반 문제 설계</p>
+            </div>
+            <div class="card">
+              <h3>적응형 LLM 호출</h3>
+              <p>토큰 초과 시 자동으로 퀴즈 개수를 줄여 재시도 — 무중단 생성</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7. 퀴즈 품질 보장 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>퀴즈 품질 보장</h2>
+
+        <h3>4가지 퀴즈 유형</h3>
+        <div class="quiz-types">
+          <div class="quiz-type-card mcq">
+            <div class="type-name">객관식 (MCQ)</div>
+            <div class="type-desc">4지선다형<br/>핵심 개념 이해도 측정</div>
+          </div>
+          <div class="quiz-type-card short">
+            <div class="type-name">주관식 (Short)</div>
+            <div class="type-desc">단답형 서술<br/>개념 정의 · 설명 능력</div>
+          </div>
+          <div class="quiz-type-card fill">
+            <div class="type-name">빈칸 채우기 (Fill)</div>
+            <div class="type-desc">핵심 용어 기억<br/>문맥 속 정확한 용어 선택</div>
+          </div>
+          <div class="quiz-type-card code">
+            <div class="type-name">코드 실행 (Code)</div>
+            <div class="type-desc">코드 작성 · 결과 예측<br/>실전 적용 능력</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px;">
+          <h3>품질 관리 전략</h3>
+          <div class="card-grid cols-2">
+            <div class="card">
+              <ul>
+                <li>JSON 파싱 실패 시 자동 복구 로직 (정규식 기반)</li>
+                <li>필수 필드 검증 + 선택지 개수 확인</li>
+              </ul>
+            </div>
+            <div class="card">
+              <ul>
+                <li>블루프린트 기반 출제로 근거 없는 문제 방지</li>
+                <li>배치 생성 후 개별 검증 — 실패 문항만 재생성</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 8. 팀 역할 & 협업 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>팀 역할 & 협업</h2>
+
+        <div class="card-grid cols-3" style="margin-top: 24px;">
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <h3 style="color: #e0e6ee;">시훈</h3>
+            <div class="tag">Pipeline</div>
+            <ul>
+              <li>전처리 파이프라인 설계 · 고도화</li>
+              <li>배포 최적화 (Docker)</li>
+              <li>Gemini API 비용 관리</li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid #4D7FA8;">
+            <h3 style="color: #e0e6ee;">경현</h3>
+            <div class="tag navy">AI / NLP</div>
+            <ul>
+              <li>퀴즈 · 개념 · 학습포인트 생성 로직</li>
+              <li>프롬프트 엔지니어링</li>
+              <li>출력 형식 정의 · 검증</li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid #2D6A4F;">
+            <h3 style="color: #e0e6ee;">주노</h3>
+            <div class="tag" style="background: rgba(45, 106, 79, 0.2); color: #4a9a6f;">Frontend</div>
+            <ul>
+              <li>UI/UX 설계 · 구현</li>
+              <li>프론트-백 API 연동</li>
+              <li>Vercel · EC2 배포 인프라</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style="margin-top: 28px;">
+          <h3>협업 방식</h3>
+          <div class="card-grid cols-2">
+            <div class="card">
+              <ul>
+                <li>GitHub PR 기반 코드 리뷰</li>
+                <li>main push = 자동 배포 (Vercel + GitHub Actions)</li>
+              </ul>
+            </div>
+            <div class="card">
+              <ul>
+                <li>태스크 파일로 작업 명세 관리 (docs/tasks/)</li>
+                <li>TypeScript ↔ Pydantic 모델 동기화</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 9. 향후 계획 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>향후 계획</h2>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <h3>오답 패턴 분석</h3>
+            <p>수강생의 오답 데이터를 수집하여 취약 개념을 식별하고, 개인 맞춤형 추가 학습을 추천합니다.</p>
+          </div>
+          <div class="timeline-item">
+            <h3>난이도 적응형 조절</h3>
+            <p>학습자의 정답률에 따라 퀴즈 난이도를 자동으로 조절하여 최적의 학습 효과를 달성합니다.</p>
+          </div>
+          <div class="timeline-item">
+            <h3>LMS 연동</h3>
+            <p>기존 학습 관리 시스템(LMS)과 연동하여 퀴즈 자동 배포 및 성적 연동을 지원합니다.</p>
+          </div>
+          <div class="timeline-item">
+            <h3>다국어 지원</h3>
+            <p>한국어 외 영어 등 다양한 언어의 강의를 분석할 수 있도록 파이프라인을 확장합니다.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 10. Q&A ==================== -->
+      <section>
+        <div class="qa-slide">
+          <h1>Q<span style="color: var(--orange);">&</span>A</h1>
+          <p>감사합니다</p>
+          <div style="margin-top: 48px;">
+            <span class="tag">wonder-girls.vercel.app</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      width: 1280,
+      height: 720,
+      margin: 0.04,
+      transition: 'slide',
+      transitionSpeed: 'default',
+      backgroundTransition: 'fade',
+      center: false,
+      controls: true,
+      controlsTutorial: true,
+      progress: true,
+      slideNumber: true,
+    })
+  </script>
+</body>
+</html>
