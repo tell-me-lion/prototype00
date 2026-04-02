@@ -71,7 +71,17 @@
 
     .title-slide h1 {
       color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
       margin-bottom: 0.15em;
+    }
+
+    .title-slide .logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
     }
 
     .title-slide .dot {
@@ -401,9 +411,8 @@
     }
 
     .reveal .slides section {
-      height: 100%;
       box-sizing: border-box;
-      padding: 20px 40px !important;
+      padding: 0 40px !important;
     }
 
     /* 반응형 스케일링을 위해 폰트 사이즈 조정 */
@@ -420,7 +429,8 @@
       <section>
         <div class="title-slide">
           <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">AI 기반 학습 콘텐츠 자동 생성 시스템</p>
-          <h1><span class="dot">●</span> 알려주사자</h1>
+          <h1><img src="../frontend/public/likelion-logo.png" alt="알려주사자 로고" class="logo-img" /> 알려주사자</h1>
+          <p style="font-size: 0.8em; color: var(--orange); font-weight: 600; margin-top: -10px; margin-bottom: 20px;">TellMeLion</p>
           <p class="subtitle">강의 녹화본에서 핵심 개념 · 퀴즈 · 학습 가이드를 자동으로</p>
           <div class="team">
             <div class="team-member">
@@ -684,47 +694,152 @@
         </div>
       </section>
 
-      <!-- ==================== 7. 퀴즈 품질 보장 ==================== -->
+      <!-- ==================== 7-1. 퀴즈 설계 전략 ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>퀴즈 품질 보장</h2>
+        <h2>퀴즈 품질 보장 전략</h2>
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 24px;">사전 설계(Blueprint)부터 자동 검증까지 이어지는 체계적인 파이프라인</p>
 
-        <h3>4가지 퀴즈 유형</h3>
-        <div class="quiz-types">
-          <div class="quiz-type-card mcq">
-            <div class="type-name">객관식 (MCQ)</div>
-            <div class="type-desc">4지선다형<br/>핵심 개념 이해도 측정</div>
+        <div class="flow" style="margin-top: 32px; gap: 16px;">
+          <div class="flow-step highlight" style="flex: 1; padding: 20px 16px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px;">1. Blueprint</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">개념별 퀴즈 유형·난이도·수량 사전 설계</div>
           </div>
-          <div class="quiz-type-card short">
-            <div class="type-name">주관식 (Short)</div>
-            <div class="type-desc">단답형 서술<br/>개념 정의 · 설명 능력</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="flex: 1; padding: 20px 16px; border-color: #4D7FA8; background: rgba(77, 127, 168, 0.1);">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px; color: #7ea8cc;">2. Evidence</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">정답(Correct) 및 오답(Distractor) 근거 확보</div>
           </div>
-          <div class="quiz-type-card fill">
-            <div class="type-name">빈칸 채우기 (Fill)</div>
-            <div class="type-desc">핵심 용어 기억<br/>문맥 속 정확한 용어 선택</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight" style="flex: 1; padding: 20px 16px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px;">3. Generation</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">설계 명세 기반 LLM 문항 자동 생성</div>
           </div>
-          <div class="quiz-type-card code">
-            <div class="type-name">코드 실행 (Code)</div>
-            <div class="type-desc">코드 작성 · 결과 예측<br/>실전 적용 능력</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="flex: 1; padding: 20px 16px; border-color: #2D6A4F; background: rgba(45, 106, 79, 0.1);">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px; color: #4a9a6f;">4. Validator</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">정확성 및 사실 일치 여부 자동 검증</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7-2. 문항 설계 및 난이도 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>문항 설계 및 난이도 제어</h2>
+        
+        <table style="margin-bottom: 20px;">
+          <thead>
+            <tr>
+              <th width="10%">난이도</th>
+              <th width="30%">질문 길이 및 특징</th>
+              <th width="30%">출제 대상</th>
+              <th width="30%">선지 구성</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag" style="background: rgba(255,255,255,0.1); color: #ccc; margin:0;">하</span></td>
+              <td>15~24자 (짧은 질문)</td>
+              <td>기초 문법, 개념어 식별</td>
+              <td>개념어 위주 (4지선다 허용)</td>
+            </tr>
+            <tr>
+              <td><span class="tag navy" style="color: #7ea8cc; background: rgba(30, 58, 95, 0.6); margin:0;">중</span></td>
+              <td>21~30자 (단문 서술형)</td>
+              <td>개념 정의, 특징 판단</td>
+              <td>명사구, 문장형 (5지선다)</td>
+            </tr>
+            <tr>
+              <td><span class="tag" style="background: rgba(255, 107, 0, 0.2); color: var(--orange); margin:0;">상</span></td>
+              <td style="color:var(--orange);">30자 이상 (상세 조건형)</td>
+              <td style="color:var(--orange);">복수 조건, 예외 판별</td>
+              <td style="color:var(--orange);">복합 서술형 (5지선다)</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="card-grid cols-3">
+           <div class="card" style="padding: 16px;">
+             <h3 style="color: #7ea8cc; margin-bottom: 12px; font-size: 0.7em;">출제 Quota</h3>
+             <ul style="font-size: 0.8em; line-height: 1.8;">
+               <li>O/X 퀴즈: <strong>최대 20%</strong></li>
+               <li>빈칸 채우기: <strong>최소 20% 이상</strong></li>
+               <li>객관식: <strong>오답근거 2개 이상</strong></li>
+             </ul>
+           </div>
+           <div class="card" style="padding: 16px; grid-column: span 2; border-color: rgba(255, 107, 0, 0.3);">
+             <h3 style="color: var(--orange); margin-bottom: 16px; font-size: 0.7em;">오답 선지 설계 4대 패턴</h3>
+             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
+               <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                 <strong style="color:#e0e6ee; font-size: 0.6em; display:block; margin-bottom:4px;">1. 인접 개념 함정</strong>
+                 <span style="font-size:0.55em; color: #8899aa;">유사 개념의 특징 차용</span>
+               </div>
+               <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                 <strong style="color:#e0e6ee; font-size: 0.6em; display:block; margin-bottom:4px;">2. 속성 반전 함정</strong>
+                 <span style="font-size:0.55em; color: #8899aa;">핵심 속성을 반대 특성으로 교체</span>
+               </div>
+               <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                 <strong style="color:#e0e6ee; font-size: 0.6em; display:block; margin-bottom:4px;">3. 키워드 중첩 함정</strong>
+                 <span style="font-size:0.55em; color: #8899aa;">정답 키워드 + 성질 조작</span>
+               </div>
+               <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: 4px;">
+                 <strong style="color:#e0e6ee; font-size: 0.6em; display:block; margin-bottom:4px;">4. 과장형 함정</strong>
+                 <span style="font-size:0.55em; color: #8899aa;">"반드시", "~에서만" 절대 표현</span>
+               </div>
+             </div>
+           </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7-3. 퀴즈 검증 (Validator) ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>자동 검증 (QA Validator)</h2>
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 24px;">LLM 생성 퀴즈를 <strong style="color: #fff;">4가지 기준</strong>으로 검증하여 통과한 문항만 최종 적재</p>
+
+        <div class="card-grid cols-2" style="gap: 16px;">
+          <div class="card" style="border-left: 3px solid #4D7FA8; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: #7ea8cc; font-size: 0.75em; margin:0;">① 근거성 (Evidence)</h3>
+              <span class="mono" style="font-size:0.6em; color:#fff; background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">≥ 0.30</span>
+            </div>
+            <p style="margin-bottom: 8px; color: #e0e6ee;">문항이 강의 원문에 기반하는가?</p>
+            <p style="font-size: 0.85em; color: #8899aa; margin:0;">출처 텍스트 ↔ 검증 청크 TF-IDF 점수</p>
+          </div>
+
+          <div class="card" style="border-left: 3px solid #667788; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: #ccc; font-size: 0.75em; margin:0;">② 중복성 (Uniqueness)</h3>
+              <span class="mono" style="font-size:0.6em; color:#fff; background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">&lt; 0.85</span>
+            </div>
+            <p style="margin-bottom: 8px; color: #e0e6ee;">유사한 내용을 묻는 문항이 없는가?</p>
+            <p style="font-size: 0.85em; color: #8899aa; margin:0;">문항 간 내용 유사도 스코어</p>
+          </div>
+
+          <div class="card" style="border-left: 3px solid var(--orange); padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: var(--orange); font-size: 0.75em; margin:0;">③ 난이도 (Difficulty)</h3>
+              <span class="mono" style="font-size:0.6em; color:#fff; background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">0.2 ~ 0.95</span>
+            </div>
+            <p style="margin-bottom: 8px; color: #e0e6ee;">너무 쉽거나 무의미하게 어렵지 않은가?</p>
+            <p style="font-size: 0.85em; color: #8899aa; margin:0;">LLM 예측 기반 오답률 허용 범위</p>
+          </div>
+
+          <div class="card" style="border-left: 3px solid #2D6A4F; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: #4a9a6f; font-size: 0.75em; margin:0;">④ 변별력 (Discrim.)</h3>
+              <span class="mono" style="font-size:0.6em; color:#fff; background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">설득력≥0.4</span>
+            </div>
+            <p style="margin-bottom: 8px; color: #e0e6ee;">오답이 소거법으로 쉽게 풀리지 않는가?</p>
+            <p style="font-size: 0.85em; color: #8899aa; margin:0;">오답 설득력 스코어 및 소거 가능 비율 판단</p>
           </div>
         </div>
 
-        <div style="margin-top: 28px;">
-          <h3>품질 관리 전략</h3>
-          <div class="card-grid cols-2">
-            <div class="card">
-              <ul>
-                <li>JSON 파싱 실패 시 자동 복구 로직 (정규식 기반)</li>
-                <li>필수 필드 검증 + 선택지 개수 확인</li>
-              </ul>
-            </div>
-            <div class="card">
-              <ul>
-                <li>블루프린트 기반 출제로 근거 없는 문제 방지</li>
-                <li>배치 생성 후 개별 검증 — 실패 문항만 재생성</li>
-              </ul>
-            </div>
-          </div>
+        <div style="text-align: center; margin-top: 28px; background: rgba(255,107,0,0.05); border: 1px solid rgba(255,107,0,0.2); padding: 12px; border-radius: 8px;">
+          <p style="font-size: 0.6em; color: var(--orange); margin: 0; font-weight: 500;">
+            ※ 검증 실패 문항은 제외되며, 전체 통과율과 실패 사유가 자동 로깅됩니다.
+          </p>
         </div>
       </section>
 
@@ -831,7 +946,7 @@
       transition: 'slide',
       transitionSpeed: 'default',
       backgroundTransition: 'fade',
-      center: false,
+      center: true,
       controls: true,
       controlsTutorial: true,
       progress: true,
