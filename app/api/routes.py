@@ -139,7 +139,9 @@ _LECTURE_STEPS_TEMPLATE = [
 ]
 
 _WEEK_STEPS_TEMPLATE = [
-    {"name": "학습 가이드 생성", "status": "pending"},
+    {"name": "데이터 수집", "status": "pending"},
+    {"name": "가이드 생성", "status": "pending"},
+    {"name": "품질 검증", "status": "pending"},
 ]
 
 
@@ -251,9 +253,26 @@ async def _run_week_pipeline(week: int) -> None:
     if not job:
         return
     try:
+        # 단계별 진행 콜백: detail 문자열에 따라 step 상태 전환
+        def _guide_detail_callback(detail: str):
+            if "데이터 수집" in detail:
+                job.steps[0]["status"] = "running"
+                job.steps[0]["detail"] = detail
+            elif "가이드 생성" in detail or "재생성" in detail:
+                job.steps[0]["status"] = "done"
+                job.steps[1]["status"] = "running"
+                job.steps[1]["detail"] = detail
+            elif "품질 검증" in detail:
+                job.steps[1]["status"] = "done"
+                job.steps[2]["status"] = "running"
+                job.steps[2]["detail"] = detail
+            logger.info("[주차 가이드] week=%d, %s", week, detail)
+
         job.steps[0]["status"] = "running"
-        await asyncio.to_thread(_exec_guides, week)
-        job.steps[0]["status"] = "done"
+        await asyncio.to_thread(_exec_guides, week, _guide_detail_callback)
+
+        for step in job.steps:
+            step["status"] = "done"
 
         job.status = ProcessingStatus.completed
         job.completed_at = datetime.now(tz=timezone.utc)
@@ -351,11 +370,14 @@ def _exec_quiz_generation(
         )
 
 
-def _exec_guides(week: int) -> None:
+def _exec_guides(
+    week: int,
+    detail_callback: Callable[[str], None] | None = None,
+) -> None:
     """Guides 실행."""
     from pipeline.guides.runner import run_guides
 
-    run_guides(week=week)
+    run_guides(week=week, detail_callback=detail_callback)
 
 
 @router.post(

@@ -1,37 +1,45 @@
-"""Guides 러너: 학습 가이드 및 핵심 요약 생성.
+"""Guides 러너: LLM 기반 주차별 학습 가이드 생성.
 
-Mode B 전용. Phase 5 facts를 주차 단위로 집계하여 학습 가이드를 생성한다.
-초안 구현 (주노) — 나중에 경현이 고도화하면 교체.
+Mode B 전용. Phase 5 facts + EP concepts/learning_points를 입력으로
+Gemini LLM이 구조화된 학습 가이드를 생성한다.
 """
 
 import json
+import logging
 import re
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
+from typing import Callable
 
 from pipeline import paths
+
+logger = logging.getLogger(__name__)
 
 
 def run_guides(
     in_dir: Path | None = None,
     out_dir: Path | None = None,
     week: int | None = None,
+    detail_callback: Callable[[str], None] | None = None,
 ) -> None:
-    """전처리 결과(Phase 5 Fact)만을 입력으로 주차별 학습 가이드를 생성.
-
-    Mode B 전용. Mode A 출력(EP 개념, 퀴즈)을 읽지 않는다.
+    """주차별 학습 가이드 생성 (LLM 기반).
 
     Args:
         in_dir: phase5_facts 디렉터리. None이면 기본 경로.
         out_dir: 출력 디렉터리. None이면 기본 경로.
         week: 특정 주차만 처리. None이면 전체 주차.
+        detail_callback: 진행 상황 콜백.
     """
+    from .guide_generator import call_gemini_guide
+    from .prompt_builder import build_guide_prompt
+    from .validator import validate_guide
+
     src = in_dir or paths.DATA_PHASE5_FACTS
     dst = out_dir or paths.DATA_LEARNING_GUIDES
     dst.mkdir(parents=True, exist_ok=True)
 
-    # first_date를 raw 디렉터리에서 산출 (catalog.py와 동일 기준)
+    # first_date를 raw 디렉터리에서 산출
     raw_dir = paths.DATA_RAW
     raw_dates: list[date] = []
     for txt_file in raw_dir.glob("*.txt"):
@@ -55,13 +63,17 @@ def run_guides(
         print("[WARN] 날짜를 파싱할 수 있는 Phase 5 파일 없음")
         return
 
-    # Phase 5 facts 파일을 주차별로 그룹핑
+    # Phase 5 facts를 주차별로 그룹핑
     week_chunks: dict[int, list[dict]] = defaultdict(list)
+    # lecture_id별 주차 매핑 (EP 데이터 로딩용)
+    week_lecture_ids: dict[int, list[str]] = defaultdict(list)
 
     for file_date, jsonl_file in dated_files:
         file_week = _calculate_week(file_date, first_date)
         if week is not None and file_week != week:
             continue
+        lecture_id = jsonl_file.stem
+        week_lecture_ids[file_week].append(lecture_id)
 
         for line in jsonl_file.read_text(encoding="utf-8").splitlines():
             line = line.strip()
@@ -79,11 +91,76 @@ def run_guides(
 
     # 주차별 가이드 생성
     for w, chunks in sorted(week_chunks.items()):
-        guide = _build_guide(w, chunks)
+        if detail_callback:
+            detail_callback("데이터 수집 중...")
+
+        # EP 데이터 로딩
+        lecture_ids = week_lecture_ids.get(w, [])
+        concepts = _load_ep_data(paths.DATA_EP_CONCEPTS, lecture_ids, min_importance=0.3)
+        learning_points = _load_ep_data(paths.DATA_EP_LEARNING_POINTS, lecture_ids)
+        concept_ids = {c.get("concept_id") for c in concepts if c.get("concept_id")}
+
+        # 이전 주차 overview 로딩
+        prev_overview = _load_prev_overview(dst, w)
+
+        logger.info(
+            "[Guide] week=%d | chunks=%d, concepts=%d, learning_points=%d",
+            w, len(chunks), len(concepts), len(learning_points),
+        )
+
+        if detail_callback:
+            detail_callback("가이드 생성 중...")
+
+        # 프롬프트 조립 + LLM 호출
+        prompt = build_guide_prompt(
+            week=w,
+            facts=chunks,
+            concepts=concepts,
+            learning_points=learning_points,
+            prev_overview=prev_overview,
+        )
+
+        raw_guide = call_gemini_guide(prompt)
+
+        if detail_callback:
+            detail_callback("품질 검증 중...")
+
+        # 검증
+        guide, structure_ok = validate_guide(raw_guide, concept_ids=concept_ids, current_week=w)
+
+        # 구조 실패 시 1회 재생성
+        if not structure_ok:
+            logger.warning("[Guide] week=%d 구조 검증 실패, 1회 재생성 시도", w)
+            if detail_callback:
+                detail_callback("재생성 중...")
+            raw_guide2 = call_gemini_guide(prompt)
+            guide2, structure_ok2 = validate_guide(raw_guide2, concept_ids=concept_ids, current_week=w)
+            if structure_ok2:
+                guide = guide2
+            else:
+                logger.warning("[Guide] week=%d 재생성도 구조 실패, 첫 번째 결과 사용", w)
+
+        # week, meta 필드 보강
+        guide["week"] = w
+        guide.setdefault("meta", {})
+        guide["meta"].update({
+            "source": "llm_generated",
+            "llm_model": "gemini-2.5-flash",
+            "total_chunks": len(chunks),
+            "total_facts": sum(len(c.get("facts", [])) for c in chunks),
+            "ep_concepts_used": len(concepts),
+            "ep_learning_points_used": len(learning_points),
+        })
+
+        # overview → summary 하위 호환
+        if guide.get("overview") and not guide.get("summary"):
+            guide["summary"] = guide["overview"]
+
+        # 저장
         out_file = dst / f"week_{w:02d}.jsonl"
         with out_file.open("w", encoding="utf-8") as f:
             f.write(json.dumps(guide, ensure_ascii=False) + "\n")
-        print(f"[OK] week_{w:02d}.jsonl | {len(chunks)} chunks → guide 생성")
+        print(f"[OK] week_{w:02d}.jsonl | {len(chunks)} chunks → LLM 가이드 생성 완료")
 
 
 _DATE_PATTERN = re.compile(r"^(\d{4}-\d{2}-\d{2})")
@@ -106,56 +183,49 @@ def _calculate_week(lecture_date: date, first_date: date) -> int:
     return (delta_days // 7) + 1
 
 
-def _build_guide(week: int, chunks: list[dict]) -> dict:
-    """주차 데이터로 학습 가이드를 생성.
+def _load_ep_data(
+    ep_dir: Path,
+    lecture_ids: list[str],
+    min_importance: float = 0.0,
+) -> list[dict]:
+    """EP 출력 디렉터리에서 lecture_id별 데이터를 로딩."""
+    results: list[dict] = []
+    if not ep_dir.exists():
+        return results
 
-    초안 로직: facts에서 키워드 빈도 기반으로 핵심 개념 추출 + 요약 생성.
-    """
-    # 모든 facts 수집
-    all_facts: list[str] = []
-    for chunk in chunks:
-        facts = chunk.get("facts", [])
-        all_facts.extend(facts)
+    for lecture_id in lecture_ids:
+        ep_file = ep_dir / f"{lecture_id}.jsonl"
+        if not ep_file.exists():
+            # 날짜 부분 매칭 시도
+            date_part = lecture_id.split("_")[0] if "_" in lecture_id else lecture_id
+            candidates = list(ep_dir.glob(f"*{date_part}*.jsonl"))
+            ep_file = candidates[0] if candidates else None
 
-    # TF-IDF 키워드에서 핵심 개념 추출
-    keyword_freq: dict[str, int] = defaultdict(int)
-    for chunk in chunks:
-        tfidf = chunk.get("tfidf_scores", chunk.get("tfidf_keywords", {}))
-        if isinstance(tfidf, dict):
-            for kw, score in tfidf.items():
-                if isinstance(score, (int, float)) and score > 0.05:
-                    keyword_freq[kw] += 1
-        elif isinstance(tfidf, list):
-            for kw in tfidf:
-                keyword_freq[str(kw)] += 1
-
-    # 상위 10개 키워드를 핵심 개념으로
-    top_concepts = sorted(keyword_freq.items(), key=lambda x: x[1], reverse=True)[:10]
-    key_concepts = [kw for kw, _ in top_concepts]
-
-    # 요약: 핵심 facts 선별 (키워드 포함 + 긴 문장 우선)
-    scored_facts = []
-    for fact in all_facts:
-        if len(fact) < 10:
+        if not ep_file or not ep_file.exists():
             continue
-        score = sum(1 for kw in key_concepts if kw.lower() in fact.lower())
-        score += len(fact) / 200  # 긴 문장 보너스
-        scored_facts.append((score, fact))
 
-    scored_facts.sort(key=lambda x: x[0], reverse=True)
-    summary_facts = [fact for _, fact in scored_facts[:5]]
-    summary = f"{week}주차 핵심 학습 내용입니다.\n\n" + "\n".join(
-        f"• {fact}" for fact in summary_facts
-    )
+        for line in ep_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                item = json.loads(line)
+                if item.get("importance", 0) >= min_importance:
+                    results.append(item)
+            except json.JSONDecodeError:
+                continue
 
-    return {
-        "week": week,
-        "summary": summary,
-        "key_concepts": key_concepts,
-        "meta": {
-            "source": "auto_generated",
-            "total_chunks": len(chunks),
-            "total_facts": len(all_facts),
-        },
-    }
+    return results
 
+
+def _load_prev_overview(guides_dir: Path, current_week: int) -> str | None:
+    """이전 주차 가이드에서 overview를 로딩."""
+    prev_file = guides_dir / f"week_{current_week - 1:02d}.jsonl"
+    if not prev_file.exists():
+        return None
+    try:
+        first_line = prev_file.read_text(encoding="utf-8").splitlines()[0].strip()
+        data = json.loads(first_line)
+        return data.get("overview") or data.get("summary") or None
+    except (json.JSONDecodeError, IndexError):
+        return None

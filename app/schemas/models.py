@@ -80,11 +80,35 @@ class Quiz(BaseModel):
 # --- learning_guides 형식 ---
 
 
+class GuideSection(BaseModel):
+    """학습 가이드 주제별 섹션."""
+
+    title: str
+    summary: str
+    key_takeaways: list[str] = Field(default_factory=list)
+    related_concepts: list[str] = Field(default_factory=list)
+
+
+class SelfCheckItem(BaseModel):
+    """자가 점검 질문."""
+
+    question: str
+    hint: str
+
+
 class LearningGuide(BaseModel):
     """주차별 학습 가이드·핵심 요약 (learning_guides)."""
 
     week: int
-    summary: str
+    overview: str = ""
+    summary: str = ""  # 하위 호환 (overview alias)
+    sections: list[GuideSection] = Field(default_factory=list)
+    connections: str = ""
+    study_tips: list[str] = Field(default_factory=list)
+    difficulty_note: str = ""
+    review_priorities: list[str] = Field(default_factory=list)
+    self_check: list[SelfCheckItem] = Field(default_factory=list)
+    prerequisites: list[str] = Field(default_factory=list)
     key_concepts: list[str] = Field(default_factory=list)
     meta: dict[str, Any] = Field(default_factory=dict)
 

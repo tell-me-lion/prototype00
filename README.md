@@ -22,8 +22,7 @@
 
 한 주치 강의 전체를 종합 분석하여 **주차별 학습 가이드**와 **핵심 요약**을 자동 제작합니다.
 
-<!-- 📸 docs/images/weekly-guide.png -->
-<!-- ![주차별 학습 가이드](./docs/images/weekly-guide.png) -->
+![주차별 학습 가이드](./docs/images/weekly-guide.png)
 
 ---
 

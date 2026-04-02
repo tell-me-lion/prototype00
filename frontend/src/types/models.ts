@@ -110,9 +110,29 @@ export interface Quiz {
   meta: QuizMeta
 }
 
+export interface GuideSection {
+  title: string
+  summary: string
+  key_takeaways: string[]
+  related_concepts: string[]
+}
+
+export interface SelfCheckItem {
+  question: string
+  hint: string
+}
+
 export interface LearningGuide {
   week: number
+  overview: string
   summary: string
+  sections: GuideSection[]
+  connections: string
+  study_tips: string[]
+  difficulty_note: string
+  review_priorities: string[]
+  self_check: SelfCheckItem[]
+  prerequisites: string[]
   key_concepts: string[]
   meta: Record<string, unknown>
 }
