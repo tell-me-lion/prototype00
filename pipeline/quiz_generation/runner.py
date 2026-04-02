@@ -71,11 +71,14 @@ def run_quiz_generation(
 
         print(f"[RUN]  {bp_file.name} | bp={len(blueprints)}, chunks={len(chunks)}")
 
-        # 단일 LLM 호출
+        # 단일 LLM 호출 (잘림 시 퀴즈 수를 줄여 적응형 재시도)
         prompt = build_batch_prompt(blueprints, chunks, quiz_count=QUIZ_COUNT)
         if detail_callback:
             detail_callback(f"LLM 호출 중... (목표 {QUIZ_COUNT}개)")
-        raw_quizzes = call_gemini_batch(prompt)
+        raw_quizzes = call_gemini_batch(
+            prompt,
+            rebuild_prompt=lambda qc: build_batch_prompt(blueprints, chunks, quiz_count=qc),
+        )
 
         # 검증
         if detail_callback:

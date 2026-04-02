@@ -4,6 +4,7 @@ import json
 import os
 import re
 import time
+from collections.abc import Callable
 
 import google.genai as genai
 from dotenv import load_dotenv
@@ -19,6 +20,12 @@ _client: genai.Client | None = None
 _RETRYABLE_API_ERRORS = ("429", "503", "RESOURCE_EXHAUSTED", "UNAVAILABLE")
 _CODE_BLOCK_RE = re.compile(r"^```[\w]*\n?", re.MULTILINE)
 _CODE_BLOCK_END_RE = re.compile(r"\n?```\s*$", re.MULTILINE)
+
+# 적응형 재시도: 시도별 퀴즈 수 (None = 원래 프롬프트 그대로)
+_RETRY_QUIZ_COUNTS = [None, 20, 15, 10]
+
+# 부분 복구 시 최소 퀴즈 수 — 이 이상이면 재시도 없이 사용
+_MIN_PARTIAL_QUIZZES = 15
 
 
 def _get_client() -> genai.Client:
@@ -40,19 +47,115 @@ def _strip_markdown_fences(text: str) -> str:
 
 
 def _try_repair_json(raw: str) -> str:
-    """흔한 LLM JSON 오류를 보정 시도."""
-    # trailing comma 제거: ,\s*} 또는 ,\s*]
+    """흔한 LLM JSON 오류를 보정 시도 — 잘린 JSON 복구 포함."""
+    # 1) trailing comma 제거
     repaired = re.sub(r",\s*([}\]])", r"\1", raw)
+
+    # 2) 문자열 내 이스케이프 안 된 줄바꿈 처리
+    repaired = re.sub(r'(?<=": ")(.*?)(?=")', lambda m: m.group(0).replace("\n", "\\n"), repaired)
+
+    # 3) 잘린 JSON 복구 시도
+    try:
+        json.loads(repaired)
+        return repaired
+    except json.JSONDecodeError:
+        pass
+
+    # 미닫힌 문자열 닫기
+    if repaired.count('"') % 2 != 0:
+        repaired += '"'
+
+    # 미닫힌 배열/객체 닫기
+    open_braces = repaired.count("{") - repaired.count("}")
+    open_brackets = repaired.count("[") - repaired.count("]")
+    repaired += "}" * max(0, open_braces)
+    repaired += "]" * max(0, open_brackets)
+
+    # trailing comma 다시 제거 (닫기 전에 comma가 남아있을 수 있음)
+    repaired = re.sub(r",\s*([}\]])", r"\1", repaired)
+
     return repaired
 
 
-def call_gemini_batch(prompt: str) -> list[dict]:
+def _extract_complete_objects(raw: str) -> list[dict] | None:
+    """잘린 JSON 배열에서 완전한 객체들만 추출.
+
+    불완전한 마지막 객체는 버리고, 파싱 가능한 앞부분 퀴즈만 반환.
+    """
+    # 배열 시작 확인
+    stripped = raw.strip()
+    if not stripped.startswith("["):
+        return None
+
+    # 완전한 객체를 하나씩 추출 (최외곽 배열의 직계 객체)
+    results: list[dict] = []
+    depth = 0
+    in_string = False
+    escape_next = False
+    obj_start = -1
+
+    for i, ch in enumerate(stripped):
+        if escape_next:
+            escape_next = False
+            continue
+        if ch == "\\":
+            escape_next = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+
+        if ch == "{":
+            if depth == 1:
+                obj_start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 1 and obj_start >= 0:
+                obj_str = stripped[obj_start : i + 1]
+                try:
+                    results.append(json.loads(obj_str))
+                except json.JSONDecodeError:
+                    pass
+                obj_start = -1
+        elif ch == "[" and depth == 0:
+            depth = 1
+
+    return results if results else None
+
+
+def _check_finish_reason(response) -> str | None:
+    """응답의 finish_reason 확인. MAX_TOKENS이면 문자열 반환, 정상이면 None."""
+    try:
+        candidates = response.candidates
+        if candidates and len(candidates) > 0:
+            reason = candidates[0].finish_reason
+            # Gemini SDK에서 finish_reason은 enum 또는 문자열
+            reason_str = str(reason).upper()
+            if "MAX_TOKENS" in reason_str or "LENGTH" in reason_str:
+                return reason_str
+    except (AttributeError, IndexError):
+        pass
+    return None
+
+
+def call_gemini_batch(
+    prompt: str,
+    *,
+    rebuild_prompt: Callable[[int], str] | None = None,
+) -> list[dict]:
     """Gemini API를 호출하고 JSON 배열 응답을 파싱해 반환.
 
     API 에러(429/503) 및 JSON 파싱 에러 시 최대 3회 재시도.
+    잘린 응답 감지 시 퀴즈 수를 줄여 적응형 재시도.
 
     Args:
         prompt: 배치 퀴즈 생성 프롬프트.
+        rebuild_prompt: 퀴즈 수를 줄여 프롬프트를 재조립하는 콜백.
+            ``rebuild_prompt(quiz_count) -> str`` 시그니처.
+            None이면 동일 프롬프트로 재시도.
 
     Returns:
         파싱된 퀴즈 dict 목록.
@@ -72,13 +175,14 @@ def call_gemini_batch(prompt: str) -> list[dict]:
 
     max_retries = 3
     last_error: Exception | None = None
+    current_prompt = prompt
 
     for attempt in range(max_retries + 1):
         # ── 1) API 호출 ──
         try:
             response = client.models.generate_content(
                 model=MODEL_NAME,
-                contents=prompt,
+                contents=current_prompt,
                 config=gen_config,
             )
         except Exception as e:
@@ -91,30 +195,59 @@ def call_gemini_batch(prompt: str) -> list[dict]:
                 continue
             raise RuntimeError(f"Gemini API 호출 실패: {e}") from e
 
-        # ── 2) 응답 텍스트 정리 ──
+        # ── 2) finish_reason 확인 ──
+        truncated_reason = _check_finish_reason(response)
+        if truncated_reason:
+            print(f"[Quiz Gen] 응답 잘림 감지 (finish_reason={truncated_reason})")
+
+        # ── 3) 응답 텍스트 정리 ──
         raw_text = response.text.strip()
         raw_text = _strip_markdown_fences(raw_text)
 
-        # ── 3) JSON 파싱 (실패 시 보정 후 1회 더 시도) ──
+        # ── 4) JSON 파싱 ──
+        parsed = None
         try:
             parsed = json.loads(raw_text)
         except json.JSONDecodeError:
+            # 보정 시도
             try:
                 parsed = json.loads(_try_repair_json(raw_text))
                 print(f"[Quiz Gen] JSON 자동 보정 성공 (attempt {attempt+1})")
-            except json.JSONDecodeError as e2:
-                last_error = e2
-                if attempt < max_retries:
-                    wait_sec = 10.0 * (2 ** attempt)
+            except json.JSONDecodeError:
+                # 잘린 응답에서 완전한 객체 추출 시도
+                partial = _extract_complete_objects(raw_text)
+                if partial and len(partial) >= _MIN_PARTIAL_QUIZZES:
                     print(
-                        f"[Quiz Gen] JSON 파싱 실패, 재시도 ({attempt+1}/{max_retries}) — {wait_sec:.0f}초 대기\n"
-                        f"  에러: {e2}\n  원문(앞 500자): {raw_text[:500]}"
+                        f"[Quiz Gen] 잘린 응답에서 {len(partial)}개 퀴즈 부분 복구 성공 — 그대로 사용"
                     )
+                    return partial
+                if partial:
+                    print(
+                        f"[Quiz Gen] 부분 복구 {len(partial)}개 — "
+                        f"최소 {_MIN_PARTIAL_QUIZZES}개 미달, 재시도"
+                    )
+
+                last_error = ValueError(f"JSON 파싱 실패: {raw_text[:300]}")
+                if attempt < max_retries:
+                    # 적응형 재시도: 퀴즈 수 줄이기
+                    next_count = _RETRY_QUIZ_COUNTS[min(attempt + 1, len(_RETRY_QUIZ_COUNTS) - 1)]
+                    if next_count and rebuild_prompt:
+                        current_prompt = rebuild_prompt(next_count)
+                        print(
+                            f"[Quiz Gen] 퀴즈 수 {next_count}개로 줄여 재시도 "
+                            f"({attempt+1}/{max_retries})"
+                        )
+                    else:
+                        print(
+                            f"[Quiz Gen] JSON 파싱 실패, 재시도 ({attempt+1}/{max_retries})"
+                        )
+                    wait_sec = 10.0 * (2 ** attempt)
                     time.sleep(wait_sec)
                     continue
                 raise ValueError(
-                    f"JSON 파싱 실패 ({max_retries+1}회 시도): {e2}\n원문(앞 500자): {raw_text[:500]}"
-                ) from e2
+                    f"JSON 파싱 실패 ({max_retries+1}회 시도): {last_error}\n"
+                    f"원문(앞 500자): {raw_text[:500]}"
+                ) from last_error
 
         if not isinstance(parsed, list):
             last_error = ValueError(f"응답이 배열이 아닙니다. 타입: {type(parsed)}")
@@ -123,6 +256,19 @@ def call_gemini_batch(prompt: str) -> list[dict]:
                 time.sleep(10.0)
                 continue
             raise last_error
+
+        # 잘림 감지 + 퀴즈 수 부족 시 적응형 재시도
+        if truncated_reason and len(parsed) < _MIN_PARTIAL_QUIZZES and attempt < max_retries:
+            next_count = _RETRY_QUIZ_COUNTS[min(attempt + 1, len(_RETRY_QUIZ_COUNTS) - 1)]
+            if next_count and rebuild_prompt:
+                current_prompt = rebuild_prompt(next_count)
+                print(
+                    f"[Quiz Gen] 잘림으로 {len(parsed)}개만 파싱됨 — "
+                    f"퀴즈 수 {next_count}개로 줄여 재시도"
+                )
+                wait_sec = 10.0 * (2 ** attempt)
+                time.sleep(wait_sec)
+                continue
 
         return parsed
 
