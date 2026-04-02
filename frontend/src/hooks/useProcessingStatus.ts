@@ -55,8 +55,8 @@ export function useProcessingStatus({
     let apiRetryCount = 0         // API 응답 에러 전용 카운터
     let emptyStepsCount = 0
     let lastLogTime = 0
-    let lastPhase4Detail = ''     // TASK-002: 로그 중복 방지용
-    let lastQuizDetail = ''       // TASK-002: 로그 중복 방지용
+    let lastRunningStep = ''      // 현재 running 단계 이름 추적
+    let lastStatus = ''           // 이전 폴링의 status 추적
     const LOG_INTERVAL = 60000 // 콘솔 로그는 60초마다
     const MAX_NETWORK_RETRIES = 20  // 네트워크 에러는 넉넉하게
     const MAX_API_RETRIES = 5       // API 에러는 기존대로
@@ -79,11 +79,7 @@ export function useProcessingStatus({
 
       const target = lectureId ? `lecture:${lectureId}` : `week:${week}`
       const now = Date.now()
-      const shouldLog = now - lastLogTime >= LOG_INTERVAL
-      if (shouldLog) {
-        lastLogTime = now
-        console.log(`[폴링] ${target} — 상태 조회 중... (네트워크 재시도: ${networkRetryCount}, API 재시도: ${apiRetryCount})`)
-      }
+      const timerFired = now - lastLogTime >= LOG_INTERVAL
       try {
         const result = lectureId
           ? await fetchLectureStatus(lectureId)
@@ -96,26 +92,25 @@ export function useProcessingStatus({
 
         const steps = result.steps ?? []
 
+        // 단계 변경 감지: running step 이름 또는 전체 status가 바뀌었을 때
+        const currentRunningStep = steps.find((s) => s.status === 'running')?.name ?? ''
+        const stepChanged = currentRunningStep !== lastRunningStep
+        const statusChanged = result.status !== lastStatus
+        lastRunningStep = currentRunningStep
+        lastStatus = result.status
+
+        // 로그 출력 조건: 1분 경과 OR 단계/상태 변경
+        const shouldLog = timerFired || stepChanged || statusChanged
         if (shouldLog) {
+          lastLogTime = now
           const doneCount = steps.filter((s) => s.status === 'done').length
           const isRunning = steps.some((s) => s.status === 'running')
           const percent = steps.length > 0
             ? doneCount * Math.floor(100 / steps.length) + (isRunning ? Math.floor(50 / steps.length) : 0)
             : null
           const percentLabel = percent !== null ? ` ${percent}% (${doneCount}/${steps.length})` : ''
-          console.log(`[폴링] ${target} — 응답: ${result.status}${percentLabel}`, steps, result.error_message ?? '')
-        }
-
-        // TASK-002: detail 값이 변경될 때만 출력 (중복 방지)
-        const phase4Step = steps.find((s) => s.name === 'Step 4: 명제 추출')
-        if (phase4Step?.status === 'running' && phase4Step?.detail && phase4Step.detail !== lastPhase4Detail) {
-          lastPhase4Detail = phase4Step.detail
-          console.log(`[폴링] ${target} — [명제 추출] ${phase4Step.detail}`)
-        }
-        const quizStep = steps.find((s) => s.name === '퀴즈 생성')
-        if (quizStep?.status === 'running' && quizStep?.detail && quizStep.detail !== lastQuizDetail) {
-          lastQuizDetail = quizStep.detail
-          console.log(`[폴링] ${target} — [퀴즈 생성] ${quizStep.detail}`)
+          const runningDetail = currentRunningStep ? ` [${currentRunningStep}]` : ''
+          console.log(`[폴링] ${target} — ${result.status}${percentLabel}${runningDetail}`)
         }
 
         if (result.status === 'completed') {
@@ -130,7 +125,7 @@ export function useProcessingStatus({
         }
         if (result.status === 'error') {
           const msg = result.error_message ?? '처리 중 오류가 발생했습니다.'
-          console.error(`[폴링] ${target} — 백엔드 에러:`, msg)
+          console.error(`[폴링] ${target} — 에러:`, msg)
           setError(msg)
           onErrorRef.current?.(msg)
           return
@@ -139,12 +134,9 @@ export function useProcessingStatus({
         // processing + steps 빈 배열 연속 감지
         if (result.status === 'processing' && steps.length === 0) {
           emptyStepsCount++
-          if (shouldLog) {
-            console.warn(`[폴링] ${target} — processing이지만 steps 빈 배열 (${emptyStepsCount}/${MAX_EMPTY_STEPS})`)
-          }
           if (emptyStepsCount >= MAX_EMPTY_STEPS) {
             const msg = '처리 상태를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.'
-            console.error(`[폴링] ${target} — 빈 steps 연속 ${MAX_EMPTY_STEPS}회 초과, 에러로 전환`)
+            console.error(`[폴링] ${target} — 빈 steps 연속 ${MAX_EMPTY_STEPS}회 초과`)
             setError(msg)
             onErrorRef.current?.(msg)
             return
