@@ -51,11 +51,16 @@ export function useProcessingStatus({
 
     let stopped = false
     let timer: ReturnType<typeof setTimeout>
-    let retryCount = 0
+    let networkRetryCount = 0     // DNS/네트워크 에러 전용 카운터
+    let apiRetryCount = 0         // API 응답 에러 전용 카운터
     let emptyStepsCount = 0
     let lastLogTime = 0
+    let lastPhase4Detail = ''     // TASK-002: 로그 중복 방지용
+    let lastQuizDetail = ''       // TASK-002: 로그 중복 방지용
     const LOG_INTERVAL = 60000 // 콘솔 로그는 60초마다
-    const MAX_RETRIES = 5
+    const MAX_NETWORK_RETRIES = 20  // 네트워크 에러는 넉넉하게
+    const MAX_API_RETRIES = 5       // API 에러는 기존대로
+    const BACKOFF_CAP_MS = 30000    // 백오프 상한 30초
     const MAX_EMPTY_STEPS = 10
     const MAX_POLL_MS = 60 * 60 * 1000 // 60분 타임아웃
     const pollStartTime = Date.now()
@@ -77,7 +82,7 @@ export function useProcessingStatus({
       const shouldLog = now - lastLogTime >= LOG_INTERVAL
       if (shouldLog) {
         lastLogTime = now
-        console.log(`[폴링] ${target} — 상태 조회 중... (재시도: ${retryCount})`)
+        console.log(`[폴링] ${target} — 상태 조회 중... (네트워크 재시도: ${networkRetryCount}, API 재시도: ${apiRetryCount})`)
       }
       try {
         const result = lectureId
@@ -85,7 +90,8 @@ export function useProcessingStatus({
           : await fetchWeekStatus(week!)
         if (stopped) return
 
-        retryCount = 0
+        networkRetryCount = 0
+        apiRetryCount = 0
         setStatus(result)
 
         const steps = result.steps ?? []
@@ -100,13 +106,15 @@ export function useProcessingStatus({
           console.log(`[폴링] ${target} — 응답: ${result.status}${percentLabel}`, steps, result.error_message ?? '')
         }
 
-        // 세부 진행 상황이 있는 step은 매 폴링마다 즉시 출력 (throttle 없음)
+        // TASK-002: detail 값이 변경될 때만 출력 (중복 방지)
         const phase4Step = steps.find((s) => s.name === 'Step 4: 명제 추출')
-        if (phase4Step?.status === 'running' && phase4Step?.detail) {
+        if (phase4Step?.status === 'running' && phase4Step?.detail && phase4Step.detail !== lastPhase4Detail) {
+          lastPhase4Detail = phase4Step.detail
           console.log(`[폴링] ${target} — [명제 추출] ${phase4Step.detail}`)
         }
         const quizStep = steps.find((s) => s.name === '퀴즈 생성')
-        if (quizStep?.status === 'running' && quizStep?.detail) {
+        if (quizStep?.status === 'running' && quizStep?.detail && quizStep.detail !== lastQuizDetail) {
+          lastQuizDetail = quizStep.detail
           console.log(`[폴링] ${target} — [퀴즈 생성] ${quizStep.detail}`)
         }
 
@@ -148,16 +156,35 @@ export function useProcessingStatus({
         timer = setTimeout(poll, interval)
       } catch (err) {
         if (stopped) return
-        retryCount++
-        console.error(`[폴링] ${target} — 네트워크/요청 실패 (${retryCount}/${MAX_RETRIES}):`, err)
-        if (retryCount >= MAX_RETRIES) {
-          const msg = '서버와 연결할 수 없습니다. 네트워크를 확인해주세요.'
-          console.error(`[폴링] ${target} — 최대 재시도 초과, 에러로 전환`)
-          setError(msg)
-          onErrorRef.current?.(msg)
-          return
+
+        // TASK-001: 네트워크 에러와 API 에러의 재시도 카운터 분리
+        const isNetworkError = err instanceof TypeError
+          || (err instanceof Error && /network|fetch|abort|dns|ENOTFOUND|ERR_NAME_NOT_RESOLVED/i.test(err.message))
+        if (isNetworkError) {
+          networkRetryCount++
+          const delay = Math.min(interval * Math.pow(2, networkRetryCount), BACKOFF_CAP_MS)
+          console.error(`[폴링] ${target} — 네트워크 에러 (${networkRetryCount}/${MAX_NETWORK_RETRIES}):`, err)
+          if (networkRetryCount >= MAX_NETWORK_RETRIES) {
+            const msg = '서버와 연결할 수 없습니다. 네트워크를 확인해주세요.'
+            console.error(`[폴링] ${target} — 네트워크 재시도 초과, 에러로 전환`)
+            setError(msg)
+            onErrorRef.current?.(msg)
+            return
+          }
+          timer = setTimeout(poll, delay)
+        } else {
+          apiRetryCount++
+          const delay = Math.min(interval * Math.pow(2, apiRetryCount), BACKOFF_CAP_MS)
+          console.error(`[폴링] ${target} — API 요청 실패 (${apiRetryCount}/${MAX_API_RETRIES}):`, err)
+          if (apiRetryCount >= MAX_API_RETRIES) {
+            const msg = '서버와 연결할 수 없습니다. 잠시 후 다시 시도해주세요.'
+            console.error(`[폴링] ${target} — API 재시도 초과, 에러로 전환`)
+            setError(msg)
+            onErrorRef.current?.(msg)
+            return
+          }
+          timer = setTimeout(poll, delay)
         }
-        timer = setTimeout(poll, interval * Math.pow(2, retryCount))
       }
     }
 
