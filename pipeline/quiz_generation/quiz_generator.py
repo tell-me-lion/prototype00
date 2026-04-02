@@ -25,7 +25,7 @@ _CODE_BLOCK_END_RE = re.compile(r"\n?```\s*$", re.MULTILINE)
 _RETRY_QUIZ_COUNTS = [None, 20, 15, 10]
 
 # 부분 복구 시 최소 퀴즈 수 — 이 이상이면 재시도 없이 사용
-_MIN_PARTIAL_QUIZZES = 15
+_MIN_PARTIAL_QUIZZES = 10
 
 
 def _get_client() -> genai.Client:
@@ -51,27 +51,24 @@ def _try_repair_json(raw: str) -> str:
     # 1) trailing comma 제거
     repaired = re.sub(r",\s*([}\]])", r"\1", raw)
 
-    # 2) 문자열 내 이스케이프 안 된 줄바꿈 처리
-    repaired = re.sub(r'(?<=": ")(.*?)(?=")', lambda m: m.group(0).replace("\n", "\\n"), repaired)
-
-    # 3) 잘린 JSON 복구 시도
+    # 파싱 성공하면 즉시 반환
     try:
         json.loads(repaired)
         return repaired
     except json.JSONDecodeError:
         pass
 
-    # 미닫힌 문자열 닫기
+    # 2) 미닫힌 문자열 닫기
     if repaired.count('"') % 2 != 0:
         repaired += '"'
 
-    # 미닫힌 배열/객체 닫기
+    # 3) 미닫힌 배열/객체 닫기
     open_braces = repaired.count("{") - repaired.count("}")
     open_brackets = repaired.count("[") - repaired.count("]")
     repaired += "}" * max(0, open_braces)
     repaired += "]" * max(0, open_brackets)
 
-    # trailing comma 다시 제거 (닫기 전에 comma가 남아있을 수 있음)
+    # 4) trailing comma 다시 제거
     repaired = re.sub(r",\s*([}\]])", r"\1", repaired)
 
     return repaired
@@ -80,14 +77,28 @@ def _try_repair_json(raw: str) -> str:
 def _extract_complete_objects(raw: str) -> list[dict] | None:
     """잘린 JSON 배열에서 완전한 객체들만 추출.
 
-    불완전한 마지막 객체는 버리고, 파싱 가능한 앞부분 퀴즈만 반환.
+    3단계 전략으로 가능한 많은 퀴즈를 복구:
+    1) 마지막 완전한 객체 경계(},)를 찾아 배열 닫기 — 가장 정확
+    2) 문자 단위 파서 — 중첩 구조 추적
+    3) 정규식으로 개별 객체 블록 추출 — 최후 수단
     """
-    # 배열 시작 확인
     stripped = raw.strip()
     if not stripped.startswith("["):
         return None
 
-    # 완전한 객체를 하나씩 추출 (최외곽 배열의 직계 객체)
+    # ── 전략 1: 마지막 },를 찾아 배열 닫기 (역순 탐색) ──
+    # 객체 사이 경계인 },를 역순으로 찾아 그 위치에서 배열을 닫아봄
+    closing_positions = [m.start() + 1 for m in re.finditer(r"\}\s*,", stripped)]
+    for pos in reversed(closing_positions):
+        candidate = stripped[:pos] + "]"
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, list) and len(parsed) > 0:
+                return parsed
+        except json.JSONDecodeError:
+            continue
+
+    # ── 전략 2: 문자 단위 파서 ──
     results: list[dict] = []
     depth = 0
     in_string = False
@@ -114,7 +125,7 @@ def _extract_complete_objects(raw: str) -> list[dict] | None:
         elif ch == "}":
             depth -= 1
             if depth == 1 and obj_start >= 0:
-                obj_str = stripped[obj_start : i + 1]
+                obj_str = stripped[obj_start: i + 1]
                 try:
                     results.append(json.loads(obj_str))
                 except json.JSONDecodeError:
@@ -122,6 +133,23 @@ def _extract_complete_objects(raw: str) -> list[dict] | None:
                 obj_start = -1
         elif ch == "[" and depth == 0:
             depth = 1
+
+    if results:
+        return results
+
+    # ── 전략 3: 정규식으로 개별 블록 추출 (최후 수단) ──
+    obj_pattern = re.compile(
+        r'\{\s*"blueprint_id"\s*:.*?\}(?=\s*[,\]\s])', re.DOTALL
+    )
+    for match in obj_pattern.finditer(stripped):
+        obj_str = match.group(0)
+        # 중첩 braces 밸런스 맞추기
+        while obj_str.count("{") > obj_str.count("}"):
+            obj_str += "}"
+        try:
+            results.append(json.loads(obj_str))
+        except json.JSONDecodeError:
+            continue
 
     return results if results else None
 
@@ -176,6 +204,8 @@ def call_gemini_batch(
     max_retries = 3
     last_error: Exception | None = None
     current_prompt = prompt
+    # 이전 시도에서 부분 복구된 결과를 보관 (최종 폴백용)
+    best_partial: list[dict] | None = None
 
     for attempt in range(max_retries + 1):
         # ── 1) API 호출 ──
@@ -216,16 +246,13 @@ def call_gemini_batch(
             except json.JSONDecodeError:
                 # 잘린 응답에서 완전한 객체 추출 시도
                 partial = _extract_complete_objects(raw_text)
-                if partial and len(partial) >= _MIN_PARTIAL_QUIZZES:
-                    print(
-                        f"[Quiz Gen] 잘린 응답에서 {len(partial)}개 퀴즈 부분 복구 성공 — 그대로 사용"
-                    )
-                    return partial
                 if partial:
-                    print(
-                        f"[Quiz Gen] 부분 복구 {len(partial)}개 — "
-                        f"최소 {_MIN_PARTIAL_QUIZZES}개 미달, 재시도"
-                    )
+                    print(f"[Quiz Gen] 부분 복구 {len(partial)}개 퀴즈 추출")
+                    if not best_partial or len(partial) > len(best_partial):
+                        best_partial = partial
+                    if len(partial) >= _MIN_PARTIAL_QUIZZES:
+                        print(f"[Quiz Gen] {len(partial)}개 >= {_MIN_PARTIAL_QUIZZES}개 — 그대로 사용")
+                        return partial
 
                 last_error = ValueError(f"JSON 파싱 실패: {raw_text[:300]}")
                 if attempt < max_retries:
@@ -244,6 +271,13 @@ def call_gemini_batch(
                     wait_sec = 10.0 * (2 ** attempt)
                     time.sleep(wait_sec)
                     continue
+                # 최종 실패: 부분 복구 결과라도 있으면 반환
+                if best_partial:
+                    print(
+                        f"[Quiz Gen] 최대 재시도 후에도 완전 파싱 실패 — "
+                        f"부분 복구 {len(best_partial)}개로 폴백"
+                    )
+                    return best_partial
                 raise ValueError(
                     f"JSON 파싱 실패 ({max_retries+1}회 시도): {last_error}\n"
                     f"원문(앞 500자): {raw_text[:500]}"
@@ -259,6 +293,8 @@ def call_gemini_batch(
 
         # 잘림 감지 + 퀴즈 수 부족 시 적응형 재시도
         if truncated_reason and len(parsed) < _MIN_PARTIAL_QUIZZES and attempt < max_retries:
+            if not best_partial or len(parsed) > len(best_partial):
+                best_partial = parsed
             next_count = _RETRY_QUIZ_COUNTS[min(attempt + 1, len(_RETRY_QUIZ_COUNTS) - 1)]
             if next_count and rebuild_prompt:
                 current_prompt = rebuild_prompt(next_count)
