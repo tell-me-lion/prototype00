@@ -49,8 +49,25 @@ interface GuideCardProps {
 
 function GuideCard({ weekSummary, status, index, onProcess, onViewResults, onProcessComplete, onProcessError }: GuideCardProps) {
   const { week, lecture_count, completed_count, date_range } = weekSummary
+  const navigate = useNavigate()
   const gradient = getGuideGradient(week)
   const percent = lecture_count > 0 ? Math.round((completed_count / lecture_count) * 100) : 0
+  const [showConfirm, setShowConfirm] = useState(false)
+  const allCompleted = completed_count >= lecture_count && lecture_count > 0
+  const remaining = lecture_count - completed_count
+
+  const handleGuideClick = () => {
+    if (allCompleted) {
+      onProcess(week)
+    } else {
+      setShowConfirm(true)
+    }
+  }
+
+  const handleAnalyzeAll = () => {
+    setShowConfirm(false)
+    navigate(`/lectures?week=${week}&autoAnalyze=true`)
+  }
 
   return (
     <div
@@ -80,7 +97,22 @@ function GuideCard({ weekSummary, status, index, onProcess, onViewResults, onPro
 
         {/* 액션 */}
         <div className="tml-guide-card__footer">
-          {status === 'completed' ? (
+          {showConfirm ? (
+            <div className="tml-guide-card__confirm">
+              <p className="tml-guide-card__confirm-msg">
+                {remaining}개 강의 분석이 남아있어요.<br />
+                먼저 이 주차 강의를 모두 분석할까요?
+              </p>
+              <div className="tml-guide-card__confirm-actions">
+                <button className="btn-primary" onClick={handleAnalyzeAll}>
+                  지금 분석하기
+                </button>
+                <button className="tml-guide-card__cancel-btn" onClick={() => setShowConfirm(false)}>
+                  취소
+                </button>
+              </div>
+            </div>
+          ) : status === 'completed' ? (
             <button className="btn-primary" onClick={() => onViewResults(week)}>
               가이드 보기 →
             </button>
@@ -94,7 +126,7 @@ function GuideCard({ weekSummary, status, index, onProcess, onViewResults, onPro
             <button
               className="btn-primary"
               style={{ background: 'var(--tml-navy)' }}
-              onClick={() => onProcess(week)}
+              onClick={handleGuideClick}
             >
               가이드 생성 →
             </button>

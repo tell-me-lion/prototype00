@@ -573,6 +573,32 @@ export function LecturesPage() {
 
   const activeWeek = searchParams.get('week') ? Number(searchParams.get('week')) : null
 
+  // 학습 가이드 페이지에서 autoAnalyze=true로 넘어온 경우 해당 주차 미처리 강의 자동 분석
+  useEffect(() => {
+    if (loading || !searchParams.get('autoAnalyze') || !activeWeek) return
+    // 파라미터 소비 (한 번만 실행)
+    setSearchParams({ week: String(activeWeek) }, { replace: true })
+
+    const targetWeek = weeks.find((w) => w.week === activeWeek)
+    if (!targetWeek) return
+
+    targetWeek.lectures.forEach((lecture) => {
+      const effectiveStatus = getEffectiveLectureStatus(lecture.lecture_id, lecture.status, processingLectures, erroredLectures)
+      if (effectiveStatus !== 'completed' && effectiveStatus !== 'processing') {
+        setProcessingLectures((prev) => new Set(prev).add(lecture.lecture_id))
+        triggerLectureProcess(lecture.lecture_id, false).catch((err: unknown) => {
+          const status = (err as { status?: number }).status
+          if (status === 409) return // 이미 처리 중 → 폴링이 이어받음
+          setProcessingLectures((prev) => {
+            const next = new Set(prev)
+            next.delete(lecture.lecture_id)
+            return next
+          })
+        })
+      }
+    })
+  }, [loading, weeks]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleWeekSelect = useCallback(
     (week: number | null) => {
       if (week === null) setSearchParams({})

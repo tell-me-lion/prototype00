@@ -1305,6 +1305,40 @@ body::after {
   margin-top: auto;
 }
 
+.tml-guide-card__confirm {
+  width: 100%;
+  text-align: center;
+}
+
+.tml-guide-card__confirm-msg {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.tml-guide-card__confirm-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tml-guide-card__cancel-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  color: var(--tml-ink-muted);
+  padding: 6px 10px;
+}
+
+.tml-guide-card__cancel-btn:hover {
+  color: var(--tml-ink);
+}
+
 @media (max-width: 767px) {
   .tml-guide-stats {
     grid-template-columns: 1fr;
