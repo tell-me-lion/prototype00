@@ -550,16 +550,25 @@ export function LecturesPage() {
     const serverActiveIds = new Set(
       allLectures.filter((l) => l.status === 'processing' || l.status === 'partial').map((l) => l.lecture_id),
     )
-    const serverCompletedIds = new Set(
-      allLectures.filter((l) => l.status === 'completed').map((l) => l.lecture_id),
+    const serverInactiveIds = new Set(
+      allLectures.filter((l) => l.status === 'completed' || l.status === 'error').map((l) => l.lecture_id),
     )
 
     setProcessingLectures((prev) => {
       const next = new Set(prev)
       serverActiveIds.forEach((id) => next.add(id))
-      serverCompletedIds.forEach((id) => next.delete(id))
+      serverInactiveIds.forEach((id) => next.delete(id))
       return next
     })
+    // 서버에서 error로 내려온 강의는 erroredLectures에도 반영
+    const serverErrorIds = allLectures.filter((l) => l.status === 'error').map((l) => l.lecture_id)
+    if (serverErrorIds.length > 0) {
+      setErroredLectures((prev) => {
+        const next = new Set(prev)
+        serverErrorIds.forEach((id) => next.add(id))
+        return next
+      })
+    }
   }, [weeks])
 
   const activeWeek = searchParams.get('week') ? Number(searchParams.get('week')) : null

@@ -176,51 +176,104 @@ class FactExtractor:
                         continue
 
         stats = {"input_chunks": len(chunks), "output_props": 0}
-        results = []
-        prop_counter = 1
         total_chunks = len(chunks)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-        for i, chunk in enumerate(tqdm(chunks, desc=f"  [지식 추출] {filepath.name}", leave=False)):
-            text = chunk.get("text", "")
-            keywords = chunk.get("keywords", [])
+        partial_path = output_dir / f"{day}.jsonl.partial"
+        out_path = output_dir / f"{day}.jsonl"
 
-            props = self.extract_pattern(text)
+        # — 재개 로직: .partial 파일이 있으면 이어서 진행 —
+        resume_from = 0
+        existing_prop_count = 0
+        if partial_path.exists():
+            valid_lines = []
+            for raw_line in partial_path.read_text(encoding="utf-8").splitlines():
+                raw_line = raw_line.strip()
+                if not raw_line:
+                    continue
+                try:
+                    valid_lines.append(json.loads(raw_line))
+                except json.JSONDecodeError:
+                    break  # 마지막 불완전 라인 — 여기서 끊고 이후 덮어씀
+            resume_from = len(valid_lines)
+            existing_prop_count = sum(len(entry.get("props", [])) for entry in valid_lines)
+            if resume_from > 0:
+                # 불완전 라인 제거: 유효한 부분만 다시 쓰기
+                with open(partial_path, "w", encoding="utf-8") as f:
+                    for entry in valid_lines:
+                        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+                print(f"[Phase 4] 중간저장 발견 — {resume_from}/{total_chunks} 청크 완료, {existing_prop_count}개 명제 재개")
 
-            if len(text) > 30 and (self.use_gemini or self.use_ollama):
-                llm_props = self.extract_llm(text, keywords)
-                for lp in llm_props:
-                    lp["method"] = "llm"
-                props.extend(llm_props)
+        # — 청크별 처리 + 즉시 저장 —
+        current_prop_count = existing_prop_count
+        open_mode = "a" if resume_from > 0 else "w"
+        with open(partial_path, open_mode, encoding="utf-8") as pf:
+            for i, chunk in enumerate(tqdm(chunks, desc=f"  [지식 추출] {filepath.name}", leave=False)):
+                if i < resume_from:
+                    # 이미 처리된 청크는 진행률만 갱신하고 스킵
+                    if progress_callback:
+                        progress_callback(i + 1, total_chunks, existing_prop_count)
+                    continue
 
-            for prop in props:
-                c_candidates = list(set([prop.get("concept", "")] + keywords))
-                while "" in c_candidates: c_candidates.remove("")
+                text = chunk.get("text", "")
+                keywords = chunk.get("keywords", [])
 
-                results.append({
-                    "prop_id": f"{day}_P{prop_counter:04d}",
+                props = self.extract_pattern(text)
+
+                if len(text) > 30 and (self.use_gemini or self.use_ollama):
+                    llm_props = self.extract_llm(text, keywords)
+                    for lp in llm_props:
+                        lp["method"] = "llm"
+                    props.extend(llm_props)
+
+                # 청크 단위로 partial 파일에 즉시 기록
+                chunk_entry = {
+                    "chunk_index": i,
                     "chunk_id": chunk.get("chunk_id", ""),
-                    "type": prop.get("type", "fact"),
-                    "text": prop.get("fact", ""),
-                    "concept_candidates": c_candidates,
-                    "processing_type": chunk.get("processing_type", "base"),
-                    "meta": {
-                        "source_sents": chunk.get("sent_ids", []),
-                        "model": "gemini-2.5-flash" if self.use_gemini else ("ollama" if self.use_ollama else "pattern")
-                    }
-                })
+                    "props": [],
+                }
+                for prop in props:
+                    c_candidates = list(set([prop.get("concept", "")] + keywords))
+                    while "" in c_candidates:
+                        c_candidates.remove("")
+                    chunk_entry["props"].append({
+                        "type": prop.get("type", "fact"),
+                        "text": prop.get("fact", ""),
+                        "concept_candidates": c_candidates,
+                        "processing_type": chunk.get("processing_type", "base"),
+                        "meta": {
+                            "source_sents": chunk.get("sent_ids", []),
+                            "model": "gemini-2.5-flash" if self.use_gemini else ("ollama" if self.use_ollama else "pattern"),
+                        },
+                    })
+
+                pf.write(json.dumps(chunk_entry, ensure_ascii=False) + "\n")
+                pf.flush()
+
+                current_prop_count += len(chunk_entry["props"])
+                if progress_callback:
+                    progress_callback(i + 1, total_chunks, current_prop_count)
+
+        # — 완료: partial → 최종 jsonl 변환 —
+        all_props = []
+        prop_counter = 1
+        for raw_line in partial_path.read_text(encoding="utf-8").splitlines():
+            raw_line = raw_line.strip()
+            if not raw_line:
+                continue
+            entry = json.loads(raw_line)
+            for prop in entry.get("props", []):
+                prop["prop_id"] = f"{day}_P{prop_counter:04d}"
+                prop["chunk_id"] = entry.get("chunk_id", "")
+                all_props.append(prop)
                 prop_counter += 1
 
-            if progress_callback:
-                progress_callback(i + 1, total_chunks, len(results))
-
-        stats["output_props"] = len(results)
-        
-        output_dir.mkdir(parents=True, exist_ok=True)
-        out_path = output_dir / f"{day}.jsonl"
         with open(out_path, "w", encoding="utf-8") as f:
-            for item in results:
+            for item in all_props:
                 f.write(json.dumps(item, ensure_ascii=False) + "\n")
-                
+
+        partial_path.unlink()
+        stats["output_props"] = len(all_props)
         return stats
 
 def main() -> None:
