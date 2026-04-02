@@ -34,13 +34,13 @@
       letter-spacing: -0.02em;
     }
 
-    .reveal h1 { font-size: 2.4em; }
-    .reveal h2 { font-size: 1.6em; margin-bottom: 0.6em; }
-    .reveal h3 { font-size: 1.1em; color: var(--orange); margin-bottom: 0.4em; }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 { font-size: 1.4em; margin-bottom: 0.5em; }
+    .reveal h3 { font-size: 1.0em; color: var(--orange); margin-bottom: 0.3em; }
 
     .reveal p, .reveal li {
-      font-size: 0.72em;
-      line-height: 1.8;
+      font-size: 0.68em;
+      line-height: 1.6;
       color: #c8d0dc;
     }
 
@@ -63,6 +63,10 @@
     /* --- Slide: Title --- */
     .title-slide {
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
     }
 
     .title-slide h1 {
@@ -160,18 +164,18 @@
     .flow {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin: 20px 0;
+      margin: 16px 0;
     }
 
     .flow-step {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 8px;
-      padding: 14px 20px;
+      padding: 10px 16px;
       text-align: center;
-      font-size: 0.6em;
+      font-size: 0.55em;
       color: #c8d0dc;
       font-weight: 500;
     }
@@ -396,8 +400,15 @@
       background: #0a1020;
     }
 
-    section {
-      padding: 40px !important;
+    .reveal .slides section {
+      height: 100%;
+      box-sizing: border-box;
+      padding: 20px 40px !important;
+    }
+
+    /* 반응형 스케일링을 위해 폰트 사이즈 조정 */
+    .reveal {
+      font-size: 32px;
     }
   </style>
 </head>
@@ -579,7 +590,7 @@
         <div class="accent-bar"></div>
         <h2>핵심 기술 — 분석 파이프라인</h2>
 
-        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 20px;">강의 원문 텍스트에서 학습 콘텐츠까지, 8단계 자동화 파이프라인</p>
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 20px;">강의 원문 텍스트에서 학습 콘텐츠까지, 핵심 처리 흐름</p>
 
         <div class="flow">
           <div class="flow-step">텍스트 정제</div>
@@ -615,6 +626,60 @@
               <h3>적응형 LLM 호출</h3>
               <p>토큰 초과 시 자동으로 퀴즈 개수를 줄여 재시도 — 무중단 생성</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 6-2. 전처리 5단계 데이터 플로우 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>핵심 기술 — 전처리 5단계 데이터 플로우</h2>
+        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 20px;">정제되지 않은 강의 스크립트(raw)를 RAG에 즉시 활용 가능한 구조화된 지식 DB로 변환</p>
+
+        <div class="card-grid cols-3">
+          <div class="card" style="border-top: 3px solid #667788;">
+            <div class="tag navy">Phase 1</div>
+            <h3>세션 분리 및 정제</h3>
+            <ul>
+              <li>15초 이내 발화 단락 병합</li>
+              <li>30분 이상 공백 시 세션 분할</li>
+              <li>Gemini API 기반 문맥 교정</li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid #667788;">
+            <div class="tag navy">Phase 2</div>
+            <h3>문장 복원 및 필터링</h3>
+            <ul>
+              <li>구어체 텍스트 문장 단위 분할</li>
+              <li>품사(POS) 기반 단순 감탄사 제거</li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid #667788;">
+            <div class="tag navy">Phase 3</div>
+            <h3>시맨틱 청킹 및 스코어링</h3>
+            <ul>
+              <li>문맥 전환 지점 기반 청크 분할</li>
+              <li>TF-IDF로 청크 내 핵심어 추출</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div class="card-grid cols-2" style="margin-top: 16px;">
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <div class="tag">Phase 4</div>
+            <h3>지식 명제 추출 및 구조화</h3>
+            <ul>
+              <li>패턴 & LLM 기반 '명제(Fact)' 추출</li>
+              <li>핵심 키워드와 명제의 '개념-설명' 세트화</li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <div class="tag">Phase 5</div>
+            <h3>최종 RAG 팩트 DB 구축</h3>
+            <ul>
+              <li>원문/키워드/명제 매핑 (ChunkDoc)</li>
+              <li>단일 개념으로 정보 병합 (ConceptDoc)</li>
+            </ul>
           </div>
         </div>
       </section>
