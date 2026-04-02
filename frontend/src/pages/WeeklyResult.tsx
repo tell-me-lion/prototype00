@@ -9,7 +9,7 @@ import {
   triggerWeekProcess,
   ApiError,
 } from '../services/api'
-import type { WeekSummary, WeeklyOutputs } from '../types/models'
+import type { WeekSummary, WeeklyOutputs, GuideSection, SelfCheckItem } from '../types/models'
 
 type PageState =
   | { tag: 'loading' }
@@ -47,7 +47,6 @@ export function WeeklyResult() {
           return
         }
 
-        // guide_status 기준으로 판정 (Mode B 가이드 생성 상태)
         const guideStatus = weekData.guide_status ?? weekData.status
         if (guideStatus === 'completed') {
           const outputs = await fetchWeekResults(week)
@@ -78,13 +77,11 @@ export function WeeklyResult() {
   const handleTrigger = async () => {
     try {
       await triggerWeekProcess(week)
-      // processing 상태로 전환 (reload 대신)
       if (state.tag === 'not-processed') {
         setState({ tag: 'processing', week: state.week, availableWeeks: state.availableWeeks })
       }
     } catch (err) {
       if (err instanceof ApiError && err.status === 409) {
-        // 409: 이미 processing 중이거나 completed → 서버 상태 조회 후 전환
         setState({ tag: 'loading' })
         try {
           const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
@@ -111,7 +108,6 @@ export function WeeklyResult() {
   }
 
   const handleProcessComplete = async () => {
-    // 폴링이 completed를 보고했으므로 상태 확인 없이 바로 결과 fetch
     setState({ tag: 'loading' })
     try {
       const [weekData, allWeeks] = await Promise.all([fetchWeek(week), fetchWeeks()])
@@ -274,6 +270,9 @@ export function WeeklyResult() {
   const prevWeek = currentIndex > 0 ? availableWeeks[currentIndex - 1] : null
   const nextWeek = currentIndex < availableWeeks.length - 1 ? availableWeeks[currentIndex + 1] : null
 
+  // LLM 생성 가이드인지 판별 (overview 필드 존재 여부)
+  const isLlmGuide = !!(guide && guide.overview && guide.sections && guide.sections.length > 0)
+
   return (
     <main className="tml-page-container">
       {/* 주차 헤더 */}
@@ -281,9 +280,151 @@ export function WeeklyResult() {
         <WeekHeader weekData={weekData} prevWeek={prevWeek} nextWeek={nextWeek} />
       </div>
 
-      {guide && (
+      {guide && isLlmGuide ? (
         <div key={week}>
-          {/* 핵심 요약 */}
+          {/* Overview 히어로 */}
+          <OverviewHero overview={guide.overview} />
+
+          {/* 선수 지식 배너 */}
+          {guide.prerequisites && guide.prerequisites.length > 0 && (
+            <PrerequisitesBanner prerequisites={guide.prerequisites} />
+          )}
+
+          {/* 주제별 섹션 카드 */}
+          {guide.sections.length > 0 && (
+            <div style={{ marginBottom: 40 }} className="tml-animate">
+              <p className="section-label">주제별 학습 내용</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {guide.sections.map((section, i) => (
+                  <GuideSectionCard key={i} section={section} index={i} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 개념 연결 */}
+          {guide.connections && (
+            <div style={{ marginBottom: 40 }} className="tml-animate">
+              <p className="section-label">개념 간 연결</p>
+              <div className="tml-card" style={{ padding: '20px 24px' }}>
+                <p style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.9375rem',
+                  lineHeight: 1.7,
+                  color: 'var(--tml-ink-secondary)',
+                  margin: 0,
+                }}>
+                  {guide.connections}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 복습 우선순위 */}
+          {guide.review_priorities && guide.review_priorities.length > 0 && (
+            <div style={{ marginBottom: 40 }} className="tml-animate">
+              <p className="section-label">복습 우선순위</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {guide.review_priorities.map((priority, i) => (
+                  <div key={i} className="tml-card" style={{
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 14,
+                  }}>
+                    <span style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: 'var(--tml-orange)',
+                      flexShrink: 0,
+                      marginTop: 2,
+                    }}>
+                      #{i + 1}
+                    </span>
+                    <p style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.875rem',
+                      lineHeight: 1.6,
+                      color: 'var(--tml-ink)',
+                      margin: 0,
+                    }}>
+                      {priority}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 자가 점검 */}
+          {guide.self_check && guide.self_check.length > 0 && (
+            <div style={{ marginBottom: 40 }} className="tml-animate">
+              <p className="section-label">자가 점검</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {guide.self_check.map((item, i) => (
+                  <SelfCheckCard key={i} item={item} index={i} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 학습 팁 */}
+          {guide.study_tips && guide.study_tips.length > 0 && (
+            <div style={{ marginBottom: 40 }} className="tml-animate">
+              <p className="section-label">학습 팁</p>
+              <div className="tml-card" style={{ padding: '20px 24px' }}>
+                <ul style={{
+                  margin: 0,
+                  paddingLeft: 20,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}>
+                  {guide.study_tips.map((tip, i) => (
+                    <li key={i} style={{
+                      fontFamily: 'var(--font-body)',
+                      fontSize: '0.875rem',
+                      lineHeight: 1.6,
+                      color: 'var(--tml-ink-secondary)',
+                    }}>
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* 난이도 안내 */}
+          {guide.difficulty_note && (
+            <div style={{ marginBottom: 40 }} className="tml-animate">
+              <p className="section-label">난이도 안내</p>
+              <div className="tml-card" style={{
+                padding: '16px 20px',
+                borderLeft: '3px solid var(--tml-orange)',
+              }}>
+                <p style={{
+                  fontFamily: 'var(--font-body)',
+                  fontSize: '0.875rem',
+                  lineHeight: 1.6,
+                  color: 'var(--tml-ink-secondary)',
+                  margin: 0,
+                }}>
+                  {guide.difficulty_note}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* 개념 맵 (기존 호환) */}
+          {guide.key_concepts.length > 0 && (
+            <ConceptMapSection weekNum={week} concepts={guide.key_concepts} />
+          )}
+        </div>
+      ) : guide ? (
+        /* 기존 TF-IDF 가이드 폴백 (overview 없는 경우) */
+        <div key={week}>
           <div style={{ marginBottom: 40 }} className="tml-animate">
             <p className="section-label">핵심 요약</p>
             <div className="tml-guide-item">
@@ -295,12 +436,11 @@ export function WeeklyResult() {
             </div>
           </div>
 
-          {/* 개념 맵 */}
           {guide.key_concepts.length > 0 && (
             <ConceptMapSection weekNum={week} concepts={guide.key_concepts} />
           )}
         </div>
-      )}
+      ) : null}
 
       {/* 이 주차의 강의 */}
       {weekData.lectures.length > 0 && (
@@ -324,6 +464,223 @@ export function WeeklyResult() {
         </div>
       )}
     </main>
+  )
+}
+
+// ── Overview 히어로 ──────────────────────────────────────
+
+function OverviewHero({ overview }: { overview: string }) {
+  return (
+    <div style={{ marginBottom: 40 }} className="tml-animate">
+      <div className="tml-card" style={{
+        padding: '28px 32px',
+        borderLeft: '4px solid var(--tml-navy-mid)',
+      }}>
+        <p style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '1.125rem',
+          fontWeight: 600,
+          lineHeight: 1.6,
+          color: 'var(--tml-ink)',
+          margin: 0,
+        }}>
+          {overview}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ── 선수 지식 배너 ───────────────────────────────────────
+
+function PrerequisitesBanner({ prerequisites }: { prerequisites: string[] }) {
+  return (
+    <div style={{ marginBottom: 40 }} className="tml-animate">
+      <div style={{
+        background: 'var(--tml-navy-light)',
+        border: '1px solid var(--tml-rule)',
+        borderRadius: 6,
+        padding: '16px 20px',
+      }}>
+        <p style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: 'var(--tml-navy-mid)',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          margin: '0 0 8px',
+        }}>
+          선수 지식
+        </p>
+        <ul style={{ margin: 0, paddingLeft: 18 }}>
+          {prerequisites.map((p, i) => (
+            <li key={i} style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              lineHeight: 1.6,
+              color: 'var(--tml-ink-secondary)',
+            }}>
+              {p}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+// ── 주제별 섹션 카드 ─────────────────────────────────────
+
+function GuideSectionCard({ section, index }: { section: GuideSection; index: number }) {
+  return (
+    <div className="tml-card" style={{ padding: '20px 24px' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 12,
+      }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: 'var(--tml-white)',
+          background: 'var(--tml-navy-mid)',
+          borderRadius: 4,
+          padding: '2px 8px',
+          flexShrink: 0,
+        }}>
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <h3 style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: '1rem',
+          fontWeight: 600,
+          color: 'var(--tml-ink)',
+          margin: 0,
+        }}>
+          {section.title}
+        </h3>
+      </div>
+
+      <p style={{
+        fontFamily: 'var(--font-body)',
+        fontSize: '0.875rem',
+        lineHeight: 1.7,
+        color: 'var(--tml-ink-secondary)',
+        margin: '0 0 14px',
+      }}>
+        {section.summary}
+      </p>
+
+      {section.key_takeaways.length > 0 && (
+        <ul style={{
+          margin: '0 0 12px',
+          paddingLeft: 18,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}>
+          {section.key_takeaways.map((takeaway, i) => (
+            <li key={i} style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              lineHeight: 1.6,
+              color: 'var(--tml-ink)',
+            }}>
+              {takeaway}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {section.related_concepts.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {section.related_concepts.map((concept, i) => (
+            <span key={i} style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.6875rem',
+              fontWeight: 500,
+              color: 'var(--tml-navy-mid)',
+              background: 'var(--tml-navy-light)',
+              border: '1px solid var(--tml-rule)',
+              borderRadius: 4,
+              padding: '2px 8px',
+            }}>
+              {concept}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── 자가 점검 카드 (아코디언) ────────────────────────────
+
+function SelfCheckCard({ item, index }: { item: SelfCheckItem; index: number }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="tml-card" style={{
+      padding: '16px 20px',
+      cursor: 'pointer',
+      transition: 'border-color 0.15s',
+    }}
+      onClick={() => setOpen(!open)}
+    >
+      <div style={{
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 12,
+      }}>
+        <span style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: '0.75rem',
+          fontWeight: 600,
+          color: 'var(--tml-orange)',
+          flexShrink: 0,
+          marginTop: 2,
+        }}>
+          Q{index + 1}
+        </span>
+        <div style={{ flex: 1 }}>
+          <p style={{
+            fontFamily: 'var(--font-body)',
+            fontSize: '0.875rem',
+            lineHeight: 1.6,
+            color: 'var(--tml-ink)',
+            margin: 0,
+          }}>
+            {item.question}
+          </p>
+          {open && (
+            <p style={{
+              fontFamily: 'var(--font-body)',
+              fontSize: '0.8125rem',
+              lineHeight: 1.6,
+              color: 'var(--tml-ink-muted)',
+              margin: '8px 0 0',
+              paddingLeft: 12,
+              borderLeft: '2px solid var(--tml-rule)',
+            }}>
+              {item.hint}
+            </p>
+          )}
+        </div>
+        <span style={{
+          fontFamily: 'var(--font-body)',
+          fontSize: '0.75rem',
+          color: 'var(--tml-ink-muted)',
+          flexShrink: 0,
+          transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s',
+        }}>
+          ▼
+        </span>
+      </div>
+    </div>
   )
 }
 
@@ -428,7 +785,7 @@ function WeekHeader({ weekData, prevWeek, nextWeek }: WeekHeaderProps) {
                 fontSize: '0.8125rem',
                 color: 'var(--tml-ink-muted)',
               }}>
-                📅 {weekData.date_range}
+                {weekData.date_range}
               </span>
               <span style={{ color: 'var(--tml-rule-strong)', fontSize: '0.75rem' }}>·</span>
               <span style={{
@@ -447,7 +804,7 @@ function WeekHeader({ weekData, prevWeek, nextWeek }: WeekHeaderProps) {
               color: 'var(--tml-ink)',
               margin: 0,
             }}>
-              📚 {weekData.week}주차 학습 가이드
+              {weekData.week}주차 학습 가이드
             </h1>
           </div>
 
@@ -469,7 +826,7 @@ function WeekHeader({ weekData, prevWeek, nextWeek }: WeekHeaderProps) {
                 transition: 'opacity 0.15s',
               }}
             >
-              ← 이전 주차
+              이전 주차
             </button>
             <button
               onClick={() => nextWeek !== null && navigate(`/weekly/${nextWeek}`)}
@@ -487,7 +844,7 @@ function WeekHeader({ weekData, prevWeek, nextWeek }: WeekHeaderProps) {
                 transition: 'opacity 0.15s',
               }}
             >
-              다음 주차 →
+              다음 주차
             </button>
           </div>
         </div>
@@ -499,10 +856,10 @@ function WeekHeader({ weekData, prevWeek, nextWeek }: WeekHeaderProps) {
 // ── 미니 강의 카드 ──────────────────────────────────────
 
 const STATUS_LABEL: Record<string, string> = {
-  completed: '✅ 완료',
-  processing: '⏳ 처리 중',
-  idle: '⏳ 미처리',
-  error: '❌ 오류',
+  completed: '완료',
+  processing: '처리 중',
+  idle: '미처리',
+  error: '오류',
 }
 
 interface MiniLectureCardProps {

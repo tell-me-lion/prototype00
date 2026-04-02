@@ -2,9 +2,11 @@
 
 from app.schemas.models import (
     Concept,
+    GuideSection,
     LearningGuide,
     LearningPoint,
     Quiz,
+    SelfCheckItem,
     LectureOutputs,
     WeeklyOutputs,
     LectureCatalog,
@@ -18,8 +20,10 @@ from app.schemas.models import (
 
 __all__ = [
     "Concept",
+    "GuideSection",
     "LearningPoint",
     "Quiz",
+    "SelfCheckItem",
     "LearningGuide",
     "LectureOutputs",
     "WeeklyOutputs",
