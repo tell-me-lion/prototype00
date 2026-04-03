@@ -501,10 +501,10 @@
       </section>
 
       <!-- ==================== 2. 문제 정의 ==================== -->
-      <!-- ==================== 2-1. 초기 목표 ==================== -->
+      <!-- ==================== 2-1. 프로젝트 목표 ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>초기 프로젝트 목표</h2>
+        <h2>프로젝트 목표</h2>
         <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 20px;">교육 환경에서 강의 후 복습의 효율성을 극대화하기 위한 시스템 구축</p>
 
         <div style="background: var(--bg-overlay); border-left: 4px solid var(--orange); padding: 16px 24px; border-radius: 4px; margin-bottom: 24px;">
@@ -533,14 +533,15 @@
         </div>
       </section>
 
-      <!-- ==================== 2-2. 문제 인식 ==================== -->
+      <!-- ==================== 2-2. 현실 데이터 장벽 ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>현실의 문제와 우리의 돌파구</h2>
+        <h2>현실 데이터의 장벽</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">기대와 달리 실제 수집된 데이터 환경은 완벽하지 않았습니다.</p>
         
         <div class="card" style="margin-bottom: 20px; border-left: 3px solid #E85454; background: rgba(232, 84, 84, 0.04);">
           <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div class="tag" style="background:#FFF0F0; color:#E85454; margin-bottom:12px;">현실 데이터의 장벽</div>
+            <div class="tag" style="background:#FFF0F0; color:#E85454; margin-bottom:12px;">현실 이슈</div>
           </div>
           <h3 style="color: #E85454;">실제 데이터에서 발견한 2가지 치명적 이슈</h3>
           <ul style="color: var(--ink-secondary); margin-bottom: 0;">
@@ -558,16 +559,37 @@
             </li>
           </ul>
         </div>
-        
-        <div class="card" style="border-left: 3px solid var(--orange);">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-            <div class="tag">해결 전략</div>
+      </section>
+
+      <!-- ==================== 2-3. 돌파구를 찾기 위한 기술적 고민 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>돌파구를 찾기 위한 고민</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">이 문제를 단순히 회피하지 않고, 서비스의 본질적인 목적에 맞춰 접근했습니다.</p>
+
+        <div class="card-grid cols-2" style="margin-bottom: 24px;">
+          <div class="card" style="border-top: 3px solid var(--ink-muted);">
+            <h3 style="color: var(--ink); font-size: 0.8em;">❌ 외부 웹 검색 연동</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.55em; line-height: 1.6;">
+              <li style="margin-bottom: 8px;">외부 의존성 증가로 인한 시스템 예측 불가능성</li>
+              <li>강의 범위를 벗어난 지식이 유입되어 <strong>'그날 배운 내용의 복습'</strong>이라는 취지 훼손</li>
+            </ul>
           </div>
-          <h3 style="color: var(--orange);">전처리를 통한 강의 지식 데이터베이스(DB)화</h3>
-          <p style="font-size: 0.55em; color: var(--ink-secondary); margin-bottom: 8px;">단순 생성 시도를 넘어, 팩트 기반 파이프라인으로 전면 개편</p>
-          <ul>
-            <li>강의 내용을 정제하고 사실 기반(Fact) 데이터로 변환하여 할루시네이션을 원천 차단</li>
-            <li>다양한 성능의 LLM(로컬/클라우드 등) 환경에 구애받지 않는 <strong style="color: var(--ink);">강건하고 일관된 콘텐츠 생성 구조</strong> 설계</li>
+          <div class="card" style="border-top: 3px solid var(--ink-muted);">
+            <h3 style="color: var(--ink); font-size: 0.8em;">❌ 사전 지식 에셋 주입 방식</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.55em; line-height: 1.6;">
+              <li style="margin-bottom: 8px;">강사의 즉흥적인 예시나 커리큘럼 변동에 유연하게 반응하지 못함</li>
+              <li>강의마다 달라지는 맥락을 담아내지 못하는 한계 존재</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--orange);">
+          <div class="tag">최종 해결 전략</div>
+          <h3 style="color: var(--orange); font-size: 0.85em; margin-top: 12px; margin-bottom: 8px;">순수한 강의 내용 기반의 전처리와 지식 DB 구축</h3>
+          <ul style="color: var(--ink-secondary); font-size: 0.6em; margin-bottom: 0;">
+            <li>강의 자체의 텍스트를 고도화하여 사실(Fact)만 추출하는 안정적인 베이스 구축</li>
+            <li>외부 지식에 기대지 않고 오직 강의 안에서만 정제하는 <strong>강건한 생성 파이프라인</strong> 설계</li>
           </ul>
         </div>
       </section>
@@ -576,7 +598,10 @@
       <section>
         <div class="accent-bar"></div>
         <h2>솔루션 — 알려주사자</h2>
-        <p style="margin-bottom: 24px;">두 가지 작동 모드를 통해 단기 복습부터 주간 누적 복습까지 지원합니다.</p>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px; line-height: 1.5;">
+          앞서 도출한 <strong style="color: var(--orange);">지식 DB화 및 전처리 파이프라인 돌파구</strong>를 기반으로,<br/>
+          단건 집중 복습과 주간 누적 학습을 완벽히 지원하는 <strong style="color: var(--ink);">두 가지 맞춤형 모드(A/B)</strong>를 제공합니다.
+        </p>
 
         <div class="card-grid cols-2">
           <div class="card" style="border-left: 3px solid var(--orange);">
@@ -588,7 +613,7 @@
             <p style="color: var(--ink-secondary); margin-bottom: 20px;">특정 강의 복습을 위한 집중 모드</p>
             <div style="background: var(--bg-overlay); padding: 16px; border-radius: 6px;">
               <p style="font-size:0.6em; margin:0 0 8px 0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">입력</span> 강의 스크립트 1개</p>
-              <p style="font-size:0.6em; margin:0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">산출물</span> 핵심 개념, 설계, 퀴즈</p>
+              <p style="font-size:0.6em; margin:0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">산출</span> 핵심 개념, 설계, 퀴즈</p>
             </div>
           </div>
           <div class="card" style="border-left: 3px solid var(--navy-mid);">
@@ -600,7 +625,7 @@
             <p style="color: var(--ink-secondary); margin-bottom: 20px;">주간 복습 및 시험 대비용 통합 모드</p>
             <div style="background: var(--bg-overlay); padding: 16px; border-radius: 6px;">
               <p style="font-size:0.6em; margin:0 0 8px 0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">입력</span> 1주치 강의 전체</p>
-              <p style="font-size:0.6em; margin:0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">산출물</span> 주차별 학습 가이드, 핵심 요약</p>
+              <p style="font-size:0.6em; margin:0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">산출</span> 주차별 학습 가이드, 핵심 요약</p>
             </div>
           </div>
         </div>
