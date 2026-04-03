@@ -476,8 +476,8 @@
       <!-- ==================== 1-2. 팀 역할 (초기) ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>Team TellMeLion (초기 구성)</h2>
-        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">프로젝트 파트 및 초기 기획 단계의 협업 구조</p>
+        <h2>Team TellMeLion</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 32px;">프로젝트 파트 및 초기 기획 단계의 협업 구조</p>
         
         <div class="card-grid" style="gap: 16px; grid-template-columns: repeat(4, 1fr);">
           <div class="card" style="text-align: center; border-left: 3px solid var(--navy-mid); padding: 32px 16px;">
@@ -505,8 +505,19 @@
           </div>
         </div>
 
-        <div style="margin-top: 32px; font-size: 0.45em; color: var(--ink-muted); text-align: center;">
+        <div style="margin-top: 16px; font-size: 0.45em; color: var(--ink-muted); text-align: center;">
           * 원래 4명으로 시작했으나, 심유진 님은 조기 취업으로 중도 하차하게 되었습니다.
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px 24px; background: var(--bg-overlay); border-radius: 8px; border: 1px solid var(--rule);">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 24px;">
+            <h3 style="font-size: 0.7em; color: var(--ink); margin: 0; white-space: nowrap;">🤝 팀 협업 방식</h3>
+            <ul style="font-size: 0.55em; color: var(--ink-secondary); margin: 0; padding-left: 16px; line-height: 1.6; text-align: left;">
+              <li><strong>Agile & Sync:</strong> 주 단위 스프린트 회의 지정 및 Discord 실시간 소통</li>
+              <li><strong>Version Control:</strong> GitHub 활용, 철저한 코드 리뷰 및 기능(Feature) 단위 통합</li>
+              <li><strong>Documentation:</strong> Notion을 기반으로 API 명세서 및 프롬프트 결과물 실시간 공유</li>
+            </ul>
+          </div>
         </div>
       </section>
 
@@ -514,13 +525,13 @@
       <section>
         <div class="accent-bar"></div>
         <h2>Team TellMeLion (실질 수행)</h2>
-        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 40px;">하차 이후, 3명이서 전체 시스템의 실질적인 구현과 고도화를 완수했습니다.</p>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 32px;">하차 이후, 3명이서 아키텍처 설계를 이관받아 실질적인 구현과 고도화를 완수했습니다.</p>
         
         <div class="card-grid cols-3" style="gap: 24px;">
           <div class="card" style="text-align: center; border-left: 3px solid var(--navy-mid); padding: 32px 24px;">
             <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">김시훈</div>
             <div class="tag navy" style="margin-bottom: 12px;">Data Pipeline & Logic</div>
-            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">핵심 파이프라인 설계 및 개발<br/>전처리 로직/모델 설계<br/>아키텍처 초기 설계</p>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">핵심 파이프라인 설계 및 개발<br/>전처리 로직/모델 설계<br/>아키텍처 초기 설계 인수인계</p>
           </div>
           
           <div class="card" style="text-align: center; border-left: 3px solid var(--orange); padding: 32px 24px;">
@@ -533,6 +544,17 @@
             <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">조준호</div>
             <div class="tag" style="background: rgba(61, 187, 122, 0.15); color: #3DBB7A; margin-bottom: 12px;">Frontend & Deploy</div>
             <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">디자인 및 풀스택 연동<br/>시스템 인프라 배포</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px; padding: 16px 24px; background: var(--bg-overlay); border-radius: 8px; border: 1px solid var(--rule);">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 24px;">
+            <h3 style="font-size: 0.7em; color: var(--ink); margin: 0; white-space: nowrap;">🤝 팀 협업 방식</h3>
+            <ul style="font-size: 0.55em; color: var(--ink-secondary); margin: 0; padding-left: 16px; line-height: 1.6; text-align: left;">
+              <li><strong>Agile & Sync:</strong> 주 단위 스프린트 회의 지정 및 Discord 실시간 소통</li>
+              <li><strong>Version Control:</strong> GitHub 활용, 철저한 코드 리뷰 및 기능(Feature) 단위 통합</li>
+              <li><strong>Documentation:</strong> Notion을 기반으로 API 명세서 및 프롬프트 결과물 실시간 공유</li>
+            </ul>
           </div>
         </div>
       </section>
@@ -604,19 +626,26 @@
         <h2>돌파구를 찾기 위한 고민</h2>
         <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">이 문제를 단순히 회피하지 않고, 서비스의 본질적인 목적에 맞춰 접근했습니다.</p>
 
-        <div class="card-grid cols-2" style="margin-bottom: 24px;">
-          <div class="card" style="border-top: 3px solid var(--ink-muted);">
-            <h3 style="color: var(--ink); font-size: 0.8em;">❌ 외부 웹 검색 연동</h3>
-            <ul style="color: var(--ink-secondary); font-size: 0.55em; line-height: 1.6;">
-              <li style="margin-bottom: 8px;">외부 의존성 증가로 인한 시스템 예측 불가능성</li>
-              <li>강의 범위를 벗어난 지식이 유입되어 <strong>'그날 배운 내용의 복습'</strong>이라는 취지 훼손</li>
+        <div class="card-grid cols-3" style="margin-bottom: 24px; gap: 16px;">
+          <div class="card" style="border-top: 3px solid var(--ink-muted); padding: 20px 16px;">
+            <h3 style="color: var(--ink); font-size: 0.75em;">❌ 외부 웹 검색 연동</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.5em; line-height: 1.6; padding-left: 16px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;">외부 의존성 상승으로 인한 예측 불가능성</li>
+              <li>강의 밖 지식 유입으로 <strong>복습 취지 훼손</strong></li>
             </ul>
           </div>
-          <div class="card" style="border-top: 3px solid var(--ink-muted);">
-            <h3 style="color: var(--ink); font-size: 0.8em;">❌ 사전 지식 에셋 주입 방식</h3>
-            <ul style="color: var(--ink-secondary); font-size: 0.55em; line-height: 1.6;">
-              <li style="margin-bottom: 8px;">강사의 즉흥적인 예시나 커리큘럼 변동에 유연하게 반응하지 못함</li>
-              <li>강의마다 달라지는 맥락을 담아내지 못하는 한계 존재</li>
+          <div class="card" style="border-top: 3px solid var(--ink-muted); padding: 20px 16px;">
+            <h3 style="color: var(--ink); font-size: 0.75em;">❌ 사전 지식 에셋 주입</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.5em; line-height: 1.6; padding-left: 16px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;">현장 커리큘럼 변동에 유연한 반응 불가</li>
+              <li>매 강의마다 달라지는 <strong>실시간 맥락 상실</strong></li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--ink-muted); padding: 20px 16px;">
+            <h3 style="color: var(--ink); font-size: 0.75em;">❌ LLM 성능 전적 의존</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.5em; line-height: 1.6; padding-left: 16px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;">클라우드 모델의 잦은 업데이트 및 파편화</li>
+              <li>상대적 저성능의 <strong>로컬 환경</strong> 동작 미보장</li>
             </ul>
           </div>
         </div>
