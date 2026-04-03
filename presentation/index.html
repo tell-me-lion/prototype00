@@ -470,49 +470,97 @@
           <h1><img src="../frontend/public/likelion-logo.png" alt="알려주사자 로고" class="logo-img" /> 알려주사자</h1>
           <p style="font-size: 0.8em; color: var(--orange); font-weight: 600; margin-top: -10px; margin-bottom: 20px;">TellMeLion</p>
           <p class="subtitle">강의 녹화본에서 핵심 개념 · 퀴즈 · 학습 가이드를 자동으로</p>
-          <div class="team">
-            <div class="team-member">
-              <div class="name">시훈</div>
-              <div class="role">전처리 파이프라인 · 배포</div>
-            </div>
-            <div class="team-member">
-              <div class="name">경현</div>
-              <div class="role">퀴즈 · 개념 · 학습포인트 생성</div>
-            </div>
-            <div class="team-member">
-              <div class="name">주노</div>
-              <div class="role">UI/UX · 프론트-백 연동</div>
-            </div>
+        </div>
+      </section>
+
+      <!-- ==================== 1-2. 팀 역할 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Team TellMeLion</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 40px;">프로젝트 담당 파트 및 협업 구조</p>
+        
+        <div class="card-grid cols-3" style="gap: 24px;">
+          <div class="card" style="text-align: center; border-left: 3px solid var(--navy-mid); padding: 32px 24px;">
+            <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">시훈</div>
+            <div class="tag navy" style="margin-bottom: 12px;">Data Pipeline & Logic</div>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">핵심 파이프라인 설계<br/>전처리 로직/모델 설계</p>
+          </div>
+          
+          <div class="card" style="text-align: center; border-left: 3px solid var(--orange); padding: 32px 24px;">
+            <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">경현</div>
+            <div class="tag" style="margin-bottom: 12px;">Core Generation</div>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">퀴즈, 다중 개념 추출<br/>학습 가이드 AI 생성 구조</p>
+          </div>
+          
+          <div class="card" style="text-align: center; border-left: 3px solid #3DBB7A; padding: 32px 24px;">
+            <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">주노</div>
+            <div class="tag" style="background: rgba(61, 187, 122, 0.15); color: #3DBB7A; margin-bottom: 12px;">Frontend & Deploy</div>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">디자인 및 풀스택 연동<br/>시스템 인프라 배포</p>
           </div>
         </div>
       </section>
 
       <!-- ==================== 2. 문제 정의 ==================== -->
+      <!-- ==================== 2-1. 초기 목표 ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>문제 정의</h2>
+        <h2>초기 프로젝트 목표</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">교육 환경에서 강의 후 복습의 효율성을 극대화하기 위한 시스템 구축</p>
         <div class="card-grid cols-2">
-          <div class="card">
-            <h3>수강생의 어려움</h3>
+          <div class="card" style="border-top: 3px solid var(--navy-mid);">
+            <h3 style="color: var(--navy-mid);">수강생 & 교육 업체의 한계</h3>
             <ul>
-              <li>강의 녹화본은 쌓이지만 복습이 어렵다</li>
-              <li>핵심 내용을 직접 정리하는 데 시간이 과다 소요</li>
-              <li>스스로 학습 수준을 점검할 방법이 부족하다</li>
+              <li>학습 효과 극대화를 위해서는 강의 후 복습이 필수적입니다.</li>
+              <li>그러나 매 강의마다 요약, 퀴즈, 가이드를 수작업으로 제작하는 데 시간과 비용이 과다 소요됩니다.</li>
             </ul>
           </div>
-          <div class="card">
-            <h3>교육 업체의 한계</h3>
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <h3 style="color: var(--orange);">기획된 자동화 목표</h3>
             <ul>
-              <li>강의마다 요약·퀴즈를 수작업으로 만들 리소스 부족</li>
-              <li>주차별 학습 가이드 제작에 반복적 노동 발생</li>
-              <li>콘텐츠 품질의 일관성 유지가 어렵다</li>
+              <li>강의 스크립트 기반 <strong style="color: var(--ink);">자동 개념/포인트 추출</strong></li>
+              <li>주관식/객관식/코드 등 <strong style="color: var(--ink);">다양한 유형의 퀴즈와 해설 제공</strong></li>
+              <li>로드가 심한 <strong style="color: var(--ink);">주차별 학습 가이드 자동 통합 제작</strong></li>
             </ul>
           </div>
         </div>
-        <div style="text-align: center; margin-top: 36px;">
-          <p style="font-size: 0.7em; color: var(--orange); font-weight: 600;">
-            "강의를 선택하기만 하면, 나머지는 AI가 처리할 수 없을까?"
-          </p>
+      </section>
+
+      <!-- ==================== 2-2. 문제 인식 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>현실의 문제와 우리의 돌파구</h2>
+        
+        <div class="card" style="margin-bottom: 20px; border-left: 3px solid #E85454; background: rgba(232, 84, 84, 0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="tag" style="background:#FFF0F0; color:#E85454; margin-bottom:12px;">현실 데이터의 장벽</div>
+          </div>
+          <h3 style="color: #E85454;">실제 데이터에서 발견한 2가지 치명적 이슈</h3>
+          <ul style="color: var(--ink-secondary); margin-bottom: 0;">
+            <li style="margin-bottom: 16px;">
+              <strong style="color: var(--ink);">STT 품질 저하</strong>: 오타와 노이즈가 많아 단순히 프롬프트만으로는 품질 보장이 불가함
+              <div style="margin-top: 8px; text-align: center;">
+                <img src="../docs/images/issue01.png" alt="STT 품질 저하 예시" style="max-height: 100px; width: auto; max-width: 95%; border: 1px solid var(--rule); border-radius: 6px; display: inline-block; box-sizing: border-box;" />
+              </div>
+            </li>
+            <li style="margin-bottom: 0;">
+              <strong style="color: var(--ink);">커리큘럼 불일치</strong>: 실제 강의 흐름이 스크립트 계획표와 다르게 전개되는 현상 발생
+              <div style="margin-top: 8px; text-align: center;">
+                <img src="../docs/images/issue02.png" alt="커리큘럼 불일치 예시" style="max-height: 100px; width: auto; max-width: 95%; border: 1px solid var(--rule); border-radius: 6px; display: inline-block; box-sizing: border-box;" />
+              </div>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="card" style="border-left: 3px solid var(--orange);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="tag">해결 전략</div>
+          </div>
+          <h3 style="color: var(--orange);">전처리를 통한 강의 지식 데이터베이스(DB)화</h3>
+          <p style="font-size: 0.55em; color: var(--ink-secondary); margin-bottom: 8px;">단순 생성 시도를 넘어, 팩트 기반 파이프라인으로 전면 개편</p>
+          <ul>
+            <li>강의 내용을 정제하고 사실 기반(Fact) 데이터로 변환하여 할루시네이션을 원천 차단</li>
+            <li>다양한 성능의 LLM(로컬/클라우드 등) 환경에 구애받지 않는 <strong style="color: var(--ink);">강건하고 일관된 콘텐츠 생성 구조</strong> 설계</li>
+          </ul>
         </div>
       </section>
 
