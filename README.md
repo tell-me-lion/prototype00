@@ -30,7 +30,7 @@
 - **실시간 진행률 표시**: 8단계 처리 과정을 단계별로 시각화
 - **자동 배포**: PR 머지 = 프론트(Vercel) + 백엔드(EC2) 동시 배포 완료
 
-> **개발 기간**: 2026.03.10 ~ 2026.04.02 (24일) · **3인 팀** · **252 commits** · **56+ PRs**
+> **개발 기간**: 2026.03.10 ~ 2026.04.02 (24일) · **3인 팀** · **240+ commits** · **56+ PRs**
 
 <div align="center">
   <a href="https://youtu.be/k2Gi1BbiC-4">
@@ -65,7 +65,9 @@
 <img src="./docs/images/lecture-result.png" alt="핵심 개념" width="100%">
 <img src="./docs/images/study-point.png" alt="학습 포인트" width="100%">
 
-<img src="./docs/images/processing.png" alt="실시간 처리 상태" width="100%">
+<div align="center">
+  <img src="./docs/images/processing.png" alt="실시간 처리 상태" width="30%">
+</div>
 
 <details>
 <summary><strong>퀴즈 유형별 화면 보기</strong></summary>
@@ -252,7 +254,7 @@ tell-me-lion/
 │   └── src/
 │       ├── pages/           # 7개 페이지: Dashboard, LecturesPage, LectureResult,
 │       │                    #   QuizPage, GuidesPage, WeeklyResult, NotFound
-│       ├── components/      # 11개 컴포넌트: ConceptCard, QuizCard, CodeEditor,
+│       ├── components/      # 10개 컴포넌트: ConceptCard, QuizCard, CodeEditor,
 │       │                    #   ProcessingStatus, ProgressRing, Skeleton 등
 │       ├── services/        # API 호출 (api.ts)
 │       ├── hooks/           # useWeeks, useCountUp, useProcessingStatus
