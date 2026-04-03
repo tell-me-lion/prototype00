@@ -904,7 +904,7 @@
         <div class="accent-bar"></div>
         <h2>핵심 기술 — 분석 파이프라인</h2>
 
-        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 20px;">강의 원문 텍스트에서 학습 콘텐츠까지, 핵심 처리 흐름</p>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 20px;">원시 강의 스크립트가 입력되면 즉각 반응하여, 독자적인 '지식 데이터베이스'로 구조화하는 파이프라인</p>
 
         <div class="flow">
           <div class="flow-step">텍스트 정제</div>
@@ -937,8 +937,8 @@
               <p>추출된 개념을 원문 청크에 역매핑하여 근거 기반 문제 설계</p>
             </div>
             <div class="card">
-              <h3>적응형 LLM 호출</h3>
-              <p>토큰 초과 시 자동으로 퀴즈 개수를 줄여 재시도 — 무중단 생성</p>
+              <h3>완전한 반응성(Reactivity)</h3>
+              <p>사전 지식 없이 오직 새롭게 입력된 강의만 정제하여 지식 DB를 자체 구축함으로써, 세상에 없던 새로운 강의에도 즉각 대응 가능</p>
             </div>
           </div>
         </div>
@@ -957,7 +957,7 @@
             <ul>
               <li>15초 이내 발화 단락 병합</li>
               <li>30분 이상 공백 시 세션 분할</li>
-              <li>Gemini API 기반 문맥 교정</li>
+              <li>LLM 기반 문맥 교정</li>
             </ul>
           </div>
           <div class="card" style="border-top: 3px solid var(--ink-muted);">
@@ -1002,7 +1002,7 @@
       <section>
         <div class="accent-bar"></div>
         <h2>퀴즈 품질 보장 전략</h2>
-        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">사전 설계(Blueprint)부터 자동 검증까지 이어지는 체계적인 파이프라인</p>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">앞서 정제한 <strong style="color: var(--orange);">강의 지식 데이터베이스(Fact DB)</strong>를 기반으로 하여, 할루시네이션을 원천 차단하는 체계적인 파이프라인</p>
 
         <div class="flow" style="margin-top: 32px; gap: 16px;">
           <div class="flow-step highlight" style="flex: 1; padding: 20px 16px;">
@@ -1012,7 +1012,7 @@
           <div class="flow-arrow">→</div>
           <div class="flow-step" style="flex: 1; padding: 20px 16px; border-color: #6A9FBF; background: rgba(77, 127, 168, 0.1);">
             <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px; color: var(--navy-mid);">2. Evidence</div>
-            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">정답(Correct) 및 오답(Distractor) 근거 확보</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">Fact DB에서 정답 및 오답 근거(재료) 100% 한정 확보</div>
           </div>
           <div class="flow-arrow">→</div>
           <div class="flow-step highlight" style="flex: 1; padding: 20px 16px;">
