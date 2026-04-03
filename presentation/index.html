@@ -13,14 +13,43 @@
     :root {
       --orange: #FF6B00;
       --orange-light: #FFF0E6;
-      --orange-dark: #CC5500;
-      --navy: #0F1F3D;
       --navy-mid: #1E3A5F;
       --navy-light: #EBF0F8;
+
+      --bg: #FFFFFF;
+      --bg-raised: #F6F8FB;
+      --bg-overlay: #EDF1F7;
+
+      --ink: #0F1F3D;
+      --ink-secondary: #3D556E;
+      --ink-muted: #7A92A8;
+
+      --rule: #DDE3EC;
+      --rule-strong: #B8C5D4;
+    }
+
+    html[data-theme="dark"] {
+      --orange: #E05800;          /* tml-orange dark */
+      --orange-light: #2A1800;    /* tml-orange-light dark */
+      --navy-mid: #7BAEC8;        /* tml-navy-mid dark */
+      --navy-light: #1D3050;      /* tml-navy-light dark */
+
+      --bg: #0A1628;              /* tml-bg dark */
+      --bg-raised: #111E33;       /* tml-bg-raised dark */
+      --bg-overlay: #1A2D4A;      /* tml-bg-overlay dark */
+
+      --ink: #E8EDF5;             /* tml-ink dark */
+      --ink-secondary: #B0C8DF;   /* tml-ink-secondary dark */
+      --ink-muted: #7090A8;       /* tml-ink-muted dark */
+
+      --rule: #1E3050;            /* tml-rule dark */
+      --rule-strong: #2A4068;     /* tml-rule-strong dark */
     }
 
     .reveal {
       font-family: 'Pretendard Variable', 'Pretendard', sans-serif;
+      font-size: 32px;
+      color: var(--ink-secondary);
     }
 
     .reveal .slides {
@@ -32,16 +61,17 @@
       font-weight: 700;
       text-transform: none;
       letter-spacing: -0.02em;
+      color: var(--ink);
     }
 
-    .reveal h1 { font-size: 2.4em; }
-    .reveal h2 { font-size: 1.6em; margin-bottom: 0.6em; }
-    .reveal h3 { font-size: 1.1em; color: var(--orange); margin-bottom: 0.4em; }
+    .reveal h1 { font-size: 2.2em; }
+    .reveal h2 { font-size: 1.4em; margin-bottom: 0.5em; }
+    .reveal h3 { font-size: 1.0em; color: var(--orange); margin-bottom: 0.3em; }
 
     .reveal p, .reveal li {
-      font-size: 0.72em;
-      line-height: 1.8;
-      color: #c8d0dc;
+      font-size: 0.68em;
+      line-height: 1.6;
+      color: var(--ink-secondary);
     }
 
     .reveal ul { list-style: none; padding-left: 0; }
@@ -63,11 +93,25 @@
     /* --- Slide: Title --- */
     .title-slide {
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
     }
 
     .title-slide h1 {
-      color: #fff;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
       margin-bottom: 0.15em;
+    }
+
+    .title-slide .logo-img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
     }
 
     .title-slide .dot {
@@ -76,7 +120,7 @@
 
     .title-slide .subtitle {
       font-size: 0.65em;
-      color: #8899aa;
+      color: var(--ink-muted);
       margin-bottom: 1.5em;
     }
 
@@ -93,12 +137,12 @@
     .title-slide .team-member .name {
       font-size: 0.7em;
       font-weight: 600;
-      color: #e0e6ee;
+      color: var(--ink);
     }
 
     .title-slide .team-member .role {
       font-size: 0.55em;
-      color: #667788;
+      color: var(--ink-muted);
       margin-top: 4px;
     }
 
@@ -114,7 +158,7 @@
     /* --- tag/badge --- */
     .tag {
       display: inline-block;
-      background: rgba(255, 107, 0, 0.15);
+      background: var(--orange-light);
       color: var(--orange);
       font-size: 0.55em;
       font-weight: 600;
@@ -126,8 +170,8 @@
     }
 
     .tag.navy {
-      background: rgba(30, 58, 95, 0.4);
-      color: #7ea8cc;
+      background: var(--navy-light);
+      color: var(--navy-mid);
     }
 
     /* --- card grid --- */
@@ -141,50 +185,58 @@
     .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
 
     .card {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--bg-raised);
+      border: 1px solid var(--rule);
       border-radius: 8px;
       padding: 24px;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+    
+    .card:hover {
+      background: var(--bg-overlay);
+      border-color: var(--rule-strong);
     }
 
     .card h3 {
       margin-top: 0;
       font-size: 0.75em;
+      color: var(--ink);
     }
 
     .card p, .card li {
       font-size: 0.6em;
+      color: var(--ink-secondary);
     }
 
     /* --- flow / pipeline --- */
     .flow {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin: 20px 0;
+      margin: 16px 0;
     }
 
     .flow-step {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--bg-raised);
+      border: 1px solid var(--rule);
       border-radius: 8px;
-      padding: 14px 20px;
+      padding: 10px 16px;
       text-align: center;
-      font-size: 0.6em;
-      color: #c8d0dc;
+      font-size: 0.55em;
+      color: var(--ink-secondary);
       font-weight: 500;
     }
 
     .flow-step.highlight {
-      background: rgba(255, 107, 0, 0.12);
+      background: var(--orange-light);
       border-color: var(--orange);
       color: var(--orange);
     }
 
     .flow-arrow {
       font-size: 1.2em;
-      color: #445566;
+      color: var(--ink-muted);
     }
 
     /* --- architecture diagram --- */
@@ -197,36 +249,36 @@
     }
 
     .arch-box {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: var(--bg-raised);
+      border: 1px solid var(--rule);
       border-radius: 8px;
       padding: 16px 28px;
       text-align: center;
       font-size: 0.6em;
-      color: #c8d0dc;
+      color: var(--ink-secondary);
       min-width: 140px;
     }
 
     .arch-box.orange {
       border-color: var(--orange);
-      background: rgba(255, 107, 0, 0.08);
+      background: var(--orange-light);
     }
 
     .arch-box.navy {
       border-color: var(--navy-mid);
-      background: rgba(30, 58, 95, 0.3);
+      background: var(--navy-light);
     }
 
     .arch-box .label {
       display: block;
       font-size: 0.8em;
-      color: #667788;
+      color: var(--ink-muted);
       margin-top: 4px;
     }
 
     .arch-arrow {
       font-size: 1.4em;
-      color: #445566;
+      color: var(--ink-muted);
     }
 
     /* --- table --- */
@@ -238,18 +290,18 @@
     }
 
     .reveal table th {
-      background: rgba(255, 107, 0, 0.1);
+      background: var(--orange-light);
       color: var(--orange);
       font-weight: 600;
       padding: 10px 16px;
       text-align: left;
-      border-bottom: 2px solid rgba(255, 107, 0, 0.3);
+      border-bottom: 2px solid var(--orange);
     }
 
     .reveal table td {
       padding: 10px 16px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      color: #c8d0dc;
+      border-bottom: 1px solid var(--rule);
+      color: var(--ink-secondary);
     }
 
     /* --- number highlight --- */
@@ -263,7 +315,7 @@
 
     .big-number .unit {
       font-size: 0.4em;
-      color: #667788;
+      color: var(--ink-muted);
       font-weight: 400;
       margin-left: 4px;
     }
@@ -278,8 +330,8 @@
 
     .demo-step {
       flex: 1;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--bg-raised);
+      border: 1px solid var(--rule);
       border-radius: 8px;
       padding: 24px;
       position: relative;
@@ -290,7 +342,7 @@
       top: -12px;
       left: 16px;
       background: var(--orange);
-      color: #fff;
+      color: var(--ink);
       width: 24px; height: 24px;
       border-radius: 50%;
       display: flex;
@@ -300,8 +352,8 @@
       font-weight: 700;
     }
 
-    .demo-step h3 { margin-top: 8px; font-size: 0.7em; }
-    .demo-step p { font-size: 0.55em; }
+    .demo-step h3 { margin-top: 8px; font-size: 0.7em; color: var(--ink); }
+    .demo-step p { font-size: 0.55em; color: var(--ink-secondary); }
 
     /* --- quiz types --- */
     .quiz-types {
@@ -312,7 +364,7 @@
     }
 
     .quiz-type-card {
-      background: rgba(255, 255, 255, 0.04);
+      background: var(--bg-raised);
       border-radius: 8px;
       padding: 20px;
       border-left: 3px solid;
@@ -321,19 +373,19 @@
 
     .quiz-type-card.mcq { border-color: var(--orange); }
     .quiz-type-card.short { border-color: var(--navy-mid); }
-    .quiz-type-card.fill { border-color: #4D7FA8; }
-    .quiz-type-card.code { border-color: #2D6A4F; }
+    .quiz-type-card.fill { border-color: #6A9FBF; } /* tml-quiz-fill dark */
+    .quiz-type-card.code { border-color: #4A9A6F; } /* tml-quiz-code dark */
 
     .quiz-type-card .type-name {
       font-size: 0.7em;
       font-weight: 600;
-      color: #e0e6ee;
+      color: var(--ink);
       margin-bottom: 6px;
     }
 
     .quiz-type-card .type-desc {
       font-size: 0.5em;
-      color: #8899aa;
+      color: var(--ink-muted);
     }
 
     /* --- timeline --- */
@@ -350,7 +402,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--rule);
     }
 
     .timeline-item {
@@ -368,8 +420,8 @@
       border-radius: 50%;
     }
 
-    .timeline-item h3 { font-size: 0.7em; margin-bottom: 4px; }
-    .timeline-item p { font-size: 0.55em; margin: 0; }
+    .timeline-item h3 { font-size: 0.7em; margin-bottom: 4px; color: var(--ink); }
+    .timeline-item p { font-size: 0.55em; margin: 0; color: var(--ink-secondary); }
 
     /* --- QA slide --- */
     .qa-slide {
@@ -383,7 +435,7 @@
 
     .qa-slide p {
       font-size: 0.8em;
-      color: #667788;
+      color: var(--ink-muted);
     }
 
     /* --- fragment custom --- */
@@ -393,11 +445,17 @@
 
     /* --- override reveal background --- */
     .reveal .slide-background {
-      background: #0a1020;
+      background: var(--bg);
     }
 
-    section {
-      padding: 40px !important;
+    .reveal .slides section {
+      box-sizing: border-box;
+      padding: 0 40px !important;
+    }
+
+    /* 반응형 스케일링을 위해 폰트 사이즈 조정 */
+    .reveal {
+      font-size: 32px;
     }
   </style>
 </head>
@@ -408,124 +466,420 @@
       <!-- ==================== 1. 표지 ==================== -->
       <section>
         <div class="title-slide">
-          <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">AI 기반 학습 콘텐츠 자동 생성 시스템</p>
-          <h1><span class="dot">●</span> 알려주사자</h1>
+          <p style="font-size: 0.55em; color: var(--ink-muted); margin-bottom: 8px;">AI 기반 학습 콘텐츠 자동 생성 시스템</p>
+          <h1><img src="../frontend/public/likelion-logo.png" alt="알려주사자 로고" class="logo-img" /> 알려주사자</h1>
+          <p style="font-size: 0.8em; color: var(--orange); font-weight: 600; margin-top: -10px; margin-bottom: 20px;">TellMeLion</p>
           <p class="subtitle">강의 녹화본에서 핵심 개념 · 퀴즈 · 학습 가이드를 자동으로</p>
-          <div class="team">
-            <div class="team-member">
-              <div class="name">시훈</div>
-              <div class="role">전처리 파이프라인 · 배포</div>
-            </div>
-            <div class="team-member">
-              <div class="name">경현</div>
-              <div class="role">퀴즈 · 개념 · 학습포인트 생성</div>
-            </div>
-            <div class="team-member">
-              <div class="name">주노</div>
-              <div class="role">UI/UX · 프론트-백 연동</div>
-            </div>
+        </div>
+      </section>
+
+      <!-- ==================== 1-2. 팀 역할 (초기) ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Team TellMeLion</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 32px;">프로젝트 파트 및 초기 기획 단계의 협업 구조</p>
+        
+        <div class="card-grid" style="gap: 16px; grid-template-columns: repeat(4, 1fr);">
+          <div class="card" style="text-align: center; border-left: 3px solid var(--navy-mid); padding: 32px 16px;">
+            <div style="font-size: 1.1em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">김시훈</div>
+            <div class="tag navy" style="margin-bottom: 12px; font-size: 0.4em;">Data Pipeline & Logic</div>
+            <p style="font-size: 0.5em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">핵심 파이프라인 설계<br/>전처리 로직/모델 설계</p>
+          </div>
+          
+          <div class="card" style="text-align: center; border-left: 3px solid var(--orange); padding: 32px 16px;">
+            <div style="font-size: 1.1em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">홍경현</div>
+            <div class="tag" style="margin-bottom: 12px; font-size: 0.4em;">Core Generation</div>
+            <p style="font-size: 0.5em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">퀴즈, 다중 개념 추출<br/>학습 가이드 AI 생성 구조</p>
+          </div>
+          
+          <div class="card" style="text-align: center; border-left: 3px solid #3DBB7A; padding: 32px 16px;">
+            <div style="font-size: 1.1em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">조준호</div>
+            <div class="tag" style="background: rgba(61, 187, 122, 0.15); color: #3DBB7A; margin-bottom: 12px; font-size: 0.4em;">Frontend & Deploy</div>
+            <p style="font-size: 0.5em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">디자인 및 풀스택 연동<br/>시스템 인프라 배포</p>
+          </div>
+
+          <div class="card" style="text-align: center; border-left: 3px solid var(--ink-muted); padding: 32px 16px;">
+            <div style="font-size: 1.1em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">심유진</div>
+            <div class="tag" style="background: var(--bg-overlay); color: var(--ink-secondary); margin-bottom: 12px; font-size: 0.4em;">Architecture</div>
+            <p style="font-size: 0.5em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">아키텍처 초기 설계</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; font-size: 0.45em; color: var(--ink-muted); text-align: center;">
+          * 원래 4명으로 시작했으나, 심유진 님은 조기 취업으로 중도 하차하게 되었습니다.
+        </div>
+
+        <div style="margin-top: 16px; padding: 12px 24px; background: var(--bg-overlay); border-radius: 8px; border: 1px solid var(--rule);">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 24px;">
+            <h3 style="font-size: 0.7em; color: var(--ink); margin: 0; white-space: nowrap;">🤝 팀 협업 방식</h3>
+            <ul style="font-size: 0.55em; color: var(--ink-secondary); margin: 0; padding-left: 16px; line-height: 1.6; text-align: left;">
+              <li><strong>Agile & Sync:</strong> 주 단위 스프린트 회의 지정 및 Discord 실시간 소통</li>
+              <li><strong>Version Control:</strong> GitHub 활용, 철저한 코드 리뷰 및 기능(Feature) 단위 통합</li>
+              <li><strong>Documentation:</strong> Notion을 기반으로 API 명세서 및 프롬프트 결과물 실시간 공유</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 1-3. 팀 역할 (실제 구현) ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Team TellMeLion (실질 수행)</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 32px;">하차 이후, 3명이서 아키텍처 설계를 이관받아 실질적인 구현과 고도화를 완수했습니다.</p>
+        
+        <div class="card-grid cols-3" style="gap: 24px;">
+          <div class="card" style="text-align: center; border-left: 3px solid var(--navy-mid); padding: 32px 24px;">
+            <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">김시훈</div>
+            <div class="tag navy" style="margin-bottom: 12px;">Data Pipeline & Logic</div>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">핵심 파이프라인 설계 및 개발<br/>전처리 로직/모델 설계<br/>아키텍처 초기 설계 인수인계</p>
+          </div>
+          
+          <div class="card" style="text-align: center; border-left: 3px solid var(--orange); padding: 32px 24px;">
+            <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">홍경현</div>
+            <div class="tag" style="margin-bottom: 12px;">Core Generation</div>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">퀴즈, 다중 개념 추출<br/>학습 가이드 AI 생성 구조<br/>퀴즈 구조 및 생성 설계</p>
+          </div>
+          
+          <div class="card" style="text-align: center; border-left: 3px solid #3DBB7A; padding: 32px 24px;">
+            <div style="font-size: 1.2em; font-weight: 700; color: var(--ink); margin-bottom: 16px;">조준호</div>
+            <div class="tag" style="background: rgba(61, 187, 122, 0.15); color: #3DBB7A; margin-bottom: 12px;">Frontend & Deploy</div>
+            <p style="font-size: 0.55em; color: var(--ink-secondary); line-height: 1.5; margin: 0;">디자인 및 풀스택 연동<br/>시스템 인프라 배포</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 32px; padding: 16px 24px; background: var(--bg-overlay); border-radius: 8px; border: 1px solid var(--rule);">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 24px;">
+            <h3 style="font-size: 0.7em; color: var(--ink); margin: 0; white-space: nowrap;">🤝 팀 협업 방식</h3>
+            <ul style="font-size: 0.55em; color: var(--ink-secondary); margin: 0; padding-left: 16px; line-height: 1.6; text-align: left;">
+              <li><strong>Agile & Sync:</strong> 주 단위 스프린트 회의 지정 및 Discord 실시간 소통</li>
+              <li><strong>Version Control:</strong> GitHub 활용, 철저한 코드 리뷰 및 기능(Feature) 단위 통합</li>
+              <li><strong>Documentation:</strong> Notion을 기반으로 API 명세서 및 프롬프트 결과물 실시간 공유</li>
+            </ul>
           </div>
         </div>
       </section>
 
       <!-- ==================== 2. 문제 정의 ==================== -->
+      <!-- ==================== 2-1. 프로젝트 목표 ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>문제 정의</h2>
-        <div class="card-grid cols-2">
-          <div class="card">
-            <h3>수강생의 어려움</h3>
-            <ul>
-              <li>강의 녹화본은 쌓이지만 복습이 어렵다</li>
-              <li>핵심 내용을 직접 정리하는 데 시간이 과다 소요</li>
-              <li>스스로 학습 수준을 점검할 방법이 부족하다</li>
-            </ul>
-          </div>
-          <div class="card">
-            <h3>교육 업체의 한계</h3>
-            <ul>
-              <li>강의마다 요약·퀴즈를 수작업으로 만들 리소스 부족</li>
-              <li>주차별 학습 가이드 제작에 반복적 노동 발생</li>
-              <li>콘텐츠 품질의 일관성 유지가 어렵다</li>
-            </ul>
-          </div>
-        </div>
-        <div style="text-align: center; margin-top: 36px;">
-          <p style="font-size: 0.7em; color: var(--orange); font-weight: 600;">
-            "강의를 선택하기만 하면, 나머지는 AI가 처리할 수 없을까?"
+        <h2>프로젝트 목표</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 20px;">교육 환경에서 강의 후 복습의 효율성을 극대화하기 위한 시스템 구축</p>
+
+        <div style="background: var(--bg-overlay); border-left: 4px solid var(--orange); padding: 16px 24px; border-radius: 4px; margin-bottom: 24px;">
+          <h3 style="font-size: 0.7em; margin-bottom: 8px; color: var(--orange);">설계 원칙</h3>
+          <p style="font-size: 0.65em; font-weight: 500; color: var(--ink); margin: 0; line-height: 1.5;">
+            "모든 기능은 클라이언트 관점에서 시스템이 <strong style="color: var(--orange);">‘무엇을 할 수 있는가’</strong>가 아니라, 클라이언트가 <strong style="color: var(--orange);">‘무엇을 필요로 하는가’</strong>를 기준으로 설계합니다."
           </p>
+        </div>
+
+        <div class="card-grid cols-2" style="margin-top: 0;">
+          <div class="card" style="border-top: 3px solid var(--navy-mid);">
+            <h3 style="color: var(--navy-mid);">수강생 & 교육 업체의 한계</h3>
+            <ul>
+              <li>학습 효과 극대화를 위해서는 강의 후 복습이 필수적입니다.</li>
+              <li>그러나 매 강의마다 요약, 퀴즈, 가이드를 수작업으로 제작하는 데 시간과 결제 비용이 과다 소요됩니다.</li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <h3 style="color: var(--orange);">기획된 자동화 목표</h3>
+            <ul>
+              <li>강의 스크립트 기반 <strong style="color: var(--ink);">자동 개념/포인트 추출</strong></li>
+              <li>주관식/객관식/코드 등 <strong style="color: var(--ink);">다양한 유형의 퀴즈와 해설 제공</strong></li>
+              <li>로드가 심한 <strong style="color: var(--ink);">주차별 학습 가이드 자동 통합 제작</strong></li>
+            </ul>
+          </div>
         </div>
       </section>
 
-      <!-- ==================== 3. 솔루션 소개 ==================== -->
+      <!-- ==================== 2-2. 현실 데이터 장벽 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>현실 데이터의 장벽</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">기대와 달리 실제 수집된 데이터 환경은 완벽하지 않았습니다.</p>
+        
+        <div class="card" style="margin-bottom: 20px; border-left: 3px solid #E85454; background: rgba(232, 84, 84, 0.04);">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="tag" style="background:#FFF0F0; color:#E85454; margin-bottom:12px;">현실 이슈</div>
+          </div>
+          <h3 style="color: #E85454;">실제 데이터에서 발견한 2가지 치명적 이슈</h3>
+          <ul style="color: var(--ink-secondary); margin-bottom: 0;">
+            <li style="margin-bottom: 16px;">
+              <strong style="color: var(--ink);">STT 품질 저하</strong>: 오타와 노이즈가 많아 단순히 프롬프트만으로는 품질 보장이 불가함
+              <div style="margin-top: 8px; text-align: center;">
+                <img src="../docs/images/issue01.png" alt="STT 품질 저하 예시" style="max-height: 100px; width: auto; max-width: 95%; border: 1px solid var(--rule); border-radius: 6px; display: inline-block; box-sizing: border-box;" />
+              </div>
+            </li>
+            <li style="margin-bottom: 0;">
+              <strong style="color: var(--ink);">커리큘럼 불일치</strong>: 실제 강의 흐름이 스크립트 계획표와 다르게 전개되는 현상 발생
+              <div style="margin-top: 8px; text-align: center;">
+                <img src="../docs/images/issue02.png" alt="커리큘럼 불일치 예시" style="max-height: 100px; width: auto; max-width: 95%; border: 1px solid var(--rule); border-radius: 6px; display: inline-block; box-sizing: border-box;" />
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ==================== 2-3. 돌파구를 찾기 위한 기술적 고민 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>돌파구를 찾기 위한 고민</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">이 문제를 단순히 회피하지 않고, 서비스의 본질적인 목적에 맞춰 접근했습니다.</p>
+
+        <div class="card-grid cols-3" style="margin-bottom: 24px; gap: 16px;">
+          <div class="card" style="border-top: 3px solid var(--ink-muted); padding: 20px 16px;">
+            <h3 style="color: var(--ink); font-size: 0.75em;">❌ 외부 웹 검색 연동</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.5em; line-height: 1.6; padding-left: 16px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;">외부 의존성 상승으로 인한 예측 불가능성</li>
+              <li>강의 밖 지식 유입으로 <strong>복습 취지 훼손</strong></li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--ink-muted); padding: 20px 16px;">
+            <h3 style="color: var(--ink); font-size: 0.75em;">❌ 사전 지식 에셋 주입</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.5em; line-height: 1.6; padding-left: 16px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;">현장 커리큘럼 변동에 유연한 반응 불가</li>
+              <li>매 강의마다 달라지는 <strong>실시간 맥락 상실</strong></li>
+            </ul>
+          </div>
+          <div class="card" style="border-top: 3px solid var(--ink-muted); padding: 20px 16px;">
+            <h3 style="color: var(--ink); font-size: 0.75em;">❌ LLM 성능 전적 의존</h3>
+            <ul style="color: var(--ink-secondary); font-size: 0.5em; line-height: 1.6; padding-left: 16px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;">클라우드 모델의 잦은 업데이트 및 파편화</li>
+              <li>상대적 저성능의 <strong>로컬 환경</strong> 동작 미보장</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card" style="border-left: 3px solid var(--orange);">
+          <div class="tag">최종 해결 전략</div>
+          <h3 style="color: var(--orange); font-size: 0.85em; margin-top: 12px; margin-bottom: 8px;">순수한 강의 내용 기반의 전처리와 지식 DB 구축</h3>
+          <ul style="color: var(--ink-secondary); font-size: 0.6em; margin-bottom: 0;">
+            <li>강의 자체의 텍스트를 고도화하여 사실(Fact)만 추출하는 안정적인 베이스 구축</li>
+            <li>외부 지식에 기대지 않고 오직 강의 안에서만 정제하는 <strong>강건한 생성 파이프라인</strong> 설계</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ==================== 3-1. 솔루션 - 두 가지 사용 모드 ==================== -->
       <section>
         <div class="accent-bar"></div>
         <h2>솔루션 — 알려주사자</h2>
-        <p style="margin-bottom: 24px;">파일 업로드 없이, 대시보드에서 <strong style="color: var(--orange);">강의를 선택</strong>하기만 하면 서버가 나머지를 처리합니다.</p>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px; line-height: 1.5;">
+          앞서 도출한 <strong style="color: var(--orange);">지식 DB화 및 전처리 파이프라인 돌파구</strong>를 기반으로,<br/>
+          단건 집중 복습과 주간 누적 학습을 완벽히 지원하는 <strong style="color: var(--ink);">두 가지 맞춤형 모드(A/B)</strong>를 제공합니다.
+        </p>
 
         <div class="card-grid cols-2">
           <div class="card" style="border-left: 3px solid var(--orange);">
-            <div class="tag">Mode A</div>
-            <h3>단일 강의 분석</h3>
-            <p>강의 1개를 선택하면</p>
-            <ul>
-              <li>핵심 개념 자동 추출</li>
-              <li>학습 포인트 정리</li>
-              <li>다양한 유형의 퀴즈 생성</li>
-            </ul>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="tag">Mode A</div>
+              <span style="font-size:0.55em; color:var(--ink-muted); font-weight:600;">단일 강의</span>
+            </div>
+            <h3 style="margin-top:16px; color: var(--orange);">단일 강의 분석</h3>
+            <p style="color: var(--ink-secondary); margin-bottom: 20px;">특정 강의 복습을 위한 집중 모드</p>
+            <div style="background: var(--bg-overlay); padding: 16px; border-radius: 6px;">
+              <p style="font-size:0.6em; margin:0 0 8px 0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">입력</span> 강의 스크립트 1개</p>
+              <p style="font-size:0.6em; margin:0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">산출</span> 핵심 개념, 설계, 퀴즈</p>
+            </div>
           </div>
           <div class="card" style="border-left: 3px solid var(--navy-mid);">
-            <div class="tag navy">Mode B</div>
-            <h3>주차별 학습 가이드</h3>
-            <p>1주치 강의 전체를 통합하여</p>
-            <ul>
-              <li>주차별 핵심 요약</li>
-              <li>복습 우선순위</li>
-              <li>자가 점검 문항</li>
-            </ul>
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="tag navy">Mode B</div>
+              <span style="font-size:0.55em; color:var(--ink-muted); font-weight:600;">주차 단위</span>
+            </div>
+            <h3 style="margin-top:16px; color: var(--navy-mid);">주차별 학습 가이드</h3>
+            <p style="color: var(--ink-secondary); margin-bottom: 20px;">주간 복습 및 시험 대비용 통합 모드</p>
+            <div style="background: var(--bg-overlay); padding: 16px; border-radius: 6px;">
+              <p style="font-size:0.6em; margin:0 0 8px 0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">입력</span> 1주치 강의 전체</p>
+              <p style="font-size:0.6em; margin:0;"><span style="color:var(--ink-muted); display:inline-block; width:40px;">산출</span> 주차별 학습 가이드, 핵심 요약</p>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- ==================== 4. 서비스 데모 ==================== -->
+      <!-- ==================== 3-2. Mode A - Concept & Blueprint ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Mode A — 단일 강의 지식 추출</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">가공된 데이터베이스를 바탕으로 할루시네이션 없는 콘텐츠를 생성합니다.</p>
+
+        <div class="card-grid cols-2" style="gap: 24px; align-items: stretch;">
+          <!-- Concept -->
+          <div class="card" style="padding: 20px; border-top: 3px solid var(--orange);">
+            <h3 style="color: var(--orange); font-size: 0.75em; margin-bottom: 8px;">1. 핵심 개념 (Concept)</h3>
+            <p style="font-size: 0.55em; color: var(--ink-muted); margin-bottom: 12px; line-height: 1.4;">개념 정의, 중요도 점수(0~1), 연관 개념 매핑</p>
+            <pre style="margin: 0; box-shadow: none; width: 100%;"><code class="language-json" data-trim style="font-size: 0.45em; line-height: 1.4; border-radius: 8px; padding: 12px; background: var(--bg-raised);">
+{
+  "concept_id": "concept_추상",
+  "concept": "추상",
+  "definition": "추상 클래스는 주요 메소드인...",
+  "importance": 0.302,
+  "related_concepts": ["concept_바이트", "concept_캐릭터"]
+}
+            </code></pre>
+          </div>
+
+          <!-- Blueprint -->
+          <div class="card" style="padding: 20px; border-top: 3px solid var(--navy-mid);">
+            <h3 style="color: var(--navy-mid); font-size: 0.75em; margin-bottom: 8px;">2. 설계 (Blueprint)</h3>
+            <p style="font-size: 0.55em; color: var(--ink-muted); margin-bottom: 12px; line-height: 1.4;">정답 근거 및 오답 재료 사전 분리로 신뢰도 확보</p>
+            <pre style="margin: 0; box-shadow: none; width: 100%;"><code class="language-json" data-trim style="font-size: 0.40em; line-height: 1.4; border-radius: 8px; padding: 12px; background: var(--bg-raised);">
+{
+  "blueprint_id": "bp_추상",
+  "concept": "추상",
+  "evidence": {
+    "correct_facts": [
+      "추상 클래스에는 스트링 단위로 된 애가 없었다."
+    ],
+    "distractor_facts": [
+      "추상 클래스는 character 세트를 가지고 있다.",
+      "OutputStream은 추상 클래스이고..."
+    ]
+  }
+}
+            </code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 3-3. Mode A - Quiz ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Mode A — 퀴즈 생성 및 5대 유형</h2>
+        
+        <div class="card-grid cols-2" style="align-items: center; gap: 24px;">
+          <div>
+            <table style="font-size: 0.5em; margin-top: 0; width: 100%;">
+              <thead>
+                <tr>
+                  <th width="35%">유형</th>
+                  <th width="65%">설명</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="color:var(--orange); font-weight:600;">개념 정의형 객관식</td>
+                  <td>핵심 개념의 정의 4지선다</td>
+                </tr>
+                <tr>
+                  <td style="color:var(--navy-mid); font-weight:600;">오개념 객관식</td>
+                  <td>흔한 오해를 선지에 포함하여 검증</td>
+                </tr>
+                <tr>
+                  <td>빈칸 채우기</td>
+                  <td>핵심 용어를 타이핑하는 직접 입력형</td>
+                </tr>
+                <tr>
+                  <td>OX 퀴즈</td>
+                  <td>참/거짓 판별 방식의 빠른 개념 확인</td>
+                </tr>
+                <tr>
+                  <td>코드 실행형</td>
+                  <td>SQL/코드의 실행 결과를 예측하는 문제</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="padding: 20px; border-left: 3px solid var(--orange);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h3 style="color: var(--ink); font-size: 0.7em; margin:0;">생성된 퀴즈 예시</h3>
+              <span class="tag">난이도: 중</span>
+            </div>
+            <pre style="margin: 0; box-shadow: none; width:100%;"><code class="language-json" data-trim style="font-size: 0.40em; line-height: 1.4; border-radius: 8px; padding: 16px; background: var(--bg-raised);">
+{
+  "question_type": "mcq_definition",
+  "question": "추상 클래스에 대한 설명으로 올바른 것은?",
+  "choices": [
+    { "text": "인스턴스를 직접 생성할 수 있다.", "is_answer": false },
+    { "text": "추상 메서드를 포함할 수 있다.", "is_answer": true }
+  ],
+  "explanation": "하위 클래스가 반드시 구현해야 하는 추상..."
+}
+            </code></pre>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: center; gap: 24px;">
+          <img src="../docs/images/quiz01.png" alt="생성된 퀴즈 실제 화면 1" style="max-height: 180px; width: auto; max-width: 45%; border-radius: 8px; border: 1px solid var(--rule); box-shadow: 0 4px 16px rgba(0,0,0,0.15);" />
+          <img src="../docs/images/quiz02.png" alt="생성된 퀴즈 실제 화면 2" style="max-height: 180px; width: auto; max-width: 45%; border-radius: 8px; border: 1px solid var(--rule); box-shadow: 0 4px 16px rgba(0,0,0,0.15);" />
+        </div>
+      </section>
+
+      <!-- ==================== 3-4. Mode B - 주차별 학습 가이드 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>Mode B — 주차별 학습 가이드</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">1주치 강의 전체를 통합 분석하여 <strong style="color: var(--ink);">학습 로드맵</strong>과 <strong style="color: var(--ink);">핵심 요약</strong>을 제공합니다.</p>
+
+        <div class="card-grid cols-2" style="align-items: center; gap: 24px;">
+          <div class="card" style="border-left: 3px solid var(--navy-mid); padding: 24px;">
+            <div class="tag navy" style="margin-bottom: 16px;">통합 산출물 포맷</div>
+            <pre style="margin: 0; box-shadow: none; width: 100%;"><code class="language-json" data-trim style="font-size: 0.5em; line-height: 1.5; border-radius: 8px; padding: 16px; background: var(--bg-raised);">
+{
+  "week": 5,
+  "summary": "이번 주차에서는 Java I/O 스트림의 계층 구조와 직렬화...",
+  "key_concepts": [
+    "추상 클래스", 
+    "바이트 스트림", 
+    "직렬화"
+  ],
+  "meta": { 
+    "lecture_count": 4, 
+    "total_concepts": 15 
+  }
+}
+            </code></pre>
+          </div>
+          <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+            <div style="background: var(--bg-raised); padding: 24px; border-radius: 8px; border: 1px solid rgba(126, 168, 204, 0.2); margin-bottom: 20px;">
+              <h3 style="color: var(--navy-mid); font-size: 0.75em; margin-bottom: 12px;">통합 가이드의 장점</h3>
+              <ul style="font-size: 0.6em; line-height: 1.8; margin-bottom: 0; color: var(--ink-secondary);">
+                <li>여러 강의에서 산발적으로 언급된 개념을 주차 단위로 하나로 통합</li>
+                <li>강의 간의 흐름과 맥락을 학습자에게 로드맵 형태로 제공</li>
+                <li>한 주 동안 배운 핵심 개념에 대한 효과적인 누적 반복 복습</li>
+              </ul>
+            </div>
+            
+            <div style="text-align: center; flex: 1; display: flex; align-items: center; justify-content: center;">
+              <img src="../docs/images/학습가이드.png" alt="주차별 학습 가이드 실제 화면" style="max-height: 240px; width: auto; max-width: 100%; border-radius: 8px; border: 1px solid var(--rule); box-shadow: 0 4px 16px rgba(0,0,0,0.15);" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 4. 서비스 흐름 ==================== -->
       <section>
         <div class="accent-bar"></div>
         <h2>서비스 흐름</h2>
 
         <div class="demo-flow">
-          <div class="demo-step">
-            <div class="step-num">1</div>
-            <h3>대시보드</h3>
+          <div class="demo-step" style="border-top: 3px solid var(--ink-muted);">
+            <div class="step-num" style="background:var(--ink-muted); border: 2px solid var(--bg);">1</div>
+            <h3 style="color:var(--ink);">대시보드</h3>
             <p>전체 학습 진행률과 최근 분석 결과를 한눈에 확인</p>
           </div>
-          <div class="demo-step">
-            <div class="step-num">2</div>
-            <h3>강의 선택</h3>
-            <p>분석할 강의를 선택하고 "분석 시작" 클릭. 실시간 진행 상태 표시</p>
+          <div class="demo-step" style="border-top: 3px solid var(--orange);">
+            <div class="step-num" style="background:var(--orange); border: 2px solid var(--bg);">2</div>
+            <h3 style="color:var(--orange);">Mode 선택</h3>
+            <p>단일 강의(Mode A) 또는 주차별 통합(Mode B) 선택 후 자동 처리</p>
           </div>
-          <div class="demo-step">
-            <div class="step-num">3</div>
-            <h3>결과 확인</h3>
-            <p>핵심 개념 · 학습 포인트 · 퀴즈를 탭으로 전환하며 학습</p>
+          <div class="demo-step" style="border-top: 3px solid var(--orange);">
+            <div class="step-num" style="background:var(--orange); border: 2px solid var(--bg);">3</div>
+            <h3 style="color:var(--orange);">단일 분석 확인</h3>
+            <p>추출된 핵심 개념, 학습 포인트, 5개 유형 퀴즈 풀이</p>
           </div>
-          <div class="demo-step">
-            <div class="step-num">4</div>
-            <h3>주차 가이드</h3>
-            <p>주차별 통합 학습 가이드로 체계적 복습</p>
+          <div class="demo-step" style="border-top: 3px solid var(--navy-mid);">
+            <div class="step-num" style="background:#6A9FBF; border: 2px solid var(--bg);">4</div>
+            <h3 style="color:var(--navy-mid);">주차 통합 복습</h3>
+            <p>1주치 요약본과 로드맵으로 체계적인 시험 대비</p>
           </div>
         </div>
 
-        <div style="margin-top: 32px;">
-          <div class="card-grid cols-2">
-            <div class="card" style="text-align: center;">
-              <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">Mode A — 단일 강의 결과</p>
-              <p style="font-size: 0.5em; color: #556677;">핵심 개념 카드 (오렌지 사이드바)<br/>학습 포인트 카드 (네이비 사이드바)<br/>퀴즈 CTA 배너</p>
-            </div>
-            <div class="card" style="text-align: center;">
-              <p style="font-size: 0.55em; color: #667788; margin-bottom: 8px;">Mode B — 주차별 가이드</p>
-              <p style="font-size: 0.5em; color: #556677;">Overview 히어로 · 선수 지식<br/>주제별 섹션 · 복습 우선순위<br/>자가 점검 Q&A · 개념 맵</p>
-            </div>
-          </div>
+        <div style="margin-top: 36px; text-align: center; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px;">
+          <p style="font-size: 0.6em; color: var(--ink-muted); margin: 0;">
+            파일 업로드나 복잡한 설정 없이, 대시보드 클릭만으로 맞춤형 학습 콘텐츠를 획득합니다.
+          </p>
         </div>
       </section>
 
@@ -553,7 +907,7 @@
             <span class="label">Python</span>
           </div>
           <div class="arch-arrow">→</div>
-          <div class="arch-box" style="border-color: #2D6A4F; background: rgba(45, 106, 79, 0.08);">
+          <div class="arch-box" style="border-color: #4A9A6F; background: rgba(45, 106, 79, 0.08);">
             <strong>Gemini API</strong>
             <span class="label">LLM 추론</span>
           </div>
@@ -567,7 +921,7 @@
               <p style="font-size: 0.5em;">main push → Vercel 자동 빌드 · 배포</p>
             </div>
             <div class="card">
-              <p style="font-size: 0.55em; color: #7ea8cc; font-weight: 600;">백엔드</p>
+              <p style="font-size: 0.55em; color: var(--navy-mid); font-weight: 600;">백엔드</p>
               <p style="font-size: 0.5em;">main push → GitHub Actions → EC2 SSH → Docker Compose → Health Check</p>
             </div>
           </div>
@@ -579,7 +933,7 @@
         <div class="accent-bar"></div>
         <h2>핵심 기술 — 분석 파이프라인</h2>
 
-        <p style="font-size: 0.6em; color: #8899aa; margin-bottom: 20px;">강의 원문 텍스트에서 학습 콘텐츠까지, 8단계 자동화 파이프라인</p>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 20px;">원시 강의 스크립트가 입력되면 즉각 반응하여, 독자적인 '지식 데이터베이스'로 구조화하는 파이프라인</p>
 
         <div class="flow">
           <div class="flow-step">텍스트 정제</div>
@@ -612,108 +966,231 @@
               <p>추출된 개념을 원문 청크에 역매핑하여 근거 기반 문제 설계</p>
             </div>
             <div class="card">
-              <h3>적응형 LLM 호출</h3>
-              <p>토큰 초과 시 자동으로 퀴즈 개수를 줄여 재시도 — 무중단 생성</p>
+              <h3>완전한 반응성(Reactivity)</h3>
+              <p>사전 지식 없이 오직 새롭게 입력된 강의만 정제하여 지식 DB를 자체 구축함으로써, 세상에 없던 새로운 강의에도 즉각 대응 가능</p>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ==================== 7. 퀴즈 품질 보장 ==================== -->
+      <!-- ==================== 6-2. 전처리 5단계 데이터 플로우 ==================== -->
       <section>
         <div class="accent-bar"></div>
-        <h2>퀴즈 품질 보장</h2>
+        <h2>핵심 기술 — 전처리 5단계 데이터 플로우</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 20px;">정제되지 않은 강의 스크립트(raw)를 RAG에 즉시 활용 가능한 구조화된 지식 DB로 변환</p>
 
-        <h3>4가지 퀴즈 유형</h3>
-        <div class="quiz-types">
-          <div class="quiz-type-card mcq">
-            <div class="type-name">객관식 (MCQ)</div>
-            <div class="type-desc">4지선다형<br/>핵심 개념 이해도 측정</div>
-          </div>
-          <div class="quiz-type-card short">
-            <div class="type-name">주관식 (Short)</div>
-            <div class="type-desc">단답형 서술<br/>개념 정의 · 설명 능력</div>
-          </div>
-          <div class="quiz-type-card fill">
-            <div class="type-name">빈칸 채우기 (Fill)</div>
-            <div class="type-desc">핵심 용어 기억<br/>문맥 속 정확한 용어 선택</div>
-          </div>
-          <div class="quiz-type-card code">
-            <div class="type-name">코드 실행 (Code)</div>
-            <div class="type-desc">코드 작성 · 결과 예측<br/>실전 적용 능력</div>
-          </div>
-        </div>
-
-        <div style="margin-top: 28px;">
-          <h3>품질 관리 전략</h3>
-          <div class="card-grid cols-2">
-            <div class="card">
-              <ul>
-                <li>JSON 파싱 실패 시 자동 복구 로직 (정규식 기반)</li>
-                <li>필수 필드 검증 + 선택지 개수 확인</li>
-              </ul>
-            </div>
-            <div class="card">
-              <ul>
-                <li>블루프린트 기반 출제로 근거 없는 문제 방지</li>
-                <li>배치 생성 후 개별 검증 — 실패 문항만 재생성</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== 8. 팀 역할 & 협업 ==================== -->
-      <section>
-        <div class="accent-bar"></div>
-        <h2>팀 역할 & 협업</h2>
-
-        <div class="card-grid cols-3" style="margin-top: 24px;">
+        <div class="card-grid cols-3">
           <div class="card" style="border-top: 3px solid var(--orange);">
-            <h3 style="color: #e0e6ee;">시훈</h3>
-            <div class="tag">Pipeline</div>
-            <ul>
-              <li>전처리 파이프라인 설계 · 고도화</li>
-              <li>배포 최적화 (Docker)</li>
-              <li>Gemini API 비용 관리</li>
+            <div class="tag navy">Phase 1: Cleaner</div>
+            <h3 style="color: var(--orange);">시간차 복원 및 전처리</h3>
+            <ul style="line-height: 1.5; padding-left: 12px; margin-bottom: 0;">
+              <li style="margin-bottom: 8px;"><strong style="color: var(--ink);">시간 갭(Gap) 기반 복원:</strong> 15초 이내 발화를 병합하여 파편화 해결, 30분 초과 시 새 세션 분리</li>
+              <li><strong style="color: var(--ink);">LLM 문맥 교정:</strong> IT 전문 용어 중심의 오탈자 집중 정제</li>
             </ul>
           </div>
-          <div class="card" style="border-top: 3px solid #4D7FA8;">
-            <h3 style="color: #e0e6ee;">경현</h3>
-            <div class="tag navy">AI / NLP</div>
+          <div class="card" style="border-top: 3px solid var(--ink-muted);">
+            <div class="tag navy">Phase 2: Segmenter</div>
+            <h3>문장 복원 및 품사 필터링</h3>
             <ul>
-              <li>퀴즈 · 개념 · 학습포인트 생성 로직</li>
-              <li>프롬프트 엔지니어링</li>
-              <li>출력 형식 정의 · 검증</li>
+              <li>구어체 텍스트를 논리적인 문장 단위로 정밀 분할</li>
+              <li>형태소 분석기(POS) 기반 의미 없는 감탄사 제거</li>
             </ul>
           </div>
-          <div class="card" style="border-top: 3px solid #2D6A4F;">
-            <h3 style="color: #e0e6ee;">주노</h3>
-            <div class="tag" style="background: rgba(45, 106, 79, 0.2); color: #4a9a6f;">Frontend</div>
+          <div class="card" style="border-top: 3px solid var(--ink-muted);">
+            <div class="tag navy">Phase 3: Chunker</div>
+            <h3>시맨틱 청킹 및 스코어링</h3>
             <ul>
-              <li>UI/UX 설계 · 구현</li>
-              <li>프론트-백 API 연동</li>
-              <li>Vercel · EC2 배포 인프라</li>
+              <li>문맥 전환 지점을 탐지하여 의미망(Semantic) 기반 청크 분할</li>
+              <li>TF-IDF로 청크 내 핵심 빈도어 추출</li>
             </ul>
           </div>
         </div>
-
-        <div style="margin-top: 28px;">
-          <h3>협업 방식</h3>
-          <div class="card-grid cols-2">
-            <div class="card">
-              <ul>
-                <li>GitHub PR 기반 코드 리뷰</li>
-                <li>main push = 자동 배포 (Vercel + GitHub Actions)</li>
-              </ul>
-            </div>
-            <div class="card">
-              <ul>
-                <li>태스크 파일로 작업 명세 관리 (docs/tasks/)</li>
-                <li>TypeScript ↔ Pydantic 모델 동기화</li>
-              </ul>
-            </div>
+        
+        <div class="card-grid cols-2" style="margin-top: 16px;">
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <div class="tag">Phase 4: Extractor</div>
+            <h3>지식 명제 추출 및 구조화</h3>
+            <ul>
+              <li>정제된 단락 안에서 참/거짓 판단이 가능한 '명제(Fact)' 추출</li>
+              <li>핵심 키워드와 해당 명제의 '개념-명제' 관계도 매핑</li>
+            </ul>
           </div>
+          <div class="card" style="border-top: 3px solid var(--orange);">
+            <div class="tag">Phase 5: Formatter</div>
+            <h3>최종 RAG 팩트 DB 구축</h3>
+            <ul>
+              <li>원문 스크립트 기반 <strong style="color: var(--ink);">ChunkDoc</strong>(청크별 문서) 적재</li>
+              <li>추출된 개념 기준 <strong style="color: var(--ink);">ConceptDoc</strong>(개념 단위 통합 문서) 구축</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7-1. 퀴즈 설계 전략 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>퀴즈 품질 보장 전략</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">앞서 정제한 <strong style="color: var(--orange);">강의 지식 데이터베이스(Fact DB)</strong>를 기반으로 하여, 할루시네이션을 원천 차단하는 체계적인 파이프라인</p>
+
+        <div class="flow" style="margin-top: 32px; gap: 16px;">
+          <div class="flow-step highlight" style="flex: 1; padding: 20px 16px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px;">1. Blueprint</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">개념별 퀴즈 유형·난이도·수량 사전 설계</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="flex: 1; padding: 20px 16px; border-color: #6A9FBF; background: rgba(77, 127, 168, 0.1);">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px; color: var(--navy-mid);">2. Evidence</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">Fact DB에서 정답 및 오답 근거(재료) 100% 한정 확보</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step highlight" style="flex: 1; padding: 20px 16px;">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px;">3. Generation</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">설계 명세 기반 LLM 문항 자동 생성</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step" style="flex: 1; padding: 20px 16px; border-color: #4A9A6F; background: rgba(45, 106, 79, 0.1);">
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 1.0em; margin-bottom: 8px; color: #4A9A6F;">4. Validator</div>
+            <div style="font-size: 0.85em; opacity: 0.8; word-break: keep-all;">정확성 및 사실 일치 여부 자동 검증</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7-2. 문항 설계 및 난이도 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>문항 설계 및 난이도 제어</h2>
+        
+        <table style="margin-bottom: 20px;">
+          <thead>
+            <tr>
+              <th width="10%">난이도</th>
+              <th width="30%">질문 길이 및 특징</th>
+              <th width="30%">출제 대상</th>
+              <th width="30%">선지 구성</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag" style="background: var(--rule); color: var(--ink-muted); margin:0;">하</span></td>
+              <td>15~24자 (짧은 질문)</td>
+              <td>기초 문법, 개념어 식별</td>
+              <td>개념어 위주 (4지선다 허용)</td>
+            </tr>
+            <tr>
+              <td><span class="tag navy" style="color: var(--navy-mid); background: var(--bg-raised); margin:0;">중</span></td>
+              <td>21~30자 (단문 서술형)</td>
+              <td>개념 정의, 특징 판단</td>
+              <td>명사구, 문장형</td>
+            </tr>
+            <tr>
+              <td><span class="tag" style="background: rgba(255, 107, 0, 0.2); color: var(--orange); margin:0;">상</span></td>
+              <td style="color:var(--orange);">30자 이상 (상세 조건형)</td>
+              <td style="color:var(--orange);">복수 조건, 예외 판별</td>
+              <td style="color:var(--orange);">복합 서술형</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="card-grid cols-3">
+           <div class="card" style="padding: 16px;">
+             <h3 style="color: var(--navy-mid); margin-bottom: 12px; font-size: 0.7em;">출제 Quota</h3>
+             <ul style="font-size: 0.8em; line-height: 1.8;">
+               <li>O/X 퀴즈: <strong>최대 20%</strong></li>
+               <li>빈칸 채우기: <strong>최소 20% 이상</strong></li>
+               <li>객관식: <strong>오답근거 2개 이상</strong></li>
+             </ul>
+           </div>
+           <div class="card" style="padding: 16px; grid-column: span 2; border-color: rgba(255, 107, 0, 0.3);">
+             <h3 style="color: var(--orange); margin-bottom: 16px; font-size: 0.7em;">오답 선지 설계 4대 패턴</h3>
+             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px;">
+               <div style="background: var(--bg-overlay); padding: 8px; border-radius: 4px;">
+                 <strong style="color:var(--ink); font-size: 0.6em; display:block; margin-bottom:4px;">1. 인접 개념 함정</strong>
+                 <span style="font-size:0.55em; color: var(--ink-muted);">유사 개념의 특징 차용</span>
+               </div>
+               <div style="background: var(--bg-overlay); padding: 8px; border-radius: 4px;">
+                 <strong style="color:var(--ink); font-size: 0.6em; display:block; margin-bottom:4px;">2. 속성 반전 함정</strong>
+                 <span style="font-size:0.55em; color: var(--ink-muted);">핵심 속성을 반대 특성으로 교체</span>
+               </div>
+               <div style="background: var(--bg-overlay); padding: 8px; border-radius: 4px;">
+                 <strong style="color:var(--ink); font-size: 0.6em; display:block; margin-bottom:4px;">3. 키워드 중첩 함정</strong>
+                 <span style="font-size:0.55em; color: var(--ink-muted);">정답 키워드 + 성질 조작</span>
+               </div>
+               <div style="background: var(--bg-overlay); padding: 8px; border-radius: 4px;">
+                 <strong style="color:var(--ink); font-size: 0.6em; display:block; margin-bottom:4px;">4. 과장형 함정</strong>
+                 <span style="font-size:0.55em; color: var(--ink-muted);">"반드시", "~에서만" 절대 표현</span>
+               </div>
+             </div>
+           </div>
+        </div>
+      </section>
+
+      <!-- ==================== 7-3. 퀴즈 검증 (Validator) ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>자동 검증 (QA Validator)</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 24px;">LLM 생성 퀴즈를 <strong style="color: var(--ink);">4가지 기준</strong>으로 검증하여 통과한 문항만 최종 적재</p>
+
+        <div class="card-grid cols-2" style="gap: 16px;">
+          <div class="card" style="border-left: 3px solid #6A9FBF; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: var(--navy-mid); font-size: 0.75em; margin:0;">① 근거성 (Evidence)</h3>
+              <span class="mono" style="font-size:0.6em; color:var(--ink); background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">≥ 0.30</span>
+            </div>
+            <p style="margin-bottom: 8px; color: var(--ink);">문항이 강의 원문에 기반하는가?</p>
+            <p style="font-size: 0.85em; color: var(--ink-muted); margin:0;">출처 텍스트 ↔ 검증 청크 TF-IDF 점수</p>
+          </div>
+
+          <div class="card" style="border-left: 3px solid var(--ink-muted); padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: var(--ink-muted); font-size: 0.75em; margin:0;">② 중복성 (Uniqueness)</h3>
+              <span class="mono" style="font-size:0.6em; color:var(--ink); background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">&lt; 0.85</span>
+            </div>
+            <p style="margin-bottom: 8px; color: var(--ink);">유사한 내용을 묻는 문항이 없는가?</p>
+            <p style="font-size: 0.85em; color: var(--ink-muted); margin:0;">문항 간 내용 유사도 스코어</p>
+          </div>
+
+          <div class="card" style="border-left: 3px solid var(--orange); padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: var(--orange); font-size: 0.75em; margin:0;">③ 난이도 (Difficulty)</h3>
+              <span class="mono" style="font-size:0.6em; color:var(--ink); background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">0.2 ~ 0.95</span>
+            </div>
+            <p style="margin-bottom: 8px; color: var(--ink);">너무 쉽거나 무의미하게 어렵지 않은가?</p>
+            <p style="font-size: 0.85em; color: var(--ink-muted); margin:0;">LLM 예측 기반 오답률 허용 범위</p>
+          </div>
+
+          <div class="card" style="border-left: 3px solid #4A9A6F; padding: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px;">
+              <h3 style="color: #4A9A6F; font-size: 0.75em; margin:0;">④ 변별력 (Discrim.)</h3>
+              <span class="mono" style="font-size:0.6em; color:var(--ink); background:rgba(255,107,0,0.2); padding:2px 6px; border-radius:4px;">설득력≥0.4</span>
+            </div>
+            <p style="margin-bottom: 8px; color: var(--ink);">오답이 소거법으로 쉽게 풀리지 않는가?</p>
+            <p style="font-size: 0.85em; color: var(--ink-muted); margin:0;">오답 설득력 스코어 및 소거 가능 비율 판단</p>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 28px; background: rgba(255,107,0,0.05); border: 1px solid rgba(255,107,0,0.2); padding: 12px; border-radius: 8px;">
+          <p style="font-size: 0.6em; color: var(--orange); margin: 0; font-weight: 500;">
+            ※ 검증 실패 문항은 제외되며, 전체 통과율과 실패 사유가 자동 로깅됩니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- ==================== 8. 프로토타입 시연 ==================== -->
+      <section>
+        <div class="accent-bar"></div>
+        <h2>프로토타입 시연 영상</h2>
+        <p style="font-size: 0.6em; color: var(--ink-muted); margin-bottom: 32px;">완성된 파이프라인과 프론트엔드를 통해 실제 작동하는 알려주사자 시스템</p>
+
+        <div style="text-align: center; margin-top: 60px;">
+          <a href="https://www.youtube.com/watch?v=CLnTITVx9sw" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; padding: 24px 48px; background: var(--bg-raised); border: 2px solid var(--orange); border-radius: 16px; color: var(--ink); text-decoration: none; box-shadow: 0 8px 24px rgba(255, 107, 0, 0.15); transition: all 0.2s ease;">
+            <svg style="width: 48px; height: 48px; margin-right: 16px; fill: #FF0000;" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <div style="text-align: left;">
+              <div style="font-size: 0.85em; font-weight: 700; margin-bottom: 4px;">알려주사자 시스템 시연 영상 보기</div>
+              <div style="font-size: 0.55em; color: var(--ink-secondary);">YouTube에서 전체 파이프라인 구동 과정을 확인하세요. (새 창 열림)</div>
+            </div>
+          </a>
         </div>
       </section>
 
@@ -766,7 +1243,7 @@
       transition: 'slide',
       transitionSpeed: 'default',
       backgroundTransition: 'fade',
-      center: false,
+      center: true,
       controls: true,
       controlsTutorial: true,
       progress: true,
