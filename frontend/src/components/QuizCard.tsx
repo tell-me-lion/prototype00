@@ -248,7 +248,7 @@ function CodeCard({ quiz, quizIndex, totalInType }: QuizCardProps) {
   return (
     <div className="tml-card quiz-type-card">
       <div className="quiz-type-card__meta">
-        <span className="quiz-badge quiz-badge--code">코드</span>
+        <span className="quiz-badge quiz-badge--code">코드 분석</span>
         <span className="quiz-meta-id">
           {quizIndex + 1} / {totalInType} · Q-{String(quizIndex + 1).padStart(3, '0')}
         </span>

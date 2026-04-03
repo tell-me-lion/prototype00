@@ -121,7 +121,7 @@ export function QuizPage() {
     { label: '객관식', count: mcqQuizzes.length },
     { label: 'O/X', count: oxQuizzes.length },
     { label: '빈칸', count: fillQuizzes.length },
-    { label: '코드', count: codeQuizzes.length },
+    { label: '코드 분석', count: codeQuizzes.length },
   ].filter((t) => t.count > 0)
 
   return (
@@ -221,10 +221,10 @@ export function QuizPage() {
             </div>
           )}
 
-          {/* 코드 실행형 */}
+          {/* 코드 분석형 */}
           {codeQuizzes.length > 0 && (
             <div className="tml-animate">
-              <p className="section-label">코드 실행형</p>
+              <p className="section-label">코드 분석</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {codeQuizzes.map((q, i) => (
                   <QuizCard key={q.quiz_id} quiz={q} quizIndex={i} totalInType={codeQuizzes.length} />
