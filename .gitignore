@@ -90,9 +90,7 @@ tasks/
 docs/legacy/
 docs/tasks/
 
-
-
-
+PORTFOLIO.md
 *.pem
 .vercel
 .env*.local
